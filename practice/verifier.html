@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head><title>Completion Code Verifier — ISE 5405</title><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style></head><body>
+<header><h1>Completion Code Verifier</h1><div class="sub">Instructor/TA tool — checks that a code matches the student's name. <a href="index.html">&larr; practice hub</a></div></header>
+<main>
+<div class="card">
+  <p>Paste the student's <b>name exactly as they entered it</b> (Canvas roster name) and their code:</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <input type="text" id="vname" placeholder="Student name" style="flex:1;min-width:220px">
+    <input type="text" id="vcode" placeholder="e.g. CH-850-20260902-K3F9QZ" style="flex:1;min-width:260px">
+    <button class="btn" id="vbtn">Verify</button>
+  </div>
+  <div id="vout" style="margin-top:16px;font-size:17px;min-height:60px"></div>
+</div>
+<div class="card note">
+  Code anatomy: <code>ACTIVITY-SCORE-YYYYMMDD-CHECK</code>. The check digits are a hash of
+  activity + score + date + the student's (lowercased) name + a course salt. A shared code fails
+  under any other name; an edited score or date also fails. This is participation-grade
+  verification — spot-check a sample rather than every entry.
+  Activities: CH = Corner Hunt, FF = Formulation Forge, PP = Proof Puzzles, DDNOT/DDSTA/DDVOC = drill decks.
+</div>
+</main>
+<script>
+function fnv(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-6);
+}
+document.getElementById('vbtn').onclick=()=>{
+  const name=document.getElementById('vname').value.trim();
+  const code=document.getElementById('vcode').value.trim().toUpperCase();
+  const out=document.getElementById('vout');
+  const m=code.match(/^([A-Z]{2,6})-(\d+)-(\d{8})-([A-Z0-9]{6})$/);
+  if(!name||!m){out.innerHTML='<span class="bad">Format not recognized.</span> Expected ACTIVITY-SCORE-YYYYMMDD-CHECK.';return;}
+  const payload=m[1]+'-'+m[2]+'-'+m[3];
+  const h=fnv(payload+'|'+name.toLowerCase().replace(/\s+/g,' ')+'|VT-ISE5405-OPT1');
+  if(h===m[4]){
+    out.innerHTML='<span class="good">VALID ✓</span> &nbsp; Activity <b>'+m[1]+'</b>, score <b>'+m[2]+'</b>, earned <b>'+m[3].slice(0,4)+'-'+m[3].slice(4,6)+'-'+m[3].slice(6)+'</b> by <b>'+name+'</b>.';
+  }else{
+    out.innerHTML='<span class="bad">INVALID ✗</span> — code does not match this name (or was altered).';
+  }
+};
+</script></body></html>

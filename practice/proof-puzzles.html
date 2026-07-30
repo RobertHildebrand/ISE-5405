@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="en"><head><title>Proof Puzzles — ISE 5405</title><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style>
+<style>
+.pline{display:flex;align-items:center;gap:10px;background:#f6f3ef;border:2px solid #ddd;border-radius:10px;padding:8px 14px;margin:7px 0;font-size:16.5px}
+.pline .txt{flex:1}
+.pline .mv{display:flex;flex-direction:column;gap:2px}
+.pline .mv button{width:34px;height:26px;border:none;border-radius:6px;background:#e8e2da;cursor:pointer;font-size:13px}
+.pline.ok{background:#edf6ef;border-color:#1a7d3c}
+.pline.no{background:#fbeaea;border-color:#b3261e}
+</style></head><body>
+<header><h1>Proof Puzzles</h1><div class="sub">The proof lines are scrambled — restore the logical order. <a href="index.html">&larr; practice hub</a></div></header>
+<main>
+<div class="card scorebar">
+  <span class="pill">Player: <span id="whoami">…</span></span>
+  <span class="pill">Puzzle <span id="pnum">–</span>/4</span>
+  <span class="pill">Score <span id="score">0</span></span>
+  <button class="btn" id="startBtn">Start ▶</button>
+</div>
+<div class="card">
+  <div id="claim" style="font-size:18px;margin-bottom:8px"></div>
+  <div id="lines"></div>
+  <div style="margin-top:10px">
+    <button class="btn" id="checkBtn" disabled>Check order</button>
+    <span id="fb" style="margin-left:14px;font-size:17px"></span>
+  </div>
+  <div id="codeArea"></div>
+</div>
+<div class="card note">Use ▲▼ to move lines. Full credit for first-try checks; each retry costs points. These are the proofs from Lectures 3–4 — if stuck, rebuild them in the lecture's Proof Workshop first.</div>
+</main>
+<script>
+function getName(){
+  let n=localStorage.getItem('ise5405name')||'';
+  let tries=0;
+  while((!n||n.trim().length<3)&&tries<3){
+    n=prompt('Enter your full name (as registered in Canvas) — used to generate your completion code:')||'';tries++;
+  }
+  if(!n||n.trim().length<3)n='Anonymous';
+  n=n.trim();localStorage.setItem('ise5405name',n);
+  const el=document.getElementById('whoami');
+  if(el)el.textContent=n;
+  return n;
+}
+function fnv(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-6);
+}
+function completionCode(activity,score){
+  const name=getName();
+  const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const payload=activity+'-'+score+'-'+date;
+  const h=fnv(payload+'|'+name.toLowerCase().replace(/\s+/g,' ')+'|VT-ISE5405-OPT1');
+  return payload+'-'+h;
+}
+function showCode(el,activity,score){
+  el.innerHTML='<div class="note" style="margin:14px 0 6px">Completion code — paste into the Canvas quiz:</div>'+
+    '<div class="codebox">'+completionCode(activity,score)+'</div>'+
+    '<div class="note" style="margin-top:6px">Tied to the name "'+(localStorage.getItem('ise5405name')||'')+'". Wrong name in Canvas = invalid code.</div>';
+}
+
+
+const PUZ=[
+{claim:"<b>Claim.</b> The product of two odd integers is odd. <i>(direct proof)</i>",
+ lines:["Let \\(m\\) and \\(n\\) be odd integers.",
+ "Then \\(m=2a+1\\) and \\(n=2b+1\\) for some integers \\(a,b\\).",
+ "Compute: \\(mn=(2a+1)(2b+1)=4ab+2a+2b+1\\).",
+ "Factor: \\(mn=2(2ab+a+b)+1\\), i.e. twice an integer plus one.",
+ "Therefore \\(mn\\) is odd. \\(\\blacksquare\\)"]},
+{claim:"<b>Claim.</b> If \\(3n+2\\) is odd, then \\(n\\) is odd. <i>(contrapositive)</i>",
+ lines:["We prove the contrapositive: if \\(n\\) is even, then \\(3n+2\\) is even.",
+ "Assume \\(n\\) is even, so \\(n=2k\\) for some integer \\(k\\).",
+ "Then \\(3n+2=6k+2=2(3k+1)\\).",
+ "So \\(3n+2\\) is twice an integer — even.",
+ "The contrapositive holds, hence the original claim holds. \\(\\blacksquare\\)"]},
+{claim:"<b>Claim.</b> \\(\\sqrt{2}\\) is irrational. <i>(contradiction — mind the lemma!)</i>",
+ lines:["Assume not: \\(\\sqrt2=p/q\\) with \\(\\gcd(p,q)=1\\).",
+ "Squaring gives \\(p^2=2q^2\\), so \\(p^2\\) is even.",
+ "Lemma (proved via contrapositive): if \\(p^2\\) is even then \\(p\\) is even.",
+ "Write \\(p=2k\\); substituting gives \\(q^2=2k^2\\), so \\(q\\) is even too.",
+ "Both even contradicts \\(\\gcd(p,q)=1\\); hence \\(\\sqrt2\\) is irrational. \\(\\blacksquare\\)"]},
+{claim:"<b>Claim.</b> A vertex of a polyhedron \\(P\\) is an extreme point. <i>(contradiction)</i>",
+ lines:["Let \\(x^*\\) be a vertex: some \\(c\\) has \\(c'x^*<c'y\\) for all \\(y\\in P\\), \\(y\\ne x^*\\).",
+ "Assume \\(x^*\\) is not extreme: \\(x^*=\\lambda y+(1-\\lambda)z\\) with \\(y,z\\in P\\setminus\\{x^*\\}\\).",
+ "Since \\(y,z\\ne x^*\\), necessarily \\(\\lambda\\in(0,1)\\).",
+ "Then \\(c'x^*=\\lambda c'y+(1-\\lambda)c'z>\\lambda c'x^*+(1-\\lambda)c'x^*=c'x^*\\).",
+ "\\(c'x^*>c'x^*\\) is absurd, so \\(x^*\\) is extreme. \\(\\blacksquare\\)"]}
+];
+let pi=0,score=0,attempts=0,order=[];
+const claim=document.getElementById('claim'),linesEl=document.getElementById('lines'),fb=document.getElementById('fb');
+function ts(){if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([document.body]);}
+function upd(){document.getElementById('pnum').textContent=(pi<PUZ.length&&order.length)?(pi+1):'–';document.getElementById('score').textContent=score;}
+function shuffle(){
+  const n=PUZ[pi].lines.length;
+  do{order=[...Array(n).keys()].sort(()=>Math.random()-0.5);}while(order.every((v,i)=>v===i));
+}
+function render(mark){
+  linesEl.innerHTML='';
+  order.forEach((li,pos)=>{
+    const d=document.createElement('div');d.className='pline'+(mark?(li===pos?' ok':' no'):'');
+    d.innerHTML='<div class="mv"><button data-d="-1">▲</button><button data-d="1">▼</button></div><div class="txt">'+PUZ[pi].lines[li]+'</div>';
+    d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const j=pos+ +b.dataset.d;
+      if(j<0||j>=order.length)return;
+      [order[pos],order[j]]=[order[j],order[pos]];
+      render(false);
+    });
+    linesEl.appendChild(d);
+  });
+  ts();
+}
+function load(){
+  if(pi>=PUZ.length){finish();return;}
+  claim.innerHTML=PUZ[pi].claim;
+  attempts=0;fb.innerHTML='';
+  document.getElementById('checkBtn').disabled=false;
+  shuffle();render(false);upd();
+}
+document.getElementById('checkBtn').onclick=()=>{
+  attempts++;
+  const ok=order.every((v,i)=>v===i);
+  render(true);
+  if(ok){
+    const pts=Math.max(30-10*(attempts-1),10);
+    score+=pts;
+    fb.innerHTML='<span class="good">Proof restored! +'+pts+'</span>';
+    document.getElementById('checkBtn').disabled=true;
+    upd();
+    setTimeout(()=>{pi++;load();},1500);
+  }else{
+    const good=order.filter((v,i)=>v===i).length;
+    fb.innerHTML='<span class="mid">'+good+'/'+order.length+' lines in place — keep going.</span>';
+  }
+};
+function finish(){
+  claim.innerHTML='<span class="big">All proofs restored — score <b>'+score+'</b>/120</span>';
+  linesEl.innerHTML='';fb.innerHTML='';
+  document.getElementById('checkBtn').disabled=true;
+  if(score>=80)showCode(document.getElementById('codeArea'),'PP',score);
+  else document.getElementById('codeArea').innerHTML='<div class="note">Score 80+ for a completion code.</div>';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('startBtn').textContent='Play again ▶';
+}
+document.getElementById('startBtn').onclick=e=>{
+  getName();pi=0;score=0;
+  document.getElementById('codeArea').innerHTML='';
+  e.target.disabled=true;load();
+};
+getName();upd();
+</script></body></html>

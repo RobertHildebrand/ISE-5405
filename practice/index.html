@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><title>Practice Arcade — ISE 5405</title><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style></head><body>
+<header><h1>ISE 5405 · Practice Arcade</h1><div class="sub">Games and drills for the first weeks of Optimization I. <a href="../index.html">&larr; lectures</a></div></header>
+<main>
+<div class="card" style="border-top:5px solid #E5751F">
+  <b>How credit works:</b> each activity issues a <b>completion code</b> tied to your name when you
+  hit the score threshold. Paste the code into the corresponding Canvas quiz. Codes are personal —
+  they fail verification under anyone else's name.
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px">
+  <a class="card" href="corner-hunt.html" style="display:block;text-decoration:none;color:inherit;border-top:5px solid #861F41">
+    <h2 style="font-family:Fraunces,Georgia,serif;color:#861F41;margin:0 0 6px">Corner Hunt</h2>
+    <p style="margin:0;font-size:15px;color:#555">A random LP appears — click the optimal corner before the clock runs out. Unbounded and infeasible rounds lurk. <i>Trains: geometry, §1.4 &amp; Ch. 2.</i></p>
+  </a>
+  <a class="card" href="formulation-forge.html" style="display:block;text-decoration:none;color:inherit;border-top:5px solid #861F41">
+    <h2 style="font-family:Fraunces,Georgia,serif;color:#861F41;margin:0 0 6px">Formulation Forge</h2>
+    <p style="margin:0;font-size:15px;color:#555">Assemble LP models from word problems: decisions, constraints, objective — with feedback on every choice. <i>Trains: modeling, §1.2.</i></p>
+  </a>
+  <a class="card" href="proof-puzzles.html" style="display:block;text-decoration:none;color:inherit;border-top:5px solid #861F41">
+    <h2 style="font-family:Fraunces,Georgia,serif;color:#861F41;margin:0 0 6px">Proof Puzzles</h2>
+    <p style="margin:0;font-size:15px;color:#555">Scrambled proofs — restore the logical order. Includes the √2 proof <i>with</i> the famous lemma. <i>Trains: proof structure, Lectures 3–4.</i></p>
+  </a>
+  <a class="card" href="drill-deck.html" style="display:block;text-decoration:none;color:inherit;border-top:5px solid #861F41">
+    <h2 style="font-family:Fraunces,Georgia,serif;color:#861F41;margin:0 0 6px">Drill Deck</h2>
+    <p style="margin:0;font-size:15px;color:#555">Flashcard drills on notation, standard-form conversions, and vocabulary. Missed cards recycle until mastered; progress saves. <i>Trains: fluency.</i></p>
+  </a>
+</div>
+<div class="card note" style="margin-top:18px">
+  Instructors: <a href="verifier.html">completion-code verifier</a>. All tools are single HTML files —
+  no accounts, no server; progress and names stay in the student's browser.
+</div>
+</main>
+</body></html>

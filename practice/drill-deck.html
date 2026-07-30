@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en"><head><title>Drill Deck — ISE 5405</title><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style>
+<style>
+.opt{display:block;width:100%;text-align:left;background:#f6f3ef;border:2px solid #ddd;border-radius:10px;padding:10px 16px;margin:7px 0;font-size:16.5px;cursor:pointer;font-family:inherit}
+.opt:hover{border-color:#b25a12}
+.opt.right{background:#edf6ef;border-color:#1a7d3c}
+.opt.wrong{background:#fbeaea;border-color:#b3261e}
+.deckbtn{background:#fff;border:2px solid #ddd;border-radius:12px;padding:14px 18px;cursor:pointer;font-family:inherit;font-size:16px;text-align:left;flex:1;min-width:220px}
+.deckbtn:hover{border-color:#861F41}
+.prog{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:8px 0}
+.prog>div{height:100%;background:#1a7d3c;width:0;transition:width .3s}
+</style></head><body>
+<header><h1>Drill Deck</h1><div class="sub">Flashcard drills — cards you miss come back until you own them. <a href="index.html">&larr; practice hub</a></div></header>
+<main>
+<div class="card scorebar">
+  <span class="pill">Player: <span id="whoami">…</span></span>
+  <span class="pill" id="deckPill">Pick a deck</span>
+</div>
+<div class="card" id="picker">
+  <div style="display:flex;gap:14px;flex-wrap:wrap" id="deckBtns"></div>
+</div>
+<div class="card" id="play" style="display:none">
+  <div class="prog"><div id="progBar"></div></div>
+  <div id="q" style="font-size:19px;margin:12px 0"></div>
+  <div id="opts"></div>
+  <div id="fb" style="min-height:44px;font-size:16px"></div>
+  <div id="codeArea"></div>
+  <button class="btn sec" id="quitBtn" style="margin-top:8px">← decks</button>
+</div>
+</main>
+<script>
+function getName(){
+  let n=localStorage.getItem('ise5405name')||'';
+  let tries=0;
+  while((!n||n.trim().length<3)&&tries<3){
+    n=prompt('Enter your full name (as registered in Canvas) — used to generate your completion code:')||'';tries++;
+  }
+  if(!n||n.trim().length<3)n='Anonymous';
+  n=n.trim();localStorage.setItem('ise5405name',n);
+  const el=document.getElementById('whoami');
+  if(el)el.textContent=n;
+  return n;
+}
+function fnv(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-6);
+}
+function completionCode(activity,score){
+  const name=getName();
+  const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const payload=activity+'-'+score+'-'+date;
+  const h=fnv(payload+'|'+name.toLowerCase().replace(/\s+/g,' ')+'|VT-ISE5405-OPT1');
+  return payload+'-'+h;
+}
+function showCode(el,activity,score){
+  el.innerHTML='<div class="note" style="margin:14px 0 6px">Completion code — paste into the Canvas quiz:</div>'+
+    '<div class="codebox">'+completionCode(activity,score)+'</div>'+
+    '<div class="note" style="margin-top:6px">Tied to the name "'+(localStorage.getItem('ise5405name')||'')+'". Wrong name in Canvas = invalid code.</div>';
+}
+
+
+const DECKS={
+notation:{name:"Reading the Notation",cards:[
+ {q:"\\(A\\) is a \\(3\\times 5\\) matrix. For \\(Ax\\) to make sense, \\(x\\) must be…",o:[["a 5-vector",1,"Columns of A must match entries of x: 5."],["a 3-vector",0,"3 is the number of ROWS — that's the size of the output Ax."],["a 3×5 matrix",0,"x is a vector of variables."]]},
+ {q:"\\(c'x\\) where \\(c,x\\in\\mathbb{R}^n\\) is…",o:[["a single number (the inner product)",1,"Row times column: \\(\\sum c_ix_i\\)."],["an n-vector",0,"c'x contracts everything down to a scalar."],["an n×n matrix",0,"That would be xc' (outer product) — order matters!"]]},
+ {q:"In \\(Ax\\ge b\\) with \\(A\\in\\mathbb{R}^{m\\times n}\\), how many constraints are encoded?",o:[["m — one per row",1,"Each row aᵢ'x ≥ bᵢ is one constraint."],["n — one per column",0,"Columns correspond to variables."],["m·n",0,"Entries of A are coefficients, not constraints."]]},
+ {q:"\\(a_{ij}\\) refers to…",o:[["row \\(i\\), column \\(j\\)",1,"Row first, column second — constraint i, variable j."],["column \\(i\\), row \\(j\\)",0,"Backwards — burn in: row, then column."],["the ij-th constraint",0,"It's one coefficient inside constraint i."]]},
+ {q:"The feasible set \\(\\{x: Ax\\ge b\\}\\) is called a…",o:[["polyhedron",1,"Finite intersection of halfspaces — Def. 2.1."],["polytope (always)",0,"Polytope = BOUNDED polyhedron; feasible sets can be unbounded."],["hyperplane",0,"A hyperplane is a single equality a'x = b."]]},
+ {q:"\\(\\max\\, c'x\\) over \\(S\\) equals…",o:[["\\(-\\min\\,(-c)'x\\) over \\(S\\)",1,"The min/max flip — one theory covers both."],["\\(\\min\\, c'x\\) over \\(S\\)",0,"Min and max differ unless the objective is constant."],["\\(\\min\\, c'x\\) over \\(-S\\)",0,"Negate the OBJECTIVE, not the feasible set."]]}]},
+standard:{name:"Standard-Form Conversions",cards:[
+ {q:"To convert \\(a'x\\le b\\) into an equality, we…",o:[["add a slack: \\(a'x+s=b,\\; s\\ge0\\)",1,"Slack measures unused capacity."],["subtract a surplus: \\(a'x-s=b,\\; s\\ge0\\)",0,"Surplus is for ≥ constraints — direction matters."],["multiply by −1",0,"That flips ≤ to ≥ but doesn't make it an equality."]]},
+ {q:"A free variable \\(x_j\\) becomes standard-form-ready via…",o:[["\\(x_j=x_j^+-x_j^-\\) with \\(x_j^+,x_j^-\\ge0\\)",1,"Any real is a difference of two nonnegatives."],["\\(x_j = |y_j|\\)",0,"Absolute values are nonlinear — and only give x ≥ 0."],["dropping it",0,"Variables can't be discarded; solutions must map back."]]},
+ {q:"An equality \\(a'x=b\\) as ≥-constraints only:",o:[["\\(a'x\\ge b\\) and \\(-a'x\\ge -b\\)",1,"Two opposing inequalities pin the equality."],["\\(a'x\\ge b\\) alone",0,"That allows a'x > b."],["it can't be done",0,"It can — the standard trick."]]},
+ {q:"\\(x_j\\le 0\\) is handled by…",o:[["substituting \\(x_j=-x_j'\\) with \\(x_j'\\ge0\\)",1,"Flip the sign, get a nonnegative variable."],["a slack variable",0,"Slacks are for constraint rows, not variable signs."],["deleting the constraint",0,"Sign information would be lost."]]},
+ {q:"\\(\\min |x_1|+x_2\\) can be linearized because…",o:[["\\(|x_1|=\\min\\{z: x_1\\le z,\\, -x_1\\le z\\}\\) and minimization squeezes z down",1,"The epigraph trick — needs min + nonneg cost on |·|."],["absolute values are linear",0,"|x| has a kink at 0 — piecewise linear, not linear."],["it can't be",0,"It can — one extra variable, two constraints."]]},
+ {q:"After converting a general LP to standard form, the optimal COST is…",o:[["the same — the problems are equivalent",1,"Equivalence: solutions map both ways with equal cost."],["usually different",0,"Then conversion would be useless!"],["always 0",0,"No."]]}]},
+vocab:{name:"Vocabulary & Geometry",cards:[
+ {q:"A feasible solution is…",o:[["any x satisfying ALL constraints",1,"Pass/fail on constraints — no optimality involved."],["the best x",0,"That's an OPTIMAL solution — feasibility is weaker."],["a corner of P",0,"Interior points are feasible too."]]},
+ {q:"An LP is unbounded when…",o:[["for every K some feasible x has \\(c'x<K\\) (minimizing)",1,"Cost dives to −∞ along a feasible direction."],["the feasible set is unbounded",0,"P can be unbounded while the LP has a fine optimum — direction matters."],["it has no feasible points",0,"That's infeasible — a different failure."]]},
+ {q:"An extreme point of P is a point that…",o:[["is not a convex combination of two other points of P",1,"Def 2.6 — can't sit strictly between neighbors."],["has the lowest cost",0,"Extremeness is geometry, independent of any objective."],["touches at least one constraint",0,"Edge-interior points touch constraints but aren't extreme."]]},
+ {q:"Basic feasible solution (n variables) requires…",o:[["n linearly independent ACTIVE constraints + all constraints satisfied",1,"The algebraic corner test — and it equals vertex = extreme (Thm 2.3)."],["n active constraints, independence optional",0,"Without independence they may not pin a single point."],["exactly n−1 active constraints",0,"n−1 independent ones give an edge, not a corner."]]},
+ {q:"A degenerate basic solution has…",o:[["more than n active constraints",1,"Extra constraints crowd one point — multiple bases, same corner."],["fewer than n active constraints",0,"That's not basic at all."],["negative entries",0,"That's basic but INFEASIBLE — different concept."]]},
+ {q:"Every nonempty polytope is…",o:[["the convex hull of its extreme points",1,"Thm 2.9 — the inside-out representation."],["unbounded",0,"Polytopes are bounded by definition."],["full of lines",0,"Bounded sets contain no lines — that's why corners exist."]]}]}
+};
+let deck=null,queue=[],mastery={},cur=null;
+const q=document.getElementById('q'),optsEl=document.getElementById('opts'),fb=document.getElementById('fb');
+function ts(){if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([document.body]);}
+function saveP(){try{localStorage.setItem('ise5405drill',JSON.stringify(JSON.parse(localStorage.getItem('ise5405drill')||'{}')));}catch(e){}}
+function buildPicker(){
+  const el=document.getElementById('deckBtns');el.innerHTML='';
+  let prog={};try{prog=JSON.parse(localStorage.getItem('ise5405drill')||'{}');}catch(e){}
+  Object.keys(DECKS).forEach(k=>{
+    const b=document.createElement('button');b.className='deckbtn';
+    const done=prog[k]?' — <span class="good">mastered ✓</span>':'';
+    b.innerHTML='<b style="color:#861F41">'+DECKS[k].name+'</b><br><span class="note">'+DECKS[k].cards.length+' cards'+done+'</span>';
+    b.onclick=()=>start(k);
+    el.appendChild(b);
+  });
+}
+function start(k){
+  getName();deck=k;
+  queue=DECKS[k].cards.map((c,i)=>i);
+  mastery={};DECKS[k].cards.forEach((c,i)=>mastery[i]=0);
+  document.getElementById('picker').style.display='none';
+  document.getElementById('play').style.display='block';
+  document.getElementById('deckPill').textContent=DECKS[k].name;
+  document.getElementById('codeArea').innerHTML='';
+  next();
+}
+function prog(){
+  const total=Object.keys(mastery).length*2;
+  const got=Object.values(mastery).reduce((a,b)=>a+Math.min(b,2),0);
+  document.getElementById('progBar').style.width=(got/total*100)+'%';
+  return got>=total;
+}
+function next(){
+  if(prog()){finishDeck();return;}
+  // pick next card needing mastery
+  const need=Object.keys(mastery).filter(i=>mastery[i]<2);
+  cur=+need[Math.floor(Math.random()*need.length)];
+  const card=DECKS[deck].cards[cur];
+  q.innerHTML=card.q;fb.innerHTML='';
+  optsEl.innerHTML='';
+  let done=false;
+  card.o.map((o,i)=>i).sort(()=>Math.random()-0.5).forEach(i=>{
+    const o=card.o[i];
+    const b=document.createElement('button');b.className='opt';b.innerHTML=o[0];
+    b.onclick=()=>{
+      if(done)return;
+      if(o[1]){
+        done=true;b.classList.add('right');
+        mastery[cur]++;
+        fb.innerHTML='<span class="good">✓</span> '+o[2]+(mastery[cur]<2?' <span class="note">(once more later to master)</span>':' <span class="good">Mastered!</span>');
+        setTimeout(next,1400);
+      }else{
+        b.classList.add('wrong');
+        mastery[cur]=0;
+        fb.innerHTML='<span class="bad">✗</span> '+o[2]+' <span class="note">(card recycled)</span>';
+      }
+      prog();ts();
+    };
+    optsEl.appendChild(b);
+  });
+  prog();ts();
+}
+function finishDeck(){
+  q.innerHTML='<span class="big">Deck mastered: <b>'+DECKS[deck].name+'</b></span>';
+  optsEl.innerHTML='';fb.innerHTML='';
+  let p={};try{p=JSON.parse(localStorage.getItem('ise5405drill')||'{}');}catch(e){}
+  p[deck]=true;
+  try{localStorage.setItem('ise5405drill',JSON.stringify(p));}catch(e){}
+  showCode(document.getElementById('codeArea'),'DD'+deck.slice(0,3).toUpperCase(),100);
+}
+document.getElementById('quitBtn').onclick=()=>{
+  document.getElementById('play').style.display='none';
+  document.getElementById('picker').style.display='block';
+  document.getElementById('deckPill').textContent='Pick a deck';
+  buildPicker();
+};
+getName();buildPicker();
+</script></body></html>

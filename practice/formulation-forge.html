@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="en"><head><title>Formulation Forge — ISE 5405</title><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style>
+<style>
+.opt{display:block;width:100%;text-align:left;background:#f6f3ef;border:2px solid #ddd;border-radius:10px;padding:10px 16px;margin:7px 0;font-size:16.5px;cursor:pointer;font-family:inherit}
+.opt:hover{border-color:#b25a12}
+.opt.right{background:#edf6ef;border-color:#1a7d3c}
+.opt.wrong{background:#fbeaea;border-color:#b3261e}
+.stage{font-size:14px;letter-spacing:2px;color:#E5751F;font-weight:700;text-transform:uppercase}
+</style></head><body>
+<header><h1>Formulation Forge</h1><div class="sub">Build LP models piece by piece: decisions → constraints → objective. <a href="index.html">&larr; practice hub</a></div></header>
+<main>
+<div class="card scorebar">
+  <span class="pill">Player: <span id="whoami">…</span></span>
+  <span class="pill">Problem <span id="pnum">–</span>/4</span>
+  <span class="pill">Score <span id="score">0</span></span>
+  <button class="btn" id="startBtn">Start ▶</button>
+</div>
+<div class="card" id="story" style="font-size:17px"></div>
+<div class="card">
+  <div class="stage" id="stage"></div>
+  <div id="q" style="font-size:18px;margin:10px 0"></div>
+  <div id="opts"></div>
+  <div id="fb" style="min-height:48px;font-size:16px"></div>
+  <div id="codeArea"></div>
+</div>
+</main>
+<script>
+function getName(){
+  let n=localStorage.getItem('ise5405name')||'';
+  let tries=0;
+  while((!n||n.trim().length<3)&&tries<3){
+    n=prompt('Enter your full name (as registered in Canvas) — used to generate your completion code:')||'';tries++;
+  }
+  if(!n||n.trim().length<3)n='Anonymous';
+  n=n.trim();localStorage.setItem('ise5405name',n);
+  const el=document.getElementById('whoami');
+  if(el)el.textContent=n;
+  return n;
+}
+function fnv(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-6);
+}
+function completionCode(activity,score){
+  const name=getName();
+  const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const payload=activity+'-'+score+'-'+date;
+  const h=fnv(payload+'|'+name.toLowerCase().replace(/\s+/g,' ')+'|VT-ISE5405-OPT1');
+  return payload+'-'+h;
+}
+function showCode(el,activity,score){
+  el.innerHTML='<div class="note" style="margin:14px 0 6px">Completion code — paste into the Canvas quiz:</div>'+
+    '<div class="codebox">'+completionCode(activity,score)+'</div>'+
+    '<div class="note" style="margin-top:6px">Tied to the name "'+(localStorage.getItem('ise5405name')||'')+'". Wrong name in Canvas = invalid code.</div>';
+}
+
+
+const P=[
+{name:"The Bakery",story:"A bakery makes cakes, cookies, and muffins. Profits: $6, $1.50, $2.50 each. Per unit — cake: 500g flour, 200g sugar, 60 min oven; cookie: 100g, 50g, 10 min; muffin: 200g, 80g, 20 min. Available daily: 4800g flour, 2060g sugar, 480 oven-minutes. Maximize profit.",
+ steps:[
+ {stage:"Step 1 · Decisions",q:"What are the decision variables?",opts:[
+  ["\\(x_1,x_2,x_3\\) = number of cakes, cookies, muffins to bake",1,"The quantities we control — one variable per product."],
+  ["\\(x_1,x_2,x_3\\) = grams of flour, sugar, and oven minutes used",0,"Those are resources consumed — determined BY the decisions, not chosen freely."],
+  ["\\(x\\) = total profit",0,"Profit is the objective's value, an output — not something we set directly."]]},
+ {stage:"Step 2 · A constraint",q:"Which inequality captures the flour limit?",opts:[
+  ["\\(500x_1+100x_2+200x_3\\le 4800\\)",1,"Usage (per-unit × amount, summed) at most availability."],
+  ["\\(500x_1+100x_2+200x_3\\ge 4800\\)",0,"That would FORCE using at least all the flour — the limit is an upper bound."],
+  ["\\(x_1+x_2+x_3\\le 4800\\)",0,"Units don't match: cakes + cookies ≠ grams. Each product uses a different amount of flour."]]},
+ {stage:"Step 3 · Objective",q:"And the objective function?",opts:[
+  ["\\(\\max\\; 6x_1+1.5x_2+2.5x_3\\)",1,"Per-unit profit times quantity, summed — the linearity axioms at work."],
+  ["\\(\\max\\; x_1+x_2+x_3\\)",0,"That maximizes item COUNT — a cookie would count as much as a cake."],
+  ["\\(\\min\\; 6x_1+1.5x_2+2.5x_3\\)",0,"Minimizing profit would be a very strange bakery."]]}]},
+{name:"Welding Robots",story:"You have 21 units of alloy (TAA), a joining robot for 23h, a cutting robot for 17h. Sell bookcases ($18: 2 TAA, 3h join, 1h cut), desks ($16: 2, 2, 2), cabinets ($10: 1, 2, 1). Maximize revenue.",
+ steps:[
+ {stage:"Step 1 · Decisions",q:"Decision variables?",opts:[
+  ["\\(x_1,x_2,x_3\\) = number of bookcases, desks, cabinets",1,"One per product — the standard production-planning pattern."],
+  ["\\(x_1,x_2\\) = hours to run each robot",0,"Robot hours are consumed by production decisions; they're not free choices."],
+  ["\\(x_i\\) = 1 if we make product \\(i\\), else 0",0,"That's a yes/no model — but we choose HOW MANY, a quantity."]]},
+ {stage:"Step 2 · A constraint",q:"The joining robot's limit (23 h)?",opts:[
+  ["\\(3x_1+2x_2+2x_3\\le 23\\)",1,"Hours used by each product times quantity, at most 23."],
+  ["\\(2x_1+2x_2+x_3\\le 23\\)",0,"Those are the TAA coefficients — careful reading the data table!"],
+  ["\\(3x_1+2x_2+2x_3 = 23\\)",0,"Equality would force using every robot-hour — idle time is allowed."]]},
+ {stage:"Step 3 · Objective",q:"Objective?",opts:[
+  ["\\(\\max\\; 18x_1+16x_2+10x_3\\)",1,"Revenue per unit times units."],
+  ["\\(\\max\\; 21+23+17\\)",0,"That's a constant — resources aren't the goal, revenue is."],
+  ["\\(\\min\\; 18x_1+16x_2+10x_3\\)",0,"We want more revenue, not less."]]}]},
+{name:"Night-Shift Nurses",story:"Demand for nurses is d1,…,d7 for each night of the week. Every nurse works 5 consecutive nights. Hire as few nurses as possible.",
+ steps:[
+ {stage:"Step 1 · Decisions",q:"The clever variable choice is…",opts:[
+  ["\\(x_j\\) = number of nurses STARTING their 5-night stretch on night \\(j\\)",1,"Start-day variables bake the 5-consecutive rule into the model's structure."],
+  ["\\(y_j\\) = number of nurses WORKING on night \\(j\\)",0,"With y you can't express '5 consecutive nights' linearly — variable choice is design!"],
+  ["\\(z\\) = total nurses hired",0,"One number can't track when people work; the schedule shape is lost."]]},
+ {stage:"Step 2 · A constraint",q:"Coverage on night 1 (who is on duty that night)?",opts:[
+  ["\\(x_1+x_4+x_5+x_6+x_7\\ge d_1\\)",1,"Working night 1 = started within the previous 5 nights (wrap around the week)."],
+  ["\\(x_1\\ge d_1\\)",0,"Nurses who started on nights 4–7 are also still on duty night 1."],
+  ["\\(x_1+x_2+x_3+x_4+x_5\\ge d_1\\)",0,"Those are the starters covering night 5 — trace the 5-night windows carefully."]]},
+ {stage:"Step 3 · Objective",q:"Objective?",opts:[
+  ["\\(\\min\\; x_1+x_2+\\cdots+x_7\\)",1,"Every nurse starts exactly once, so summing starters counts all hires."],
+  ["\\(\\min\\; d_1+\\cdots+d_7\\)",0,"Demand is data — we can't minimize what we don't control."],
+  ["\\(\\max\\; x_1+\\cdots+x_7\\)",0,"Hiring as MANY nurses as possible is generous but not the goal."]]}]},
+{name:"A Cheap Adequate Diet",story:"Foods 1..n have cost c_j per unit and a_ij units of nutrient i per unit. A diet must supply at least b_i of each nutrient i. Find the cheapest adequate diet.",
+ steps:[
+ {stage:"Step 1 · Decisions",q:"Decision variables?",opts:[
+  ["\\(x_j\\) = units of food \\(j\\) to buy",1,"Continuous quantities of each food — the classic Stigler diet setup."],
+  ["\\(x_i\\) = amount of nutrient \\(i\\) consumed",0,"Nutrients are consequences of food choices, computed via the a-coefficients."],
+  ["\\(x\\) = total money spent",0,"Cost is the objective value, not a lever."]]},
+ {stage:"Step 2 · A constraint",q:"The nutrient-\\(i\\) requirement?",opts:[
+  ["\\(\\sum_j a_{ij}x_j \\ge b_i\\)",1,"Total intake of nutrient i, summed across foods, must MEET the requirement — a lower bound (our min-with-≥ convention!)."],
+  ["\\(\\sum_j a_{ij}x_j \\le b_i\\)",0,"An upper bound would cap nutrition — requirements are floors, not ceilings."],
+  ["\\(a_{ij}x_j\\ge b_i\\) for every \\(j\\)",0,"That forces EACH food alone to meet the requirement — foods team up via the sum."]]},
+ {stage:"Step 3 · Objective",q:"Objective?",opts:[
+  ["\\(\\min\\; \\sum_j c_j x_j\\)",1,"Cheapest adequate diet: minimize cost subject to demand lower bounds — the textbook's canonical form."],
+  ["\\(\\max\\; \\sum_j c_j x_j\\)",0,"The most expensive diet is easy to find and hard to justify."],
+  ["\\(\\min\\; \\sum_i b_i\\)",0,"Requirements are given data."]]}]}
+];
+let pi=0,si=0,score=0,started=false;
+const story=document.getElementById('story'),stg=document.getElementById('stage'),
+      q=document.getElementById('q'),optsEl=document.getElementById('opts'),fb=document.getElementById('fb');
+function ts(){if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([document.body]);}
+function upd(){document.getElementById('pnum').textContent=started?(pi+1):'–';document.getElementById('score').textContent=score;}
+function render(){
+  if(pi>=P.length){finish();return;}
+  const prob=P[pi],step=prob.steps[si];
+  story.innerHTML='<b style="font-family:Fraunces,Georgia,serif;color:#861F41;font-size:20px">'+prob.name+'</b><br>'+prob.story;
+  stg.textContent=step.stage;q.innerHTML=step.q;fb.innerHTML='';
+  optsEl.innerHTML='';
+  const shuffled=step.opts.map((o,i)=>i).sort(()=>Math.random()-0.5);
+  let done=false;
+  shuffled.forEach(i=>{
+    const o=step.opts[i];
+    const b=document.createElement('button');b.className='opt';b.innerHTML=o[0];
+    b.onclick=()=>{
+      if(done&&!o[1])return;
+      if(o[1]){
+        b.classList.add('right');
+        if(!done){score+=10;fb.innerHTML='<span class="good">✓</span> '+o[2];}
+        done=true;upd();ts();
+        setTimeout(()=>{si++;if(si>=prob.steps.length){pi++;si=0;}render();},1600);
+      }else{
+        b.classList.add('wrong');
+        if(!done){score=Math.max(0,score-2);}
+        fb.innerHTML='<span class="bad">✗</span> '+o[2];upd();ts();
+      }
+    };
+    optsEl.appendChild(b);
+  });
+  upd();ts();
+}
+function finish(){
+  story.innerHTML='';stg.textContent='';optsEl.innerHTML='';
+  q.innerHTML='<span class="big">All four models forged — score <b>'+score+'</b>/120</span>';
+  fb.innerHTML='';
+  if(score>=80)showCode(document.getElementById('codeArea'),'FF',score);
+  else document.getElementById('codeArea').innerHTML='<div class="note">Score 80+ for a completion code — run it back!</div>';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('startBtn').textContent='Play again ▶';
+  started=false;
+}
+document.getElementById('startBtn').onclick=e=>{
+  getName();pi=0;si=0;score=0;started=true;
+  document.getElementById('codeArea').innerHTML='';
+  e.target.disabled=true;render();
+};
+getName();upd();
+</script></body></html>

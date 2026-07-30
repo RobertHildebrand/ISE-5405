@@ -1,0 +1,256 @@
+<!DOCTYPE html><html lang="en"><head><title>Corner Hunt — ISE 5405</title><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",system-ui,sans-serif;background:#f5f2ee;color:#26282e;min-height:100vh}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:20px 6vw 16px}
+header h1{margin:0;font-size:26px;font-family:"Fraunces",Georgia,serif}
+header .sub{opacity:.85;font-size:14px;margin-top:3px}
+header a{color:#f6c9a8;text-decoration:none;font-size:14px}
+main{max-width:980px;margin:0 auto;padding:22px 4vw 60px}
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:16px;cursor:pointer;font-family:inherit}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+button.btn:disabled{opacity:.45;cursor:default}
+.good{color:#1a7d3c;font-weight:700}.bad{color:#b3261e;font-weight:700}.mid{color:#b25a12;font-weight:700}
+.big{font-size:22px}
+input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
+.scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
+.codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
+.note{font-size:14px;color:#777}
+</style></head><body>
+<header><h1>Corner Hunt</h1><div class="sub">Click the optimal corner before time runs out — but watch for unbounded and infeasible traps. <a href="index.html">&larr; practice hub</a></div></header>
+<main>
+<div class="card">
+  <div class="scorebar">
+    <span class="pill">Player: <span id="whoami">…</span></span>
+    <span class="pill">Round <span id="round">–</span>/10</span>
+    <span class="pill">Score <span id="score">0</span></span>
+    <span class="pill">Streak <span id="streak">0</span></span>
+    <span class="pill">⏱ <span id="timer">–</span>s</span>
+    <button class="btn" id="startBtn">Start game ▶</button>
+  </div>
+</div>
+<div class="card">
+  <div style="display:flex;gap:18px;flex-wrap:wrap">
+    <canvas id="cv" width="560" height="440" style="border:1px solid #eee;border-radius:10px;background:#fff;max-width:100%"></canvas>
+    <div style="flex:1;min-width:240px">
+      <div id="obj" class="big" style="min-height:34px"></div>
+      <div class="note" style="margin:8px 0 14px">Click the corner that <b>maximizes</b> the objective. If no optimum exists, say so:</div>
+      <button class="btn sec" id="unbBtn">It's UNBOUNDED</button>
+      <button class="btn sec" id="infBtn">It's INFEASIBLE</button>
+      <div id="fb" style="min-height:60px;margin-top:14px;font-size:17px"></div>
+      <div id="codeArea"></div>
+    </div>
+  </div>
+</div>
+<div class="card note">Scoring: 100 × streak multiplier, +5/second remaining. 10 rounds. Traps appear from round 3. Based on BT §1.4 — the geometry from Lectures 2 &amp; 4.</div>
+</main>
+<script>
+function getName(){
+  let n=localStorage.getItem('ise5405name')||'';
+  let tries=0;
+  while((!n||n.trim().length<3)&&tries<3){
+    n=prompt('Enter your full name (as registered in Canvas) — used to generate your completion code:')||'';tries++;
+  }
+  if(!n||n.trim().length<3)n='Anonymous';
+  n=n.trim();localStorage.setItem('ise5405name',n);
+  const el=document.getElementById('whoami');
+  if(el)el.textContent=n;
+  return n;
+}
+function fnv(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-6);
+}
+function completionCode(activity,score){
+  const name=getName();
+  const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const payload=activity+'-'+score+'-'+date;
+  const h=fnv(payload+'|'+name.toLowerCase().replace(/\s+/g,' ')+'|VT-ISE5405-OPT1');
+  return payload+'-'+h;
+}
+function showCode(el,activity,score){
+  el.innerHTML='<div class="note" style="margin:14px 0 6px">Completion code — paste into the Canvas quiz:</div>'+
+    '<div class="codebox">'+completionCode(activity,score)+'</div>'+
+    '<div class="note" style="margin-top:6px">Tied to the name "'+(localStorage.getItem('ise5405name')||'')+'". Wrong name in Canvas = invalid code.</div>';
+}
+
+function clipHP(poly,a,b,c){
+  const out=[],n=poly.length;if(!n)return out;
+  for(let i=0;i<n;i++){
+    const P=poly[i],Q=poly[(i+1)%n];
+    const dP=a*P[0]+b*P[1]-c,dQ=a*Q[0]+b*Q[1]-c;
+    if(dP<=1e-9)out.push(P);
+    if((dP<-1e-9&&dQ>1e-9)||(dP>1e-9&&dQ<-1e-9)){
+      const t=dP/(dP-dQ);out.push([P[0]+t*(Q[0]-P[0]),P[1]+t*(Q[1]-P[1])]);
+    }
+  }
+  return out;
+}
+function dedupe(poly){const v=[];for(const p of poly)if(!v.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<1e-6))v.push(p);return v;}
+const BIG=500;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const view={xmin:-6,xmax:6,ymin:-5,ymax:5};
+const X=x=>(x-view.xmin)/(view.xmax-view.xmin)*cv.width;
+const Y=y=>cv.height-(y-view.ymin)/(view.ymax-view.ymin)*cv.height;
+let state=null,timerInt=null;
+function rnd(a,b){return a+Math.random()*(b-a);}
+function genRound(kind){
+  let cons=[];
+  if(kind==='infeasible'){
+    const th=rnd(0,6.28);
+    cons.push([Math.cos(th),Math.sin(th),-1.2]);
+    cons.push([-Math.cos(th),-Math.sin(th),-1.2]);
+    for(let i=0;i<3;i++){const t=rnd(0,6.28);cons.push([Math.cos(t),Math.sin(t),rnd(1.5,3.5)]);}
+  }else if(kind==='unbounded'){
+    const base=rnd(0,6.28);
+    for(let i=0;i<3;i++){const t=base+rnd(-1.1,1.1);cons.push([Math.cos(t),Math.sin(t),rnd(1.2,3)]);}
+  }else{
+    const k=4+Math.floor(Math.random()*3);
+    const offs=rnd(0,6.28);
+    for(let i=0;i<k;i++){
+      const t=offs+i*6.283/k+rnd(-0.35,0.35);
+      cons.push([Math.cos(t),Math.sin(t),rnd(1.4,3.8)]);
+    }
+  }
+  let poly=[[-BIG,-BIG],[BIG,-BIG],[BIG,BIG],[-BIG,BIG]];
+  cons.forEach(c=>poly=clipHP(poly,c[0],c[1],c[2]));
+  const verts=dedupe(poly);
+  const real=verts.filter(p=>Math.abs(p[0])<BIG-1&&Math.abs(p[1])<BIG-1);
+  const th=rnd(0,6.28);
+  const c=[Math.cos(th),Math.sin(th)];
+  let answer,best=null;
+  if(!verts.length)answer='infeasible';
+  else{
+    let bi=0;verts.forEach((p,i)=>{if(c[0]*p[0]+c[1]*p[1]>c[0]*verts[bi][0]+c[1]*verts[bi][1])bi=i;});
+    if(Math.abs(verts[bi][0])>BIG-1||Math.abs(verts[bi][1])>BIG-1)answer='unbounded';
+    else{answer='vertex';best=verts[bi];}
+  }
+  // validate variety: bounded rounds need >=3 real verts, unbounded needs real region visible
+  return {cons,verts:real,c,answer,best};
+}
+function makeRound(n){
+  let kind='bounded';
+  if(n>=3){const r=Math.random();if(r<0.18)kind='unbounded';else if(r<0.3)kind='infeasible';}
+  for(let t=0;t<60;t++){
+    const R=genRound(kind);
+    if(kind==='infeasible'&&R.answer==='infeasible')return R;
+    if(kind==='unbounded'&&R.answer==='unbounded'&&R.verts.length>=1)return R;
+    if(kind==='bounded'&&R.answer==='vertex'&&R.verts.length>=3)return R;
+  }
+  return genRound('bounded');
+}
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#eee';
+  for(let g=Math.ceil(view.xmin);g<=view.xmax;g++){ctx.beginPath();ctx.moveTo(X(g),0);ctx.lineTo(X(g),cv.height);ctx.stroke();}
+  for(let g=Math.ceil(view.ymin);g<=view.ymax;g++){ctx.beginPath();ctx.moveTo(0,Y(g));ctx.lineTo(cv.width,Y(g));ctx.stroke();}
+  ctx.strokeStyle='#999';ctx.beginPath();ctx.moveTo(0,Y(0));ctx.lineTo(cv.width,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(0),0);ctx.lineTo(X(0),cv.height);ctx.stroke();
+  if(!state)return;
+  let poly=[[-BIG,-BIG],[BIG,-BIG],[BIG,BIG],[-BIG,BIG]];
+  state.cons.forEach(c=>poly=clipHP(poly,c[0],c[1],c[2]));
+  let dp=poly.slice();
+  dp=clipHP(dp,1,0,view.xmax);dp=clipHP(dp,-1,0,-view.xmin);dp=clipHP(dp,0,1,view.ymax);dp=clipHP(dp,0,-1,-view.ymin);
+  if(dp.length){
+    ctx.beginPath();dp.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.closePath();
+    ctx.fillStyle='rgba(134,31,65,.14)';ctx.fill();ctx.strokeStyle='#861F41';ctx.lineWidth=2;ctx.stroke();
+  }
+  state.cons.forEach(c=>{
+    ctx.strokeStyle='#c9b8a8';ctx.lineWidth=1.4;
+    ctx.beginPath();
+    if(Math.abs(c[1])>1e-9){ctx.moveTo(X(view.xmin),Y((c[2]-c[0]*view.xmin)/c[1]));ctx.lineTo(X(view.xmax),Y((c[2]-c[0]*view.xmax)/c[1]));}
+    else{ctx.moveTo(X(c[2]/c[0]),0);ctx.lineTo(X(c[2]/c[0]),cv.height);}
+    ctx.stroke();
+  });
+  state.verts.forEach(p=>{
+    ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),7,0,7);
+    ctx.fillStyle='#26282e';ctx.fill();
+  });
+  // objective arrow from center
+  const cx=X(0),cy=Y(0);
+  ctx.strokeStyle='#33658a';ctx.fillStyle='#33658a';ctx.lineWidth=3;
+  const ax=cx+state.c[0]*60,ay=cy-state.c[1]*60;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ax,ay);ctx.stroke();
+  const ang=Math.atan2(ay-cy,ax-cx);
+  ctx.beginPath();ctx.moveTo(ax,ay);
+  ctx.lineTo(ax-11*Math.cos(ang-0.4),ay-11*Math.sin(ang-0.4));
+  ctx.lineTo(ax-11*Math.cos(ang+0.4),ay-11*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fill();
+  ctx.font='bold 14px sans-serif';ctx.fillText('c',ax+8,ay-4);
+}
+let round=0,score=0,streak=0,timeLeft=0,answered=true;
+const fb=document.getElementById('fb');
+function upd(){
+  document.getElementById('round').textContent=round||'–';
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  document.getElementById('timer').textContent=answered?'–':timeLeft;
+}
+function nextRound(){
+  if(round>=10){finish();return;}
+  round++;answered=false;timeLeft=20;
+  state=makeRound(round);
+  document.getElementById('obj').innerHTML='maximize&nbsp; <b>'+state.c[0].toFixed(2)+'·x<sub>1</sub> '+(state.c[1]<0?'−':'+')+' '+Math.abs(state.c[1]).toFixed(2)+'·x<sub>2</sub></b>';
+  fb.innerHTML='';
+  draw();upd();
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    timeLeft--;upd();
+    if(timeLeft<=0)resolve(false,'Time! ');
+  },1000);
+}
+function resolve(ok,prefix){
+  if(answered)return;
+  answered=true;clearInterval(timerInt);
+  if(ok){
+    streak++;
+    const pts=100*Math.min(streak,5)+5*Math.max(timeLeft,0);
+    score+=pts;
+    fb.innerHTML='<span class="good">'+(prefix||'')+'Correct! +'+pts+'</span>';
+  }else{
+    streak=0;
+    const why=state.answer==='vertex'?'the optimum was the highlighted corner':'it was '+state.answer.toUpperCase();
+    fb.innerHTML='<span class="bad">'+(prefix||'')+'Miss — '+why+'.</span>';
+    if(state.best){
+      draw();
+      ctx.beginPath();ctx.arc(X(state.best[0]),Y(state.best[1]),12,0,7);
+      ctx.strokeStyle='#1a7d3c';ctx.lineWidth=3.5;ctx.stroke();
+    }
+  }
+  upd();
+  setTimeout(nextRound,1400);
+}
+cv.addEventListener('pointerdown',e=>{
+  if(answered||!state)return;
+  const r=cv.getBoundingClientRect();
+  const mx=(e.clientX-r.left)*(cv.width/r.width),my=(e.clientY-r.top)*(cv.height/r.height);
+  if(state.answer!=='vertex'){resolve(false);return;}
+  const hit=state.verts.find(p=>Math.hypot(X(p[0])-mx,Y(p[1])-my)<16);
+  if(!hit)return;
+  resolve(Math.hypot(hit[0]-state.best[0],hit[1]-state.best[1])<1e-6);
+});
+document.getElementById('unbBtn').onclick=()=>{if(!answered)resolve(state.answer==='unbounded');};
+document.getElementById('infBtn').onclick=()=>{if(!answered)resolve(state.answer==='infeasible');};
+function finish(){
+  state=null;draw();
+  fb.innerHTML='<span class="big">Game over — final score <b>'+score+'</b></span>';
+  if(score>=400)showCode(document.getElementById('codeArea'),'CH',score);
+  else document.getElementById('codeArea').innerHTML='<div class="note">Score 400+ to earn a completion code. Try again!</div>';
+  document.getElementById('startBtn').textContent='Play again ▶';
+  document.getElementById('startBtn').disabled=false;
+}
+document.getElementById('startBtn').onclick=e=>{
+  getName();round=0;score=0;streak=0;
+  e.target.disabled=true;
+  document.getElementById('codeArea').innerHTML='';
+  nextRound();
+};
+getName();draw();upd();
+</script></body></html>
