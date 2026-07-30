@@ -211,8 +211,56 @@ function show(i){
 }
 function next(){show(cur+1);}
 function prev(){show(cur-1);}
-function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
+let viewZ=1;
+function baseFit(){return Math.min(innerWidth/1280,innerHeight/720);}
+function setDeckView(nx,ny,W){
+  const H=W*720/1280,vw=innerWidth,vh=innerHeight;
+  if(W<=vw+1)nx=(vw-W)/2;else nx=Math.min(0,Math.max(vw-W,nx));
+  if(H<=vh+1)ny=(vh-H)/2;else ny=Math.min(0,Math.max(vh-H,ny));
+  const s=W/1280;
+  const tx=nx-(vw-W)/2,ty=ny-(vh-H)/2;
+  deck.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
+  viewZ=s/baseFit();
+  if(typeof syncZoom==='function')syncZoom();
+}
+function fit(){
+  if(document.body.classList.contains('handout')){deck.style.transform='none';return;}
+  viewZ=1;
+  deck.style.transform='scale('+baseFit()+')';
+}
+function appZoom(rz,c0,c1){
+  const r0=deck.getBoundingClientRect();
+  let W=r0.width*rz;
+  const minW=1280*baseFit();
+  W=Math.min(minW*6,Math.max(minW,W));
+  const eff=W/r0.width;
+  const nx=c1[0]-(c0[0]-r0.left)*eff;
+  const ny=c1[1]-(c0[1]-r0.top)*eff;
+  if(W<=minW+0.5){fit();if(typeof syncZoom==='function')syncZoom();if(typeof updatePdfWindow==='function')updatePdfWindow();return;}
+  setDeckView(nx,ny,W);
+  if(typeof updatePdfWindow==='function')updatePdfWindow();
+}
 addEventListener('resize',fit);
+/* app-controlled two-finger pan & zoom: smooth, clamped to the document — no native-pinch jank */
+let g2=null;
+function g2pts(e){return [[e.touches[0].clientX,e.touches[0].clientY],[e.touches[1].clientX,e.touches[1].clientY]];}
+addEventListener('touchstart',e=>{
+  if(document.body.classList.contains('handout'))return;
+  if(e.touches.length===2){g2={p:g2pts(e)};e.preventDefault();}
+},{passive:false});
+addEventListener('touchmove',e=>{
+  if(!g2||e.touches.length!==2)return;
+  if(document.body.classList.contains('handout')){g2=null;return;}
+  e.preventDefault();
+  const p=g2pts(e);
+  const d0=Math.hypot(g2.p[0][0]-g2.p[1][0],g2.p[0][1]-g2.p[1][1]);
+  const d1=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
+  const c0=[(g2.p[0][0]+g2.p[1][0])/2,(g2.p[0][1]+g2.p[1][1])/2];
+  const c1=[(p[0][0]+p[1][0])/2,(p[0][1]+p[1][1])/2];
+  appZoom(d1/Math.max(1,d0),c0,c1);
+  g2={p:p};
+},{passive:false});
+addEventListener('touchend',e=>{if(e.touches.length<2)g2=null;});
 async function toggleHandout(){
   const entering=!document.body.classList.contains('handout');
   if(entering&&typeof renderAllForPrint==='function')await renderAllForPrint();
@@ -382,14 +430,14 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b732';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b733';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
 let lastVVSig='';
 function syncZoom(){
   const v=vvState();
-  const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100)].join(',');
+  const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100),Math.round((viewZ||1)*100)].join(',');
   if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();}
 }
 setInterval(syncZoom,400);
@@ -613,8 +661,9 @@ function fitScale(page){
 function hiScale(page){
   const vp=page.getViewport({scale:1});
   const fs=fitScale(page);
-  const want=Math.min(3,Math.max(2,(window.devicePixelRatio||1)*1.5));
-  const cap=2600/Math.max(vp.width*fs,vp.height*fs);   /* keep canvases <= ~2600px on the long side */
+  const zx=Math.min(2,Math.max(1,(typeof viewZ==='number'?viewZ:1)));
+  const want=Math.min(3*zx,Math.max(2,(window.devicePixelRatio||1)*1.5*zx));
+  const cap=3500/Math.max(vp.width*fs,vp.height*fs);
   return Math.min(want,Math.max(1.5,cap));
 }
 function queueRender(job){renderChain=renderChain.then(job).catch(e=>console.warn('render',e));return renderChain;}
@@ -635,16 +684,23 @@ async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder +
   sec.prepend(img);
 }
 async function ensureHi(sec){ /* full-resolution live canvas for nearby pages */
-  if(sec.querySelector('canvas.pdfhi')||!pdfDoc)return;
+  if(!pdfDoc)return;
   const p=+sec.dataset.pdfpage;
   const page=await pdfDoc.getPage(p);
-  const vp=page.getViewport({scale:fitScale(page)*hiScale(page)});
+  const needed=hiScale(page);
+  const existing=sec.querySelector('canvas.pdfhi');
+  if(existing){
+    if(+existing.dataset.rs>=needed*0.85)return;
+    existing.width=0;existing.height=0;existing.remove();
+  }
+  const vp=page.getViewport({scale:fitScale(page)*needed});
   const cv=document.createElement('canvas');
   cv.className='pdfhi pdfimg';
   cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
   const cx=cv.getContext('2d');
   cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
   await page.render({canvasContext:cx,viewport:vp}).promise;
+  cv.dataset.rs=needed;
   if(!sec.querySelector('canvas.pdfhi'))sec.appendChild(cv); /* img below, hi-res canvas on top */
   else{cv.width=0;cv.height=0;}
 }
@@ -652,7 +708,8 @@ function updatePdfWindow(){
   if(!pdfDoc)return;
   slides.forEach((sec,i)=>{
     if(!sec.classList.contains('pdfpage'))return;
-    if(Math.abs(i-cur)<=2){
+    const win=(typeof viewZ==='number'&&viewZ>1.8)?1:2;
+    if(Math.abs(i-cur)<=win){
       queueRender(()=>ensureImg(sec));
       queueRender(()=>ensureHi(sec));
     }else{

@@ -1105,8 +1105,56 @@ deck.addEventListener('click',e=>{
   if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
   next();
 });
-function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
+let viewZ=1;
+function baseFit(){return Math.min(innerWidth/1280,innerHeight/720);}
+function setDeckView(nx,ny,W){
+  const H=W*720/1280,vw=innerWidth,vh=innerHeight;
+  if(W<=vw+1)nx=(vw-W)/2;else nx=Math.min(0,Math.max(vw-W,nx));
+  if(H<=vh+1)ny=(vh-H)/2;else ny=Math.min(0,Math.max(vh-H,ny));
+  const s=W/1280;
+  const tx=nx-(vw-W)/2,ty=ny-(vh-H)/2;
+  deck.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
+  viewZ=s/baseFit();
+  if(typeof syncZoom==='function')syncZoom();
+}
+function fit(){
+  if(document.body.classList.contains('handout')){deck.style.transform='none';return;}
+  viewZ=1;
+  deck.style.transform='scale('+baseFit()+')';
+}
+function appZoom(rz,c0,c1){
+  const r0=deck.getBoundingClientRect();
+  let W=r0.width*rz;
+  const minW=1280*baseFit();
+  W=Math.min(minW*6,Math.max(minW,W));
+  const eff=W/r0.width;
+  const nx=c1[0]-(c0[0]-r0.left)*eff;
+  const ny=c1[1]-(c0[1]-r0.top)*eff;
+  if(W<=minW+0.5){fit();if(typeof syncZoom==='function')syncZoom();if(typeof updatePdfWindow==='function')updatePdfWindow();return;}
+  setDeckView(nx,ny,W);
+  if(typeof updatePdfWindow==='function')updatePdfWindow();
+}
 addEventListener('resize',fit);
+/* app-controlled two-finger pan & zoom: smooth, clamped to the document — no native-pinch jank */
+let g2=null;
+function g2pts(e){return [[e.touches[0].clientX,e.touches[0].clientY],[e.touches[1].clientX,e.touches[1].clientY]];}
+addEventListener('touchstart',e=>{
+  if(document.body.classList.contains('handout'))return;
+  if(e.touches.length===2){g2={p:g2pts(e)};e.preventDefault();}
+},{passive:false});
+addEventListener('touchmove',e=>{
+  if(!g2||e.touches.length!==2)return;
+  if(document.body.classList.contains('handout')){g2=null;return;}
+  e.preventDefault();
+  const p=g2pts(e);
+  const d0=Math.hypot(g2.p[0][0]-g2.p[1][0],g2.p[0][1]-g2.p[1][1]);
+  const d1=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
+  const c0=[(g2.p[0][0]+g2.p[1][0])/2,(g2.p[0][1]+g2.p[1][1])/2];
+  const c1=[(p[0][0]+p[1][0])/2,(p[0][1]+p[1][1])/2];
+  appZoom(d1/Math.max(1,d0),c0,c1);
+  g2={p:p};
+},{passive:false});
+addEventListener('touchend',e=>{if(e.touches.length<2)g2=null;});
 let tx=null,tyv=null,tt0=0;
 addEventListener('touchstart',e=>{
   const t=e.changedTouches[0];
@@ -1230,14 +1278,14 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b732';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b733';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
 let lastVVSig='';
 function syncZoom(){
   const v=vvState();
-  const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100)].join(',');
+  const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100),Math.round((viewZ||1)*100)].join(',');
   if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();}
 }
 setInterval(syncZoom,400);
