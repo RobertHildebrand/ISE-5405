@@ -106,7 +106,7 @@ body.handout .frag{opacity:1;transform:none}
   #deck{transform:none!important;box-shadow:none;height:auto;border-radius:0}
   .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:720px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
   .frag{opacity:1!important;transform:none!important}
-  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,.printskip{display:none!important}
+  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,#handoutbar,.printskip{display:none!important}
 }
 #mxGrid{display:grid;grid-template-columns:repeat(4,72px);gap:7px;justify-content:center}
 #mxGrid .mxc{height:56px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:19px;background:#f6f3ef;border:2px solid #ddd;border-radius:9px;cursor:pointer;transition:.15s}
@@ -124,6 +124,8 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 .wbhead{display:flex;justify-content:space-between;align-items:center}
 body.handout .printskip{display:none!important}
 #pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
+#handoutbar{display:none;position:fixed;top:12px;right:14px;z-index:530;gap:10px}
+body.handout #handoutbar{display:flex}
 </style>
 </head>
 <body>
@@ -1212,6 +1214,10 @@ body.handout .printskip{display:none!important}
   <li>Nothing &mdash; equalities can't be converted</li>
 </ol>
 
+<div id="handoutbar">
+  <button class="btn" id="hbPrint">&#128190; Save / Print PDF</button>
+  <button class="btn sec" id="hbExit">Exit handout</button>
+</div>
 <div id="pentools">
   <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
   <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
@@ -1532,6 +1538,11 @@ function toggleHandout(){
 }
 addEventListener('beforeprint',()=>{document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
 addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
+(function(){
+  const p=document.getElementById('hbPrint'),x=document.getElementById('hbExit');
+  if(p)p.onclick=()=>window.print();
+  if(x)x.onclick=()=>{if(document.body.classList.contains('handout'))toggleHandout();};
+})();
 /* laser pointer */
 const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
 let laserOn=false;
