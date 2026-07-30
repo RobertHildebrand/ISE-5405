@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ISE 5405 · Lecture 2 — Introduction to Linear Optimization</title>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1c1e22;font-family:"Public Sans","Avenir Next","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#deck{width:1280px;height:720px;background:#fdfcfa;position:relative;flex:none;transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.5);border-radius:6px;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:40px 64px 38px;font-size:22px;color:#26282e;line-height:1.42}
+.slide.active{display:flex;animation:slidein .5s cubic-bezier(.16,.8,.3,1)}
+.slide h1{font-size:48px;color:#861F41;margin:0}
+.slide h2{font-size:31px;color:#861F41;margin:0 0 14px;padding-bottom:7px;border-bottom:3px solid #E5751F}
+.slide ul{margin:6px 0}
+.slide li{margin:6px 0}
+.frag{opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.frag.on{opacity:1;transform:none}
+.cols{display:flex;gap:34px;align-items:flex-start}
+.col{flex:1;min-width:0}
+.box{border-left:5px solid #861F41;background:#f4eef0;padding:9px 15px;border-radius:0 8px 8px 0;margin:9px 0}
+.box.orange{border-color:#E5751F;background:#fdf3ea}
+.box.blue{border-color:#33658a;background:#eef3f7}
+.small{font-size:18px}.tiny{font-size:15px}
+.center{text-align:center}
+table.nice{border-collapse:collapse;margin:8px auto;font-size:18px}
+table.nice th,table.nice td{border-bottom:1px solid #ccc;padding:4px 12px;text-align:center}
+table.nice th{background:#861F41;color:#fff}
+#progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
+#counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#999;cursor:pointer;z-index:50}
+#brand{position:absolute;bottom:10px;left:16px;font-size:13px;color:#b9b2a9;z-index:50}
+#toc{position:fixed;top:0;left:0;bottom:0;width:380px;background:#26282e;color:#eee;transform:translateX(-100%);transition:.25s;z-index:400;overflow-y:auto;padding:18px}
+#toc.open{transform:none}
+#toc h3{margin:4px 0 10px;color:#E5751F}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li{padding:6px 10px;cursor:pointer;border-radius:6px;font-size:14.5px}
+#toc li:hover{background:#3a3d45}
+#ink{position:fixed;inset:0;z-index:300;pointer-events:none}
+#pentools{position:fixed;top:12px;right:14px;z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
+#pentools button{width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;font-size:13px}
+#pentools .pcol{border:2px solid #fff}
+.widget{background:#fff;border:1px solid #ddd;border-radius:10px;padding:13px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:15px;cursor:pointer}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+.kbd{display:inline-block;border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 7px;font-family:monospace;background:#f4f4f4;font-size:15px}
+input[type=range]{accent-color:#E5751F}
+input[type=number]{width:58px;font-size:15px;padding:2px}
+select{font-size:15px}
+.readout{font-family:monospace;font-size:18px}
+.good{color:#1a7d3c;font-weight:600}.bad{color:#b3261e;font-weight:600}.mid{color:#b25a12;font-weight:600}
+.derive .step{display:none;margin:2px 0}
+.derive .step.shown{display:block}
+.derive .dctl{display:flex;align-items:center;gap:12px;margin-top:6px}
+.derive .dots{display:flex;gap:6px}
+.derive .dot{width:11px;height:11px;border-radius:50%;background:#d5cdc4;cursor:pointer}
+.derive .dot.here{background:#E5751F}
+.derive .dnote{margin-top:7px;font-size:17.5px;color:#5a4634;background:#fdf3ea;border-left:4px solid #E5751F;padding:7px 12px;border-radius:0 6px 6px 0;min-height:46px}
+.crow{display:flex;align-items:center;gap:5px;margin:3px 0;font-size:15px}
+.vtab{font-size:14px;border-collapse:collapse;width:100%}
+.vtab td,.vtab th{padding:2px 7px;border-bottom:1px solid #eee;text-align:center}
+.vtab tr.opt{background:#e7f4ea;font-weight:700}
+
+/* ===== polish pass ===== */
+@keyframes slidein{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.slide h1,.slide h2{font-family:"Fraunces",Georgia,serif}
+.slide h1{letter-spacing:-.5px}
+.kicker{font-size:14px;letter-spacing:3px;color:#E5751F;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.slide.title{justify-content:center;align-items:center;text-align:center;background:radial-gradient(1100px 620px at 78% 112%,#f6e3d0 0%,#fdfcfa 58%)}
+.title-art{position:absolute;right:-30px;bottom:-34px;width:500px;pointer-events:none}
+#help{position:fixed;inset:0;background:rgba(20,22,26,.82);z-index:600;display:none;align-items:center;justify-content:center;cursor:pointer}
+#help.open{display:flex}
+#help .card{background:#fdfcfa;border-radius:14px;padding:26px 36px;max-width:580px;font-size:17px;line-height:2.1;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#help h3{margin:0 0 8px;color:#861F41;font-family:"Fraunces",Georgia,serif}
+.chip{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:1px 12px;font-size:14px;font-weight:600;margin-right:6px}
+iframe.embed{border:none;border-radius:10px;background:#fff}
+.widget{transition:box-shadow .25s}
+.widget:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+#counter{background:#f1ece6;border-radius:14px;padding:2px 12px;color:#7a736b}
+
+/* ===== handout / laser / checkpoint ===== */
+body.handout{overflow:auto}
+body.handout #stage{position:static;display:block;height:auto}
+body.handout #deck{transform:none!important;margin:24px auto;height:auto;box-shadow:none}
+body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;height:720px;animation:none;border-bottom:3px solid #e5ded6;overflow:hidden}
+body.handout #progress,body.handout #counter,body.handout #brand{display:none}
+body.handout .frag{opacity:1;transform:none}
+#laser{position:fixed;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff4040 0%,rgba(255,64,64,.4) 55%,transparent 72%);box-shadow:0 0 14px 5px rgba(255,64,64,.55);pointer-events:none;z-index:700;display:none;transform:translate(-50%,-50%)}
+#cp{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:620;display:none;align-items:center;justify-content:center}
+#cp.open{display:flex}
+#cp .cpcard{background:#fdfcfa;border-radius:16px;padding:26px 34px;max-width:700px;min-width:520px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#cpQ{font-size:23px;margin:6px 0 14px;line-height:1.45}
+#cpOpts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+#cpOpts button{text-align:left;font-size:18px;padding:9px 14px}
+#cpFb{min-height:52px;font-size:17px;margin-bottom:8px}
+@media print{
+  @page{size:13.33in 7.5in;margin:0}
+  html,body{background:#fff!important;overflow:visible;height:auto}
+  #stage{position:static;display:block;height:auto}
+  #deck{transform:none!important;box-shadow:none;height:auto;border-radius:0}
+  .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:720px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
+  .frag{opacity:1!important;transform:none!important}
+  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,.printskip{display:none!important}
+}
+#mxGrid{display:grid;grid-template-columns:repeat(4,72px);gap:7px;justify-content:center}
+#mxGrid .mxc{height:56px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:19px;background:#f6f3ef;border:2px solid #ddd;border-radius:9px;cursor:pointer;transition:.15s}
+#mxGrid .mxc.rowhl{background:#f4dee6;border-color:#861F41}
+#mxGrid .mxc.colhl{background:#dfe9f1;border-color:#33658a}
+#mxGrid .mxc.pick{background:#E5751F;color:#fff;border-color:#b25a12;font-weight:700}
+#ink{touch-action:none}
+body.handout #ink{display:none}
+#touchbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:520;display:none;gap:10px;background:rgba(38,40,46,.88);padding:9px 13px;border-radius:16px}
+#touchbar button{width:48px;height:48px;border:none;border-radius:11px;font-size:21px;background:#3a3d45;color:#fff}
+#touchbar button.on{background:#E5751F}
+canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.slide.whiteboard{background:repeating-linear-gradient(to bottom,#fdfcfa 0 44px,#ebe7e1 44px 45px);padding:20px 40px}
+.wbhead{display:flex;justify-content:space-between;align-items:center}
+body.handout .printskip{display:none!important}
+#pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
+</style>
+</head>
+<body>
+<div id="stage"><div id="deck">
+<div id="progress"></div>
+<div id="brand">ISE 5405 · Optimization I</div>
+<div id="counter">1 / 1</div>
+
+<!-- 1 TITLE -->
+<section class="slide title">
+  <svg class="title-art" viewBox="0 0 400 320" aria-hidden="true">
+    <defs><linearGradient id="pgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E5751F" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#861F41" stop-opacity=".30"/></linearGradient></defs>
+    <polygon points="70,240 140,90 250,60 340,140 320,240 180,290" fill="url(#pgGrad)" stroke="#861F41" stroke-width="2.5" stroke-opacity=".5"/>
+    <g stroke="#E5751F" stroke-width="1.6" stroke-dasharray="7 6" opacity=".65">
+      <line x1="20" y1="215" x2="380" y2="118"/>
+      <line x1="20" y1="258" x2="380" y2="161"/>
+      <line x1="20" y1="172" x2="380" y2="75"/>
+    </g>
+    <g fill="#861F41" opacity=".75">
+      <circle cx="70" cy="240" r="5"/><circle cx="140" cy="90" r="5"/><circle cx="250" cy="60" r="5"/>
+      <circle cx="340" cy="140" r="5"/><circle cx="320" cy="240" r="5"/><circle cx="180" cy="290" r="5"/>
+    </g>
+    <circle cx="250" cy="60" r="10" fill="none" stroke="#1a7d3c" stroke-width="3"/>
+    <path d="M 250 60 l 34 -14" stroke="#33658a" stroke-width="2.5" fill="none"/>
+    <path d="M 284 46 l -9 -1 4 8 z" fill="#33658a"/>
+  </svg>
+
+  <div style="font-size:22px;letter-spacing:3px;color:#E5751F;font-weight:600">ISE 5405 · OPTIMIZATION I</div>
+  <h1 style="margin:14px 0 8px">Introduction to Linear Optimization</h1>
+  <div style="font-size:24px;color:#555">Lecture 2 · Bertsimas–Tsitsiklis §1.1–1.4</div>
+  <div style="margin-top:32px" class="tiny">
+    <span class="kbd">&rarr;</span>/<span class="kbd">Space</span> advance &middot; <span class="kbd">&larr;</span> back &middot;
+    <span class="kbd">F</span> fullscreen &middot; <span class="kbd">M</span> menu &middot;
+    <span class="kbd">P</span> pen &middot; <span class="kbd">C</span> clear ink &middot; <span class="kbd">L</span> laser &middot;
+    <span class="kbd">H</span> handout &middot; <span class="kbd">K</span> checkpoint &middot; <span class="kbd">?</span> help
+  </div>
+  <div class="tiny" style="margin-top:14px;max-width:920px;color:#8a837b;font-size:13.5px;line-height:1.55">
+    <b>Saving a PDF handout (annotations included):</b> press <span class="kbd">H</span> for the handout view, then
+    Ctrl/Cmd+P &rarr; &ldquo;Save as PDF&rdquo; &mdash; one slide per page, all reveals shown, and any pen annotations
+    drawn onto the slides. On iPad: tap &#9636; on the on-screen toolbar, then Share &rarr; Print &rarr; Save to Files.
+    Pen annotations also save automatically in this browser, per slide, between sessions.
+  </div>
+</section>
+
+<!-- 2 OUTLINE -->
+<section class="slide">
+  <h2>Outline</h2>
+  <ul style="font-size:23px">
+    <li><b>Setup</b> — notation, what an LP is, feasibility &amp; optimality <span class="tiny" style="color:#999">(BT &sect;1.1)</span></li>
+    <li class="frag"><b>Modeling, modeling, modeling</b> — production, bakery, diet, power, scheduling <span class="tiny" style="color:#999">(&sect;1.2)</span></li>
+    <li class="frag"><b>Geometry</b> — graphical solution, the four possibilities, corners <span class="tiny" style="color:#999">(&sect;1.4)</span></li>
+    <li class="frag"><b>Canonical forms</b> — general &amp; standard form, and how to convert <span class="tiny" style="color:#999">(&sect;1.1 revisited)</span></li>
+    <li class="frag"><b>LPs in disguise</b> — max-objectives and absolute values via the epigraph trick <span class="tiny" style="color:#999">(&sect;1.3)</span></li>
+  </ul>
+  <div class="box orange frag" style="margin-top:18px">We <b>model first</b> and formalize second — conversions to standard form matter once algorithms enter the story, so they come after you've built some models.</div>
+</section>
+
+<!-- 3 NOTATION MATRICES -->
+<section class="slide">
+  <div class="kicker">Setup &middot; reading the language</div>
+  <h2>Notation &mdash; Matrices</h2>
+  <div class="cols">
+    <div class="col">
+      <p class="small">An \(m\times n\) matrix \(A\): a rectangular array of reals with <b>\(m\) rows, \(n\) columns</b>.</p>
+      \[A=\begin{bmatrix}a_{11}&a_{12}&\cdots&a_{1n}\\ a_{21}&a_{22}&\cdots&a_{2n}\\ \vdots&\vdots&\ddots&\vdots\\ a_{m1}&a_{m2}&\cdots&a_{mn}\end{bmatrix}\]
+      <div class="box small frag"><b>Index convention:</b> \(a_{ij}\) lives in <span style="color:#861F41;font-weight:700">row \(i\)</span>, <span style="color:#33658a;font-weight:700">column \(j\)</span> &mdash; <i>row first, column second</i>.</div>
+      <div class="box orange small frag">In this course: <b>rows &harr; constraints</b>, <b>columns &harr; variables</b>. Burn that in now and every formula this semester gets easier.</div>
+    </div>
+    <div class="col widget" style="flex:0 0 400px">
+      <div class="tiny" style="margin-bottom:8px"><b>Try it:</b> click any entry of this \(3\times 4\) matrix</div>
+      <div id="mxGrid"></div>
+      <div id="mxOut" class="small center" style="min-height:48px;margin-top:10px;color:#555">Click a cell&hellip;</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3b TRANSPOSE -->
+<section class="slide">
+  <div class="kicker">Setup</div>
+  <h2>The Transpose: Rows Become Columns</h2>
+  <div class="cols">
+    <div class="col" style="flex:0 0 600px">
+      <svg viewBox="0 0 600 250" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <text x="30" y="40" font-size="20" font-family="Georgia" font-style="italic">A =</text>
+        <g font-size="19" text-anchor="middle" font-family="monospace">
+          <rect x="80" y="60" width="150" height="44" rx="7" fill="#f4dee6" stroke="#861F41" stroke-width="2"/>
+          <text x="105" y="89">3</text><text x="155" y="89">1</text><text x="205" y="89">4</text>
+          <rect x="80" y="112" width="150" height="44" rx="7" fill="#dfe9f1" stroke="#33658a" stroke-width="2"/>
+          <text x="105" y="141">2</text><text x="155" y="141">0</text><text x="205" y="141">5</text>
+        </g>
+        <text x="120" y="195" font-size="14" fill="#861F41">row 1</text>
+        <text x="185" y="195" font-size="14" fill="#33658a">row 2</text>
+        <path d="M 265 110 h 55" stroke="#5a4634" stroke-width="2.5" fill="none"/>
+        <path d="M 320 110 l -9 -5 v 10 z" fill="#5a4634"/>
+        <text x="262" y="95" font-size="14" fill="#5a4634">transpose</text>
+        <text x="345" y="40" font-size="20" font-family="Georgia" font-style="italic">A&prime; =</text>
+        <g font-size="19" text-anchor="middle" font-family="monospace">
+          <rect x="405" y="55" width="52" height="140" rx="7" fill="#f4dee6" stroke="#861F41" stroke-width="2"/>
+          <text x="431" y="87">3</text><text x="431" y="133">1</text><text x="431" y="179">4</text>
+          <rect x="465" y="55" width="52" height="140" rx="7" fill="#dfe9f1" stroke="#33658a" stroke-width="2"/>
+          <text x="491" y="87">2</text><text x="491" y="133">0</text><text x="491" y="179">5</text>
+        </g>
+        <text x="400" y="225" font-size="14" fill="#861F41">column 1</text>
+        <text x="480" y="240" font-size="14" fill="#33658a">column 2</text>
+      </svg>
+    </div>
+    <div class="col small">
+      <ul>
+        <li>BT writes \(A'\); elsewhere you'll see \(A^\top\) &mdash; same thing</li>
+        <li class="frag">\((A')' = A\), and sizes flip: \(m\times n \to n\times m\)</li>
+        <li class="frag">A <b>column vector</b> \(x\) is an \(n\times 1\) matrix; its transpose \(x'\) is a \(1\times n\) <b>row vector</b></li>
+      </ul>
+      <div class="box frag">Why care? Expressions like \(c'x\) and \(a_i'x\) are <i>row times column</i> &mdash; and that's a single number. Next slides!</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 NOTATION VECTORS -->
+<section class="slide">
+  <h2>Vectors: Columns of Numbers = Points = Arrows</h2>
+  <div class="cols">
+    <div class="col">
+      \[x=\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix}\in\mathbb{R}^n
+      \qquad x' = (x_1, x_2, \dots, x_n)\]
+      <div class="box small frag"><b>Convention:</b> vectors are <b>columns</b> unless transposed. \(x\in\mathbb{R}^n\) collects <i>all</i> the decision variables &mdash; one coordinate per decision.</div>
+      <div class="box orange small frag">Three mental pictures for the same \(x=(3,2)'\): a list of numbers, a <b>point</b> in the plane, an <b>arrow</b> from the origin. Fluency = switching freely.</div>
+    </div>
+    <div class="col" style="flex:0 0 420px">
+      <svg viewBox="0 0 420 320" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <g stroke="#eee"><line x1="60" y1="20" x2="60" y2="280"/><line x1="140" y1="20" x2="140" y2="280"/><line x1="220" y1="20" x2="220" y2="280"/><line x1="300" y1="20" x2="300" y2="280"/><line x1="380" y1="20" x2="380" y2="280"/>
+        <line x1="20" y1="40" x2="400" y2="40"/><line x1="20" y1="120" x2="400" y2="120"/><line x1="20" y1="200" x2="400" y2="200"/></g>
+        <line x1="20" y1="280" x2="400" y2="280" stroke="#888" stroke-width="1.5"/>
+        <line x1="60" y1="20" x2="60" y2="280" stroke="#888" stroke-width="1.5"/>
+        <text x="392" y="298" font-size="14" fill="#666">x&#8321;</text>
+        <text x="36" y="30" font-size="14" fill="#666">x&#8322;</text>
+        <g stroke="#c9b8a8" stroke-width="1.6" stroke-dasharray="6 5">
+          <line x1="300" y1="280" x2="300" y2="120"/><line x1="60" y1="120" x2="300" y2="120"/>
+        </g>
+        <line x1="60" y1="280" x2="296" y2="123" stroke="#861F41" stroke-width="3.5"/>
+        <path d="M 300 120 l -14 2 6 11 z" fill="#861F41"/>
+        <circle cx="300" cy="120" r="6" fill="#861F41"/>
+        <text x="310" y="112" font-size="17" font-weight="bold" fill="#861F41">x = (3, 2)&prime;</text>
+        <text x="172" y="308" font-size="13" fill="#999">3 across</text>
+        <text x="14" y="205" font-size="13" fill="#999">2 up</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 4b INNER PRODUCT -->
+<section class="slide">
+  <h2>The Inner Product \(x'y\) &mdash; the Course Workhorse</h2>
+  <div class="cols">
+    <div class="col">
+      \[x'y=\begin{bmatrix}x_1&\cdots&x_n\end{bmatrix}\!\begin{bmatrix}y_1\\ \vdots\\ y_n\end{bmatrix}=\sum_{i=1}^n x_iy_i\]
+      <div class="frag">
+        Example: \(x=({\color{#861F41}1},{\color{#33658a}3})'\), \(y=({\color{#861F41}2},{\color{#33658a}-1})'\):
+        \[x'y = ({\color{#861F41}1})({\color{#861F41}2}) + ({\color{#33658a}3})({\color{#33658a}-1}) = 2-3 = -1\]
+      </div>
+      <div class="box orange small frag"><b>Everything linear is an inner product:</b> the objective is \(c'x\), each constraint is \(a_i'x \ge b_i\). Learn to read them at a glance.</div>
+    </div>
+    <div class="col widget" style="flex:0 0 420px">
+      <canvas id="ipCv" width="400" height="300" style="width:100%;cursor:crosshair"></canvas>
+      <div id="ipOut" class="small center" style="min-height:52px"></div>
+      <div class="tiny center" style="color:#777">drag the blue vector \(x\); sign of \(a'x\) &harr; which side of the dashed line</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4c HALFPLANE -->
+<section class="slide">
+  <div class="kicker">The one picture to internalize</div>
+  <h2>One Inequality \(a'x \ge b\) = Half the Plane</h2>
+  <div class="cols">
+    <div class="col small">
+      <ul>
+        <li>\(a'x = b\) is a <b>line</b> (a plane in \(\mathbb{R}^3\), a <i>hyperplane</i> beyond)</li>
+        <li class="frag">The vector \(a\) is <b>perpendicular</b> to it and points where \(a'x\) grows</li>
+        <li class="frag">The inequality keeps one side: a <b>halfplane</b> (halfspace)</li>
+        <li class="frag">Raising \(b\) slides the line in the direction of \(a\) &mdash; try the slider</li>
+      </ul>
+      <div class="box frag">An LP's feasible set = the <b>intersection of finitely many halfspaces</b>. That's why feasible regions have flat sides and corners &mdash; the whole geometry of Ch.&nbsp;2 starts here.</div>
+    </div>
+    <div class="col widget" style="flex:0 0 460px">
+      <canvas id="hpCv" width="430" height="330" style="width:100%;cursor:crosshair"></canvas>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px" class="small">
+        b = <span id="hpBv" class="readout">1.0</span>
+        <input id="hpB" type="range" min="-3" max="3" step="0.1" value="1" style="flex:1">
+      </div>
+      <div id="hpOut" class="small center" style="min-height:44px"></div>
+      <div class="tiny center" style="color:#777">drag the tip of \(a\) to re-aim it &middot; drag anywhere else to move the test point P</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 EXAMPLE 1.1 -->
+<section class="slide">
+  <h2>A Linear Programming Problem (Ex. 1.1)</h2>
+  <div class="cols">
+    <div class="col">
+      \[
+      \begin{aligned}
+      {\color{#861F41}\text{minimize}\quad 2x_1 - x_2 + 4x_3}\;&\\
+      \text{subject to}\quad {\color{#33658a}x_1 + x_2 + x_4 \le 2}\;&\\
+      {\color{#33658a}3x_2 - x_3 = 5}\;&\\
+      {\color{#33658a}x_3 + x_4 \ge 3}\;&\\
+      {\color{#b25a12}x_1 \ge 0,\;\; x_3 \le 0}\;&
+      \end{aligned}
+      \]
+    </div>
+    <div class="col small">
+      <div class="box" style="border-color:#861F41"><b style="color:#861F41">Objective</b> &mdash; one inner product: \(c'x\) with \(c=(2,-1,4,0)'\). Note \(x_4\) is invisible here: its cost coefficient is 0.</div>
+      <div class="box blue frag"><b style="color:#33658a">Functional constraints</b> &mdash; each is \(a_i'x \{\le,=,\ge\}\, b_i\): one of <i>every</i> flavor here. E.g. row 1 has \(a_1=(1,1,0,1)'\), \(b_1=2\).</div>
+      <div class="box orange frag"><b style="color:#b25a12">Sign constraints</b> &mdash; single-variable bounds. And \(x_2, x_4\) have none: they are <b>free</b> variables.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 GENERAL LP -->
+<section class="slide">
+  <h2>The General LP Problem</h2>
+  <div class="cols">
+    <div class="col">
+      \[
+      \begin{aligned}
+      \text{minimize}\quad & c'x\\
+      \text{subject to}\quad & a_i'x \ge b_i, && i\in M_1\\
+      & a_i'x \le b_i, && i\in M_2\\
+      & a_i'x = b_i, && i\in M_3\\
+      & x_j \ge 0, && j\in N_1\\
+      & x_j \le 0, && j\in N_2
+      \end{aligned}
+      \]
+      <div class="box small frag">If \(j\notin N_1\cup N_2\): \(x_j\) is <b>free</b>. The index sets just sort constraints and variables into bins.</div>
+    </div>
+    <div class="col" style="flex:0 0 430px">
+      <svg viewBox="0 0 430 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <text x="26" y="30" font-size="15" fill="#666">the rows of \(A\), sorted into bins:</text>
+        <rect x="30" y="45" width="200" height="70" rx="8" fill="#edf6ef" stroke="#1a7d3c" stroke-width="2"/>
+        <text x="130" y="75" font-size="15" text-anchor="middle" fill="#1a7d3c">rows i &isin; M&#8321;</text>
+        <text x="130" y="98" font-size="15" text-anchor="middle" fill="#1a7d3c" font-weight="bold">a&#8305;&prime;x &ge; b&#8305;</text>
+        <rect x="30" y="123" width="200" height="70" rx="8" fill="#eef3f7" stroke="#33658a" stroke-width="2"/>
+        <text x="130" y="153" font-size="15" text-anchor="middle" fill="#33658a">rows i &isin; M&#8322;</text>
+        <text x="130" y="176" font-size="15" text-anchor="middle" fill="#33658a" font-weight="bold">a&#8305;&prime;x &le; b&#8305;</text>
+        <rect x="30" y="201" width="200" height="70" rx="8" fill="#f4f0f4" stroke="#6b5a72" stroke-width="2"/>
+        <text x="130" y="231" font-size="15" text-anchor="middle" fill="#6b5a72">rows i &isin; M&#8323;</text>
+        <text x="130" y="254" font-size="15" text-anchor="middle" fill="#6b5a72" font-weight="bold">a&#8305;&prime;x = b&#8305;</text>
+        <text x="260" y="66" font-size="15" fill="#666">the variables:</text>
+        <rect x="260" y="78" width="150" height="52" rx="8" fill="#fdf3ea" stroke="#E5751F" stroke-width="2"/>
+        <text x="335" y="102" font-size="14" text-anchor="middle" fill="#b25a12">j &isin; N&#8321;: x&#11388; &ge; 0</text>
+        <text x="335" y="121" font-size="12" text-anchor="middle" fill="#b25a12">(nonnegative)</text>
+        <rect x="260" y="140" width="150" height="52" rx="8" fill="#fbeaea" stroke="#b3261e" stroke-width="2"/>
+        <text x="335" y="164" font-size="14" text-anchor="middle" fill="#b3261e">j &isin; N&#8322;: x&#11388; &le; 0</text>
+        <text x="335" y="183" font-size="12" text-anchor="middle" fill="#b3261e">(nonpositive)</text>
+        <rect x="260" y="202" width="150" height="52" rx="8" fill="#f6f3ef" stroke="#999" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="335" y="226" font-size="14" text-anchor="middle" fill="#777">everyone else:</text>
+        <text x="335" y="245" font-size="14" text-anchor="middle" fill="#777" font-weight="bold">free</text>
+        <text x="26" y="310" font-size="14" fill="#999">every LP is some mix of these five ingredient types</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 6b SIGMA TO AX -->
+<section class="slide">
+  <div class="kicker">Reading the notation</div>
+  <h2>Click-through: From \(\sum\) to \(Ax\)</h2>
+  <div class="widget derive" id="dp0">
+    <div class="dsteps small">
+      <div class="step" data-note="Concrete data: a 2×3 matrix (two constraints, three variables) and the variable vector. Colors track the rows.">
+        \[A=\begin{bmatrix}{\color{#861F41}4}&{\color{#861F41}5}&{\color{#861F41}0}\\ {\color{#33658a}2}&{\color{#33658a}4}&{\color{#33658a}1}\end{bmatrix},\qquad
+        x=\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix},\qquad b=\begin{bmatrix}200\\160\end{bmatrix}\]
+      </div>
+      <div class="step" data-note="Row 1 times the column x: multiply matching entries, add. One row × one column = one number — the left-hand side of constraint 1.">
+        \[{\color{#861F41}a_1'x} = {\color{#861F41}4}x_1+{\color{#861F41}5}x_2+{\color{#861F41}0}x_3 \;=\; \sum_{j=1}^{3} a_{1j}x_j\]
+      </div>
+      <div class="step" data-note="Same recipe for row 2. The Σ notation and the inner product notation say exactly the same thing.">
+        \[{\color{#33658a}a_2'x} = {\color{#33658a}2}x_1+{\color{#33658a}4}x_2+{\color{#33658a}1}x_3 \;=\; \sum_{j=1}^{3} a_{2j}x_j\]
+      </div>
+      <div class="step" data-note="Stack the two numbers into a vector: that's Ax. And Ax ≥ b just means every component inequality holds at once — m constraints in one line of notation.">
+        \[Ax=\begin{bmatrix}{\color{#861F41}4x_1+5x_2}\\ {\color{#33658a}2x_1+4x_2+x_3}\end{bmatrix}
+        \qquad Ax\ge b \;\iff\; \begin{cases}4x_1+5x_2\ge 200\\ 2x_1+4x_2+x_3\ge 160\end{cases}\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">&#9664; Prev</button><span class="dots"></span><button class="btn dnext">Next step &#9654;</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 7 DEFINITIONS -->
+<section class="slide" data-checkpoint="cpA">
+  <h2>Basic Definitions</h2>
+  <div class="cols">
+    <div class="col" style="font-size:20px">
+      <ul>
+        <li>A <b>feasible solution</b>: a vector \(x\) satisfying <i>all</i> constraints.</li>
+        <li class="frag">The <b>feasible set</b>: all of them; empty \(\Rightarrow\) <b>infeasible</b>.</li>
+        <li class="frag">The <b>cost</b> of feasible \(x\): the number \(c'x\).</li>
+        <li class="frag">An <b>optimal solution</b> \(x^*\): feasible, with \(c'x^*\le c'x\) for <i>every</i> feasible \(x\). Its cost is the <b>optimal cost</b>.</li>
+      </ul>
+      <div class="box orange small frag">Feasible &ne; optimal! Feasibility is a pass/fail test; optimality is winning the whole competition.</div>
+    </div>
+    <div class="col" style="flex:0 0 430px">
+      <svg viewBox="0 0 430 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <g stroke="#E5751F" stroke-width="1.5" stroke-dasharray="7 6" opacity=".8">
+          <line x1="10" y1="150" x2="290" y2="320"/>
+          <line x1="60" y1="90" x2="400" y2="296"/>
+          <line x1="120" y1="40" x2="430" y2="228"/>
+        </g>
+        <polygon points="70,250 100,110 210,64 320,120 300,240 190,282" fill="rgba(134,31,65,.13)" stroke="#861F41" stroke-width="2.5"/>
+        <text x="150" y="180" font-size="15" fill="#861F41" font-weight="bold">feasible set</text>
+        <circle cx="235" cy="200" r="7" fill="#1a7d3c"/>
+        <text x="248" y="205" font-size="14" fill="#1a7d3c" font-weight="bold">feasible</text>
+        <text x="366" y="60" font-size="22" fill="#b3261e" font-weight="bold">&#10005;</text>
+        <text x="300" y="42" font-size="14" fill="#b3261e" font-weight="bold">infeasible</text>
+        <text x="60" y="262" font-size="24" fill="#1a7d3c">&#9733;</text>
+        <text x="30" y="292" font-size="14" fill="#1a7d3c" font-weight="bold">optimal</text>
+        <path d="M 250 90 l -42 -25" stroke="#E5751F" stroke-width="2.5" fill="none"/>
+        <path d="M 208 65 l 12 -1 -5 11 z" fill="#E5751F"/>
+        <text x="256" y="88" font-size="13" fill="#b25a12">cost decreases</text>
+        <text x="256" y="104" font-size="13" fill="#b25a12">(dashed = equal-cost lines)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 8 UNBOUNDED / MAXMIN -->
+<section class="slide">
+  <h2>Unboundedness &amp; Maximization</h2>
+  <div class="cols small">
+    <div class="col">
+      <svg viewBox="0 0 420 240" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <polygon points="60,220 160,90 420,10 420,240 60,240" fill="rgba(134,31,65,.12)" stroke="none"/>
+        <line x1="60" y1="220" x2="160" y2="90" stroke="#861F41" stroke-width="2.5"/>
+        <line x1="160" y1="90" x2="420" y2="10" stroke="#861F41" stroke-width="2.5"/>
+        <line x1="60" y1="220" x2="420" y2="232" stroke="#861F41" stroke-width="2.5"/>
+        <g fill="#1a7d3c">
+          <circle cx="180" cy="170" r="5"/><circle cx="260" cy="150" r="5"/><circle cx="340" cy="130" r="5"/>
+        </g>
+        <text x="168" y="196" font-size="13" fill="#1a7d3c">cost &minus;10</text>
+        <text x="250" y="176" font-size="13" fill="#1a7d3c">&minus;100</text>
+        <text x="330" y="156" font-size="13" fill="#1a7d3c">&minus;1000&hellip;</text>
+        <path d="M 360 122 l 40 -10" stroke="#1a7d3c" stroke-width="2.5" fill="none"/>
+        <path d="M 400 112 l -10 -2 3 10 z" fill="#1a7d3c"/>
+        <text x="30" y="30" font-size="14" fill="#666">region open in an improving direction &rarr; cost &darr; forever</text>
+      </svg>
+      <div class="box frag" style="margin-top:8px">If for every \(K\) some feasible \(x\) has \(c'x\le K\): optimal cost \(=-\infty\), the problem is <b>unbounded</b>.</div>
+    </div>
+    <div class="col">
+      <svg viewBox="0 0 420 240" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <polygon points="100,200 130,80 240,48 330,110 310,190 200,222" fill="rgba(134,31,65,.12)" stroke="#861F41" stroke-width="2.5"/>
+        <text x="226" y="42" font-size="22" fill="#1a7d3c">&#9733;</text>
+        <path d="M 240 60 l 55 -28" stroke="#33658a" stroke-width="3" fill="none"/>
+        <path d="M 295 32 l -11 0 4 10 z" fill="#33658a"/>
+        <text x="300" y="30" font-size="14" fill="#33658a" font-weight="bold">c : max c&prime;x</text>
+        <path d="M 232 72 l -55 28" stroke="#861F41" stroke-width="3" fill="none"/>
+        <path d="M 177 100 l 11 0 -4 -10 z" fill="#861F41"/>
+        <text x="60" y="118" font-size="14" fill="#861F41" font-weight="bold">&minus;c : min (&minus;c)&prime;x</text>
+        <text x="96" y="230" font-size="14" fill="#666">same star wins both contests</text>
+      </svg>
+      <div class="frag" style="margin-top:8px">
+        \[\max_{x\in S} c'x = -\min_{x\in S}\,(-c)'x\]
+        <div class="box orange small">Convention (BT + this course): <b>minimize</b> by default; flip any max with a sign change. One theory covers both.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8b CONVENTIONS -->
+<section class="slide">
+  <div class="kicker">A word on conventions</div>
+  <h2>Why \(\min c'x\) with \(Ax \ge b\)?</h2>
+  <div class="cols small">
+    <div class="col">
+      <div class="box"><b>Our convention (following BT):</b>
+        \[\min\; c'x \quad\text{s.t.}\; Ax\ge b\]
+        Natural story: <b>minimize cost while meeting requirements</b>. Think of the diet problem — cheapest food bundle whose nutrients hit every lower bound; or staffing that covers every shift's demand.</div>
+      <div class="box blue frag"><b>Other books:</b>
+        \[\max\; c'x \quad\text{s.t.}\; Ax\le b\]
+        Equally natural story: <b>maximize profit within resource limits</b> — our production examples. The two forms are mirror images (flip signs), so nothing is lost either way.</div>
+    </div>
+    <div class="col">
+      <div class="box orange frag"><b>The deeper reason we minimize:</b> it matches the conventions of <b>convex optimization</b>, where one minimizes convex functions over convex sets. A linear objective is convex (and concave!), so LP sits inside that world as the cleanest special case.</div>
+      <div class="frag" style="margin-top:8px">
+        \[\underbrace{\min\; c'x}_{\text{LP}} \;\subset\; \underbrace{\min\; f(x),\; f \text{ convex}}_{\text{convex optimization}}\]
+      </div>
+      <div class="box green small frag">Payoff: results we prove here — local = global, optimality conditions, duality — <b>translate directly</b> to nonlinear convex settings (ISE 5406). Learn the min-form once, reuse it everywhere.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- 16b WORDS TO MATH EMBED -->
+<section class="slide" style="padding:28px 40px">
+  <div class="kicker">Interactive &middot; from the course text</div>
+  <h2 style="margin-bottom:6px">From Words to Math</h2>
+  <div class="widget" style="padding:6px;flex:1;display:flex">
+    <iframe class="embed" src="https://open-optimization.github.io/open-optimization-or-book/visualizations/#modeling-intro" style="width:100%;height:100%;min-height:520px" loading="lazy" title="Modeling introduction demo"></iframe>
+  </div>
+  <div class="tiny center" style="color:#777;margin-top:4px">Guided modeling tutorial &mdash; students can revisit it any time at <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> (requires internet)</div>
+</section>
+
+<!-- 17 PRODUCTION -->
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Examples of LP models</div>
+  <h2>A Production Problem</h2>
+  <div class="cols">
+    <div class="col small">
+      <ul>
+        <li>Produce \(n\) goods using \(m\) materials</li>
+        <li>\(b_i\): available amount of material \(i\)</li>
+        <li>\(a_{ij}\): units of material \(i\) per unit of good \(j\)</li>
+        <li>\(c_j\): revenue per unit of good \(j\)</li>
+      </ul>
+      <div class="box"><b>Variables:</b> \(x_j\) = amount of good \(j\) produced.</div>
+    </div>
+    <div class="col frag">
+      \[
+      \begin{aligned}
+      \max\quad & \sum_{j=1}^n c_j x_j\\
+      \text{s.t.}\quad & \sum_{j=1}^n a_{ij}x_j \le b_i, && i=1,\dots,m\\
+      & x_j \ge 0, && j=1,\dots,n
+      \end{aligned}
+      \]
+    </div>
+  </div>
+  <div class="box orange small frag">Let's play with a live instance → next slide.</div>
+</section>
+
+<!-- 18 SANDBOX -->
+<section class="slide">
+  <h2>Modeling Sandbox: Production Planning</h2>
+  <div class="cols">
+    <div class="widget" style="flex:none;width:430px">
+      <div class="small"><b>Data</b> (drag to change the world):</div>
+      <div class="crow">Profit A: $<span id="sbPAv" class="readout">40</span> <input id="sbPA" type="range" min="10" max="100" value="40" style="flex:1"></div>
+      <div class="crow">Profit B: $<span id="sbPBv" class="readout">55</span> <input id="sbPB" type="range" min="10" max="100" value="55" style="flex:1"></div>
+      <div class="crow">Labor: <span id="sbLv" class="readout">200</span> h <input id="sbL" type="range" min="100" max="320" value="200" style="flex:1"></div>
+      <div class="crow">Material: <span id="sbMv" class="readout">160</span> kg <input id="sbM" type="range" min="80" max="260" value="160" style="flex:1"></div>
+      <div class="tiny" style="color:#777">A uses 4 h + 2 kg per unit; B uses 5 h + 4 kg.</div>
+      <div class="box small" id="sbOut" style="margin-top:8px;min-height:100px"></div>
+    </div>
+    <div class="col">
+      <div class="widget" style="display:inline-block"><canvas id="sbCanvas" width="470" height="380"></canvas></div>
+      <div class="tiny" style="color:#777;margin-top:4px">Watch which corner is optimal — and when the optimum <i>jumps</i> from one corner to another as prices change.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 18b BAKERY -->
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; From the course text</div>
+  <h2>Bakery Production (3 variables)</h2>
+  <div class="cols">
+    <div class="col small">
+      <table class="nice">
+        <tr><th></th><th>Cake</th><th>Cookie</th><th>Muffin</th><th>Avail.</th></tr>
+        <tr><td>Profit</td><td>$6.00</td><td>$1.50</td><td>$2.50</td><td>&mdash;</td></tr>
+        <tr><td>Flour (g)</td><td>500</td><td>100</td><td>200</td><td>4800</td></tr>
+        <tr><td>Sugar (g)</td><td>200</td><td>50</td><td>80</td><td>2060</td></tr>
+        <tr><td>Oven (min)</td><td>60</td><td>10</td><td>20</td><td>480</td></tr>
+      </table>
+      <div class="box frag">With 3+ variables the picture leaves the plane &mdash; but the <b>modeling recipe</b> is identical: decisions, constraints, objective.</div>
+    </div>
+    <div class="col frag">
+      \[
+      \begin{aligned}
+      \max\quad & 6x_1 + 1.5x_2 + 2.5x_3\\
+      \text{s.t.}\quad & 500x_1+100x_2+200x_3 \le 4800\\
+      & 200x_1+50x_2+80x_3 \le 2060\\
+      & 60x_1+10x_2+20x_3 \le 480\\
+      & x_1,\,x_2,\,x_3\ge 0
+      \end{aligned}
+      \]
+      <div class="box orange small frag">Remember this bakery &mdash; it returns as the running example when we pivot the <b>simplex method</b> by hand (Ch. 3).</div>
+    </div>
+  </div>
+</section>
+
+<!-- 18c WELDING PRACTICE -->
+<section class="slide">
+  <div class="kicker">Your turn &middot; 2 minutes</div>
+  <h2>Practice: the Welding Robots</h2>
+  <p class="small">You have <b>21 units</b> of transparent aluminum alloy (TAA), a joining robot leased for <b>23 h</b>, and a cutting robot for <b>17 h</b>. You can sell bookcases ($18), desks ($16), and cabinets ($10). Per unit: bookcase = 2 TAA + 3 h join + 1 h cut &middot; desk = 2 TAA + 2 h join + 2 h cut &middot; cabinet = 1 TAA + 2 h join + 1 h cut.</p>
+  <div class="box orange small">Formulate the LP: what are the <b>decisions</b>? the <b>constraints</b>? the <b>objective</b>?</div>
+  <div class="frag small">
+    \[
+    \begin{aligned}
+    \max\quad & 18x_1+16x_2+10x_3 && \text{(revenue)}\\
+    \text{s.t.}\quad & 2x_1+2x_2+x_3\le 21 && \text{(TAA)}\\
+    & 3x_1+2x_2+2x_3\le 23 && \text{(joining)}\\
+    & x_1+2x_2+x_3\le 17 && \text{(cutting)}\\
+    & x_1,\,x_2,\,x_3\ge 0
+    \end{aligned}
+    \]
+  </div>
+  <div class="box frag small">Name the decisions first (\(x_i\) = units of product \(i\)) and the rest becomes mechanical &mdash; the modeling workflow from Lecture 1 in action.</div>
+</section>
+
+<!-- 12 DIET -->
+<section class="slide">
+  <h2>Example 1.3 — The Diet Problem</h2>
+  <div class="cols">
+    <div class="col small">
+      <ul>
+        <li>\(n\) ingredients, \(m\) nutrients</li>
+        <li>\(a_{ij}\): amount of nutrient \(i\) per unit of ingredient \(j\)</li>
+        <li>\(b_i\): nutrient content of the "ideal food"</li>
+        <li>\(c_j\): cost per unit of ingredient \(j\)</li>
+      </ul>
+      <table class="nice tiny">
+        <tr><th></th><th>ingr 1</th><th>⋯</th><th>ingr n</th><th>ideal</th></tr>
+        <tr><td>nutr 1</td><td>\(a_{11}\)</td><td>⋯</td><td>\(a_{1n}\)</td><td>\(b_1\)</td></tr>
+        <tr><td>⋮</td><td>⋮</td><td>⋱</td><td>⋮</td><td>⋮</td></tr>
+        <tr><td>nutr m</td><td>\(a_{m1}\)</td><td>⋯</td><td>\(a_{mn}\)</td><td>\(b_m\)</td></tr>
+      </table>
+    </div>
+    <div class="col frag">
+      \[
+      \begin{aligned}
+      \min\quad & \sum_{j=1}^n c_j x_j\\
+      \text{s.t.}\quad & \sum_{j=1}^n A_j x_j = b\\
+      & x_j \ge 0
+      \end{aligned}
+      \]
+      <div class="box small frag"><b>Variant:</b> \(b\) = <i>minimal</i> requirements → \(Ax \ge b\). Same model, different form. (This is the classic Stigler diet LP.)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 POWER 1 -->
+<section class="slide">
+  <h2>Multiperiod Planning of Electric Power</h2>
+  <ul class="small">
+    <li>Plan electricity capacity for the next \(T\) years; demand in year \(t\) is \(d_t\) MW.</li>
+    <li>Existing (oil) capacity available in year \(t\): \(e_t\).</li>
+    <li class="frag">Expand with <b>coal</b> (lasts 20 yrs, capital cost \(c_t\)/MW) or <b>nuclear</b> (lasts 15 yrs, cost \(n_t\)/MW).</li>
+    <li class="frag">Policy: no more than 20% of total capacity may ever be nuclear.</li>
+  </ul>
+  <div class="box frag">
+    <b>Variables:</b> \(x_t, y_t\) = coal / nuclear capacity brought online at start of year \(t\).<br>
+    <b>Helper variables:</b> \(w_t, z_t\) = total coal / nuclear capacity available in year \(t\).
+  </div>
+  <div class="frag" style="margin-top:6px">
+    \[\min \sum_{t=1}^T \left(c_t x_t + n_t y_t\right)\]
+  </div>
+</section>
+
+<!-- 20 POWER 2 -->
+<section class="slide">
+  <h2>Electric Power — Constraints</h2>
+  <div class="small">
+    <div class="frag on"><b>Coal lasts 20 years:</b>
+      \[w_t=\sum_{s=\max\{1,t-19\}}^{t} x_s \qquad t=1,\dots,T\]</div>
+    <div class="frag"><b>Nuclear lasts 15 years:</b>
+      \[z_t=\sum_{s=\max\{1,t-14\}}^{t} y_s\]</div>
+    <div class="frag"><b>Meet demand:</b>
+      \[w_t+z_t+e_t \ge d_t\]</div>
+    <div class="frag"><b>At most 20% nuclear</b> — a ratio! But it linearizes:
+      \[\frac{z_t}{w_t+z_t+e_t}\le 0.2 \;\Longleftrightarrow\; 0.2\,w_t-0.8\,z_t+0.2\,e_t\ge 0\]</div>
+  </div>
+  <div class="box orange small frag">Moral: some nonlinear-looking constraints (ratios of linear terms with known-sign denominators) are secretly linear.</div>
+</section>
+
+<!-- 21 SCHEDULING -->
+<section class="slide">
+  <h2>A Scheduling Problem (Nurses)</h2>
+  <div class="cols">
+    <div class="col small">
+      <ul>
+        <li>Night-shift demand on day \(j\): \(d_j\), \(j=1,\dots,7\)</li>
+        <li>Every nurse works <b>5 consecutive days</b></li>
+        <li>Minimize the number of nurses hired</li>
+      </ul>
+      <div class="box frag"><b>Variable choice matters!</b> \(x_j\) = number of nurses <i>starting</i> their 5-day week on day \(j\).<br>
+      <span class="tiny">("\(y_j\) = nurses working day \(j\)" can't capture the consecutive-days rule.)</span></div>
+    </div>
+    <div class="col frag">
+      \[
+      \begin{aligned}
+      \min\; & \textstyle\sum_{j=1}^{7} x_j\\
+      \text{s.t. } & x_1+x_4+x_5+x_6+x_7 \ge d_1\\
+      & x_1+x_2+x_5+x_6+x_7 \ge d_2\\
+      & \;\;\vdots\\
+      & x_3+x_4+x_5+x_6+x_7 \ge d_7\\
+      & x_j \ge 0,\; x_j \in \mathbb{Z}
+      \end{aligned}
+      \]
+      <div class="tiny" style="color:#777">Row \(j\): who is on duty on day \(j\)? Those who started within the last 5 days.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 IP REMARKS -->
+<section class="slide" data-checkpoint="cpB">
+  <h2>…But That's an Integer Program</h2>
+  <ul class="small">
+    <li>The constraint \(x_j\in\mathbb{Z}\) makes this an <b>integer linear program</b> (ILP), not an LP.</li>
+    <li class="frag"><b>Relax</b> integrality → the <b>LP relaxation</b>. Its optimal cost is a <b>lower bound</b> on the ILP's:
+      \[Z_{LP} \le Z_{ILP}\]</li>
+    <li class="frag">If the LP relaxation's optimum happens to be integer → it solves the ILP too. 🎉</li>
+    <li class="frag">If not: rounding up gives a feasible (not necessarily optimal) schedule — and a gap we can measure.</li>
+  </ul>
+  <div class="box orange frag">This bound-and-round idea is the seed of all of integer programming (end of the course, and ISE 5406).</div>
+</section>
+
+<!-- 27 GRAPHICAL -->
+<section class="slide">
+  <div class="kicker">&sect;1.4 &middot; Geometry</div>
+  <h2>Graphical Representation</h2>
+  <ul style="font-size:23px">
+    <li>In the plane, \(a_1x_1+a_2x_2=b\) is a <b>line</b>; it splits \(\mathbb{R}^2\) into two <b>halfspaces</b> (the ≥ side and the ≤ side).</li>
+    <li class="frag">The vector \((a_1,a_2)\) is <b>orthogonal</b> to the line and points where \(a_1x_1+a_2x_2\) <i>increases</i>.</li>
+    <li class="frag">Level sets of the objective \(c'x = t\) form a family of parallel lines, orthogonal to \(c\).</li>
+    <li class="frag"><b>To minimize:</b> slide the line as far as possible in direction \(-c\) while touching the feasible set.</li>
+  </ul>
+  <div class="box orange frag">Time to drive → the LP grapher on the next slide.</div>
+</section>
+
+<!-- 28 GRAPHER -->
+<section class="slide" style="padding:34px 44px">
+  <h2 style="margin-bottom:8px">2D LP Grapher</h2>
+  <div class="cols" style="gap:18px">
+    <div class="widget" style="flex:none">
+      <canvas id="gCanvas" width="600" height="470" style="display:block;cursor:crosshair"></canvas>
+      <div class="tiny" style="color:#777;margin-top:3px">Drag on the plot to re-aim the objective vector \(c\).</div>
+    </div>
+    <div class="col tiny" style="font-size:14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <b>Preset:</b>
+        <select id="gPreset">
+          <option value="ex16">Example 1.6 (min −x₁−x₂)</option>
+          <option value="prod">Production planning (max)</option>
+          <option value="caseA">Ex 1.8 (a): unique optimum</option>
+          <option value="caseB1">Ex 1.8 (b): multiple optima, bounded</option>
+          <option value="caseB2">Ex 1.8 (b'): multiple optima, unbounded</option>
+          <option value="caseC">Ex 1.8 (c): unbounded cost −∞</option>
+          <option value="caseD">Ex 1.8 (d): infeasible</option>
+        </select>
+      </div>
+      <div class="widget" style="padding:8px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <b>Objective:</b><span id="gSense" class="readout">min</span>
+          <input id="gC1" type="number" step="0.5" value="-1"> x₁ +
+          <input id="gC2" type="number" step="0.5" value="-1"> x₂
+          <button class="btn sec" id="gFlip" style="padding:2px 8px">min⇄max</button>
+          <button class="btn" id="gWalk" style="padding:2px 10px">&#9654; simplex walk</button>
+        </div>
+        <div style="margin-top:5px">Objective line \(c'x = t\):
+          <input id="gT" type="range" min="0" max="100" value="50" style="width:96%">
+        </div>
+      </div>
+      <div class="widget" style="padding:8px;margin-top:7px">
+        <b>Constraints</b> (a·x₁ + b·x₂ ≤/≥ rhs)
+        <div id="gCons"></div>
+        <button class="btn sec" id="gAdd" style="padding:2px 10px;margin-top:3px">+ add</button>
+      </div>
+      <div id="gStatus" class="widget" style="padding:8px;margin-top:7px;min-height:56px"></div>
+      <table class="vtab" id="gVerts" style="margin-top:6px"></table>
+    </div>
+  </div>
+</section>
+
+<!-- 29 POSSIBILITIES -->
+<section class="slide">
+  <h2>The Four Possibilities</h2>
+  <p class="small">Fix the feasible set \(\{-x_1+x_2\le 1,\; x_1,x_2\ge0\}\) and vary the cost vector \(c\) (try these in the grapher presets!):</p>
+  <div class="cols small">
+    <div class="col">
+      <div class="box"><b>(a)</b> \(c=(1,1)\): a <b>unique</b> optimal solution — the corner \((0,0)\).</div>
+      <div class="box frag"><b>(b)</b> \(c=(1,0)\): <b>multiple optima</b>, a bounded edge \(\{(0,x_2): 0\le x_2\le 1\}\).</div>
+    </div>
+    <div class="col">
+      <div class="box frag"><b>(b')</b> \(c=(0,1)\): multiple optima forming an <b>unbounded</b> set (the whole \(x_1\)-axis).</div>
+      <div class="box frag"><b>(c)</b> \(c=(-1,-1)\): cost \(\to-\infty\) — <b>unbounded problem</b>.</div>
+    </div>
+  </div>
+  <div class="box orange frag"><b>(d)</b> Add \(x_1+x_2\le -2\): the feasible set is empty — <b>infeasible</b>.</div>
+</section>
+
+<!-- 29b CUBE 3D -->
+<section class="slide">
+  <div class="kicker">&sect;1.4 &middot; one dimension up</div>
+  <h2>Example 1.7 in 3D &mdash; Spin It Yourself</h2>
+  <div class="cols">
+    <div class="widget" style="flex:0 0 520px">
+      <canvas id="cubeCv" width="500" height="420" style="display:block;cursor:grab"></canvas>
+      <div class="tiny center" style="color:#777">drag to rotate &middot; orange slices are level sets \(x_1{+}x_2{+}x_3 = t\) sweeping toward the far corner</div>
+    </div>
+    <div class="col small">
+      \[\begin{aligned}\min\quad & -x_1-x_2-x_3\\ \text{s.t.}\quad & 0\le x_i\le 1,\;\; i=1,2,3\end{aligned}\]
+      <div class="box frag">The feasible set is the unit cube &mdash; 8 corners, 12 edges, 6 faces. The level sets of the objective are <b>planes</b>; sliding them as far as possible lands on the corner \((1,1,1)\), cost \(-3\).</div>
+      <div class="box orange frag">In \(n\) dimensions the cube has \(2^n\) corners &mdash; more than a googol by \(n=333\). The simplex method's whole job: find the best corner <i>without visiting them all</i>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 30 3D + CORNERS -->
+<section class="slide">
+  <h2>Higher Dimensions &amp; the Key Observation</h2>
+  <div class="cols">
+    <div class="col small">
+      <b>Three variables:</b> level sets of \(c'x\) are planes ⟂ \(c\); slide the plane in direction \(-c\).
+      <div class="box" style="margin-top:8px">
+        Ex. 1.7: \(\min -x_1-x_2-x_3\) over the unit cube \(0\le x_i\le 1\)
+        → optimum \((1,1,1)\), cost \(-3\). A corner again!
+      </div>
+      <div class="frag box blue" style="margin-top:8px">
+        <b>Standard form geometry:</b> \(Ax=b\) confines \(x\) to an \((n-m)\)-dim affine set; standing inside it, only \(x\ge0\) constrains us. E.g. \(x_1+x_2+x_3=1,\,x\ge0\) is a 2D triangle living in \(\mathbb{R}^3\).
+      </div>
+    </div>
+    <div class="col frag">
+      <div class="box orange" style="font-size:23px">
+        <b>Key observation.</b> In every example: if an optimal solution exists, one can be found at a <b>corner</b> of the feasible set.
+      </div>
+      <p class="small frag">Chapter 2 makes this a theorem — and the simplex method (Ch. 3) turns it into an algorithm that hops from corner to corner.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 SIMPLER FORM -->
+<section class="slide" data-checkpoint="cpC">
+  <div class="kicker">Canonical forms &middot; getting ready for algorithms</div>
+  <h2>A Simpler Form: All Constraints as "&ge;"</h2>
+  <p class="small">Every general LP feasible set can be written using only \(a_i'x\ge b_i\):</p>
+  <ul style="font-size:23px">
+    <li class="frag">\(a_i'x \le b_i \;\Longleftrightarrow\; -a_i'x \ge -b_i\)</li>
+    <li class="frag">\(a_i'x = b_i \;\Longleftrightarrow\; a_i'x \ge b_i \text{ and } -a_i'x \ge -b_i\)</li>
+    <li class="frag">\(x_j\ge 0\) and \(x_j\le 0\) are already of this type (with \(a_i = \pm e_j\))</li>
+  </ul>
+  <div class="frag box" style="margin-top:14px">
+    Stacking rows \(a_i'\) into a matrix \(A\) and \(b_i\) into \(b\):
+    \[\text{minimize } c'x \quad\text{subject to } Ax \ge b\]
+    — the <b>general form</b> we'll use for LP theory.
+  </div>
+</section>
+
+<!-- 10 DP1: Example 1.2 -->
+<section class="slide">
+  <h2>Click-through: Ex. 1.2 → General Form \(Ax \ge b\)</h2>
+  <div class="widget derive" id="dp1">
+    <div class="dsteps small">
+      <div class="step" data-note="Start with the LP from Example 1.1 — a mix of ≤, =, ≥ and sign constraints.">
+        \[\begin{aligned}\min\;& 2x_1-x_2+4x_3\\ \text{s.t. }& x_1+x_2+x_4\le 2\\ & 3x_2-x_3=5\\ & x_3+x_4\ge 3\\ & x_1\ge 0,\; x_3\le 0\end{aligned}\]
+      </div>
+      <div class="step" data-note="Multiply the ≤ constraint by −1 to flip it into a ≥ constraint.">
+        \[x_1+x_2+x_4\le 2 \;\;\Longrightarrow\;\; {\color{#861F41}-x_1-x_2-x_4\ge -2}\]
+      </div>
+      <div class="step" data-note="Split the equality into two opposing inequalities.">
+        \[3x_2-x_3=5 \;\;\Longrightarrow\;\; {\color{#861F41}3x_2-x_3\ge 5}\;\text{ and }\;{\color{#861F41}-3x_2+x_3\ge -5}\]
+      </div>
+      <div class="step" data-note="Sign constraints are already ≥ rows: x₁ ≥ 0 stays, and x₃ ≤ 0 becomes −x₃ ≥ 0.">
+        \[x_1 \ge 0, \qquad {\color{#861F41}-x_3 \ge 0}\]
+      </div>
+      <div class="step" data-note="Stack everything: six rows, all of the form aᵢ'x ≥ bᵢ. One matrix inequality Ax ≥ b captures the entire feasible set.">
+        \[\min\; c'x \;\;\text{ s.t. } Ax\ge b,\qquad
+        A=\begin{bmatrix}-1&-1&0&-1\\0&3&-1&0\\0&-3&1&0\\0&0&1&1\\1&0&0&0\\0&0&-1&0\end{bmatrix},\;
+        b=\begin{bmatrix}-2\\5\\-5\\3\\0\\0\end{bmatrix},\; c=\begin{bmatrix}2\\-1\\4\\0\end{bmatrix}\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">◀ Prev</button><span class="dots"></span><button class="btn dnext">Next step ▶</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 11 STANDARD FORM -->
+<section class="slide">
+  <h2>Standard Form</h2>
+  <div class="cols">
+    <div class="col">
+      \[
+      \begin{aligned}
+      \text{minimize}\quad & c'x\\
+      \text{subject to}\quad & Ax = b\\
+      & x \ge 0
+      \end{aligned}
+      \]
+      <div class="box small frag">Equalities + nonnegative variables only. This is the form our <b>algorithms</b> (simplex!) will operate on.</div>
+    </div>
+    <div class="col frag">
+      <b>Column interpretation</b>
+      \[Ax = A_1x_1 + A_2x_2 + \cdots + A_nx_n = \sum_{j=1}^n A_j x_j\]
+      <div class="small">where \(A_j\) is the \(j\)th <b>column</b> of \(A\). So \(Ax=b\) says: <i>combine the columns to synthesize \(b\)</i>.</div>
+    </div>
+  </div>
+  <div class="box orange small frag">
+    <b>Resource view:</b> columns \(A_j\) are resource vectors, \(b\) a target to synthesize, \(x_j\ge 0\) the amount of resource \(j\) used, \(c_j\) its unit cost. Minimize total cost.
+  </div>
+</section>
+
+<!-- 13 REDUCTION OVERVIEW -->
+<section class="slide">
+  <h2>Reduction to Standard Form</h2>
+  <p class="small">Standard form is a special case of the general form — but also the converse: <b>any LP can be transformed into an equivalent standard form LP.</b></p>
+  <table class="nice">
+    <tr><th>General form</th><th>Standard form</th></tr>
+    <tr><td>min \(c'x\)</td><td>min \(c'x\)</td></tr>
+    <tr><td>\(a_i'x \{\ge,\le,=\} b_i\)</td><td>\(Ax=b\)</td></tr>
+    <tr><td>\(x_j\ge0\) or \(x_j\le0\) or free</td><td>\(x\ge0\)</td></tr>
+  </table>
+  <div class="frag box orange" style="margin-top:12px">
+    Two steps: <b>(a)</b> eliminate nonpositive and free variables, <b>(b)</b> eliminate inequality constraints.
+    <br><span class="small">Payoff: we only need algorithms for standard form!</span>
+  </div>
+</section>
+
+<!-- 14 TRANSFORMATION RULES -->
+<section class="slide">
+  <h2>The Four Transformation Rules</h2>
+  <div class="cols small">
+    <div class="col">
+      <div class="box"><b>(a.1) Nonpositive variable</b> \(x_j\le 0\):<br>
+        replace \(x_j = -x_j'\) with \(x_j'\ge 0\).</div>
+      <div class="box frag"><b>(a.2) Free variable</b> \(x_j\):<br>
+        write \(x_j = x_j^+ - x_j^-\) with \(x_j^+, x_j^- \ge 0\).<br>
+        <span class="tiny">Any real is a difference of two nonnegatives: \(-5 = 0 - 5\).</span></div>
+    </div>
+    <div class="col">
+      <div class="box orange frag"><b>(b.1) ≤ constraint:</b> add a <b>slack</b> variable
+        \[\textstyle\sum_j a_{ij}x_j + s_i = b_i,\quad s_i\ge 0\]</div>
+      <div class="box orange frag"><b>(b.2) ≥ constraint:</b> subtract a <b>surplus</b> variable
+        \[\textstyle\sum_j a_{ij}x_j - s_i = b_i,\quad s_i\ge 0\]</div>
+    </div>
+  </div>
+  <div class="frag center small" style="color:#666">Cost of the makeover: more variables. Worth it — algorithms love standard form.</div>
+</section>
+
+<!-- 15 DP2: Example 1.4 -->
+<section class="slide">
+  <h2>Click-through: Ex. 1.4 → Standard Form</h2>
+  <div class="widget derive" id="dp2">
+    <div class="dsteps small">
+      <div class="step" data-note="The original problem: one ≥ constraint, one equality, x₁ signed, x₂ free.">
+        \[\begin{aligned}\min\;& 2x_1+4x_2\\ \text{s.t. }& x_1+x_2\ge 3\\ & 3x_1+2x_2=14\\ & x_1\ge 0\end{aligned}\]
+      </div>
+      <div class="step" data-note="Rule (a.2): x₂ is free, so split it: x₂ = x₂⁺ − x₂⁻ with both parts nonnegative.">
+        \[x_2 = {\color{#861F41}x_2^+ - x_2^-},\qquad x_2^+,\,x_2^-\ge 0\]
+      </div>
+      <div class="step" data-note="Rule (b.2): the ≥ constraint gets a surplus variable x₃ ≥ 0 subtracted to become an equality.">
+        \[x_1+x_2^+-x_2^-\ge 3\;\;\Longrightarrow\;\; x_1+x_2^+-x_2^-\,{\color{#861F41}-\,x_3}=3,\quad x_3\ge0\]
+      </div>
+      <div class="step" data-note="Assemble: all equality constraints, all variables ≥ 0. This is standard form — with 4 variables instead of 2.">
+        \[\begin{aligned}\min\;& 2x_1+4x_2^+-4x_2^-\\ \text{s.t. }& x_1+x_2^+-x_2^--x_3=3\\ & 3x_1+2x_2^+-2x_2^-=14\\ & x_1,\,x_2^+,\,x_2^-,\,x_3\ge 0\end{aligned}\]
+      </div>
+      <div class="step" data-note="Sanity check both directions. Feasible solutions map back and forth with equal cost — that's what 'equivalent' means (next slide).">
+        \[(x_1,x_2)=(6,-2)\;\longmapsto\;(x_1,x_2^+,x_2^-,x_3)=(6,0,2,1)\]
+        \[(x_1,x_2^+,x_2^-,x_3)=(8,1,6,0)\;\longmapsto\;(x_1,x_2)=(8,-5)\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">◀ Prev</button><span class="dots"></span><button class="btn dnext">Next step ▶</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 16 EQUIVALENCE -->
+<section class="slide">
+  <h2>What Does "Equivalent" Mean?</h2>
+  <p class="small">Consider two minimization problems \(\Pi_1\) and \(\Pi_2\). They are <b>equivalent</b> if they are both infeasible, or they have the same optimal cost.</p>
+  <div class="box frag">
+    <b>Lemma.</b> \(\Pi_1\) and \(\Pi_2\) are equivalent if:
+    <ol class="small">
+      <li>for every feasible solution to \(\Pi_1\), there is a feasible solution to \(\Pi_2\) with equal or lower cost, and</li>
+      <li>for every feasible solution to \(\Pi_2\), there is a feasible solution to \(\Pi_1\) with equal or lower cost.</li>
+    </ol>
+  </div>
+  <div class="frag box blue small" style="margin-top:12px">
+    <b>Which form when?</b> General form \(Ax\ge b\) → developing <b>theory</b>. Standard form \(Ax=b,\,x\ge0\) → running <b>algorithms</b>.
+  </div>
+</section>
+
+<!-- 23 PWL FUNCTIONS -->
+<section class="slide">
+  <div class="kicker">&sect;1.3 &middot; LPs in disguise</div>
+  <h2>Piecewise Linear Convex Functions</h2>
+  <div class="cols">
+    <div class="col">
+      Given \(c_1,\dots,c_m\in\mathbb{R}^n\) and scalars \(d_1,\dots,d_m\):
+      \[f(x)=\max_{i=1,\dots,m}\,(c_i'x+d_i)\]
+      is a <b>piecewise linear convex</b> function.
+      <div class="box frag small">Simplest example: \[|x| = \max\{x,\,-x\}\]</div>
+    </div>
+    <div class="col frag">
+      <svg viewBox="0 0 340 240" style="width:100%;background:#fff;border:1px solid #eee;border-radius:8px">
+        <line x1="20" y1="200" x2="320" y2="200" stroke="#999"/>
+        <line x1="170" y1="20" x2="170" y2="220" stroke="#999"/>
+        <line x1="30" y1="60" x2="310" y2="172" stroke="#c9c1b8" stroke-width="1.5"/>
+        <line x1="30" y1="172" x2="310" y2="60" stroke="#c9c1b8" stroke-width="1.5"/>
+        <line x1="30" y1="130" x2="310" y2="130" stroke="#c9c1b8" stroke-width="1.5"/>
+        <path d="M 30 60 L 118 95 L 218 130 L 310 60" fill="none" stroke="#861F41" stroke-width="3.5"/>
+        <text x="240" y="30" fill="#861F41" font-size="14" font-weight="bold">max of the lines</text>
+        <text x="40" y="220" fill="#888" font-size="12">the pointwise max of linear functions is convex</text>
+      </svg>
+    </div>
+  </div>
+  <div class="frag box orange small">Claim: minimizing such an \(f\) over a polyhedron <b>is an LP in disguise</b>. Let's see the trick →</div>
+</section>
+
+<!-- 24 DP3 EPIGRAPH -->
+<section class="slide">
+  <h2>Click-through: the "Epigraph Trick"</h2>
+  <div class="widget derive" id="dp3">
+    <div class="dsteps small">
+      <div class="step" data-note="A piecewise-linear convex objective. The max makes it nonlinear — as written, not an LP.">
+        \[\min_{x}\;\max_{i=1,\dots,m}\,(c_i'x+d_i)\qquad \text{s.t. } Ax\ge b\]
+      </div>
+      <div class="step" data-note="Key observation: for fixed x, the max equals the smallest z that sits above every one of the m linear pieces.">
+        \[\max_{i}\,(c_i'x+d_i) \;=\; \min\{\,z \;:\; z\ge c_i'x+d_i,\;\; i=1,\dots,m\,\}\]
+      </div>
+      <div class="step" data-note="So introduce z as a new decision variable and push the max into constraints — all linear now!">
+        \[\begin{aligned}\min_{x,\,z}\;& z\\ \text{s.t. }& {\color{#861F41}z\ge c_i'x+d_i,\quad i=1,\dots,m}\\ & Ax\ge b\end{aligned}\]
+      </div>
+      <div class="step" data-note="Why is it equivalent? At an optimum, z gets squeezed down until it equals the max — no slack survives minimization. Constraint version: max ≤ h just splits into m linear constraints directly.">
+        \[\text{At optimality: } z^*=\max_i\,(c_i'x^*+d_i).\]
+        \[\text{Also: } \max_i\,(c_i'x+d_i)\le h \iff c_i'x+d_i\le h\;\;\forall i\]
+      </div>
+      <div class="step" data-note="Concrete example: this 'min max' problem becomes a plain LP with one extra variable.">
+        \[\min\,\max\{2x_1+4x_2,\,2x_1+x_2\} \text{ s.t. } \dots
+        \;\;\Longrightarrow\;\;
+        \begin{aligned}\min\;& z\\ \text{s.t. } & z\ge 2x_1+4x_2\\ & z\ge 2x_1+x_2\\ & \dots\end{aligned}\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">◀ Prev</button><span class="dots"></span><button class="btn dnext">Next step ▶</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 25 DP4 ABSOLUTE VALUES -->
+<section class="slide">
+  <h2>Click-through: Absolute Values</h2>
+  <div class="widget derive" id="dp4">
+    <div class="dsteps small">
+      <div class="step" data-note="Cost with absolute values, cᵢ ≥ 0. Nonlinear as written.">
+        \[\min\;\sum_{i=1}^n c_i\,|x_i| \qquad \text{s.t. } Ax\ge b,\qquad (c_i\ge 0)\]
+      </div>
+      <div class="step" data-note="|xᵢ| is the smallest zᵢ satisfying both xᵢ ≤ zᵢ and −xᵢ ≤ zᵢ. Same epigraph idea as before, applied per coordinate.">
+        \[|x_i| = \min\{\,z_i : x_i\le z_i,\; -x_i\le z_i\,\}\]
+      </div>
+      <div class="step" data-note="Introduce z₁,…,zₙ and let minimization squeeze them down onto the absolute values.">
+        \[\begin{aligned}\min\;& \sum_{i=1}^n c_i z_i\\ \text{s.t. }& Ax\ge b\\ & {\color{#861F41}x_i\le z_i,\;\; -x_i\le z_i}\quad i=1,\dots,n\end{aligned}\]
+      </div>
+      <div class="step" data-note="Both assumptions are load-bearing: if some cᵢ < 0, the optimizer would inflate zᵢ to −∞ benefit… the squeeze argument breaks. Same if we were maximizing.">
+        \[\textbf{Warning:}\; \text{needs } c_i \ge 0 \;\text{ and minimization!}\]
+      </div>
+      <div class="step" data-note="Example: two extra constraints and one extra variable turn this into a plain LP.">
+        \[\min\; 2|x_1|+x_2 \;\text{ s.t. } x_1+x_2\ge 4
+        \;\Longrightarrow\;
+        \begin{aligned}\min\;& 2z_1+x_2\\ \text{s.t. }& x_1+x_2\ge 4\\ & x_1\le z_1,\; -x_1\le z_1\end{aligned}\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">◀ Prev</button><span class="dots"></span><button class="btn dnext">Next step ▶</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 26 DATA FITTING -->
+<section class="slide">
+  <h2>Application: Data Fitting</h2>
+  <p class="small">Data points \((a_i,b_i)\), \(i=1,\dots,m\). Fit a linear model \(b\approx a'x\); the <b>residual</b> at point \(i\) is \(|b_i-a_i'x|\).</p>
+  <div class="cols small">
+    <div class="col frag on">
+      <b>Minimize the largest residual (\(\ell_\infty\)):</b>
+      \[\min_x\;\max_i\,|b_i-a_i'x|\]
+      <div class="box">
+        \[\begin{aligned}\min\;& z\\ \text{s.t. } & b_i-a_i'x\le z\;\;\forall i\\ & a_i'x-b_i\le z\;\;\forall i\end{aligned}\]
+      </div>
+    </div>
+    <div class="col frag">
+      <b>Minimize the sum of residuals (\(\ell_1\)):</b>
+      \[\min_x\;\sum_{i=1}^m |b_i-a_i'x|\]
+      <div class="box">
+        \[\begin{aligned}\min\;& z_1+\cdots+z_m\\ \text{s.t. } & b_i-a_i'x\le z_i\;\;\forall i\\ & a_i'x-b_i\le z_i\;\;\forall i\end{aligned}\]
+      </div>
+    </div>
+  </div>
+  <div class="frag box orange small">Robust regression = linear programming. (Least squares is the \(\ell_2\) cousin — that one is calculus, not LP.)</div>
+</section>
+
+<!-- 30b EXPLORE MORE -->
+<section class="slide">
+  <div class="kicker">Keep playing after class</div>
+  <h2>Explore More (self-study)</h2>
+  <div class="cols small">
+    <div class="col">
+      <b>Live demo library</b> &mdash; <span style="color:#33658a">open-optimization.github.io/open-optimization-or-book/visualizations</span>
+      <ul>
+        <li><span class="chip">#modeling-intro</span> words &rarr; math tutorial</li>
+        <li><span class="chip">#objective-slider</span> objective level-line slider</li>
+        <li><span class="chip">#concept-quiz</span> 20-question LP concept quiz</li>
+        <li><span class="chip">#simplex-dictionary</span> pivot the bakery by hand (coming in Ch. 3!)</li>
+      </ul>
+    </div>
+    <div class="col frag">
+      <b>Bundled with these slides</b> (offline, in <code>figures/</code>)
+      <ul>
+        <li><a href="figures/lp-graphical-method.html" target="_blank">Graphical method explorer</a></li>
+        <li><a href="figures/lp-duality-explorer.html" target="_blank">Duality explorer</a> (for Ch. 4)</li>
+        <li><a href="figures/lp-sensitivity-explorer.html" target="_blank">Sensitivity explorer</a> (for Ch. 5)</li>
+      </ul>
+      <div class="box small">Course text: Hildebrand, <i>Mathematical Programming and Operations Research</i> &mdash; free &amp; open at <b>github.com/open-optimization</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 31 SUMMARY -->
+<section class="slide">
+  <h2>Summary</h2>
+  <ul style="font-size:23px">
+    <li>LP problems come in many shapes; <b>general form</b> \(Ax\ge b\) and <b>standard form</b> \(Ax=b,\,x\ge0\) capture them all.</li>
+    <li class="frag">Transformations: sign-splitting free variables, slack &amp; surplus variables — with a precise notion of <b>equivalence</b>.</li>
+    <li class="frag">Modeling: production, diet, capacity expansion, scheduling — variable choice is a design decision.</li>
+    <li class="frag">Piecewise linear convex objectives (max-of-linear, \(|x|\), residual fitting) reduce to LP via the <b>epigraph trick</b>.</li>
+    <li class="frag">Geometry: optimal solutions live at <b>corners</b> — the idea we build the whole course on.</li>
+  </ul>
+  <div class="box orange frag"><b>Next:</b> proofs bootcamp &amp; LaTeX — then the geometry of polyhedra (BT Ch. 2).</div>
+</section>
+
+
+<!-- WHITEBOARDS -->
+<section class="slide whiteboard" data-inkkey="wb1" data-toc="Whiteboard 1">
+  <div class="wbhead"><span class="kicker">Whiteboard 1</span><span class="tiny" style="color:#aaa"><span class="kbd">W</span> returns to your slide &middot; <span class="kbd">C</span> clears &middot; <span class="kbd">&rarr;</span> more boards</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb2" data-toc="Whiteboard 2">
+  <div class="wbhead"><span class="kicker">Whiteboard 2</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb3" data-toc="Whiteboard 3">
+  <div class="wbhead"><span class="kicker">Whiteboard 3</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb4" data-toc="Whiteboard 4">
+  <div class="wbhead"><span class="kicker">Whiteboard 4</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb5" data-toc="Whiteboard 5">
+  <div class="wbhead"><span class="kicker">Whiteboard 5</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb6" data-toc="Whiteboard 6">
+  <div class="wbhead"><span class="kicker">Whiteboard 6</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb7" data-toc="Whiteboard 7">
+  <div class="wbhead"><span class="kicker">Whiteboard 7</span></div>
+</section>
+
+</div></div>
+
+<div id="toc"><h3>Slides</h3><ul></ul></div>
+<canvas id="ink"></canvas>
+<div id="help" onclick="this.classList.remove('open')"><div class="card">
+  <h3>Keyboard controls</h3>
+  <b>&rarr; / Space / click</b> &mdash; next reveal or slide<br>
+  <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
+  <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
+  <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
+
+  <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; blank whiteboard pages, and back (pen auto-on)<br>
+
+  <b>?</b> &mdash; toggle this help &nbsp;&middot;&nbsp; <b>Esc</b> &mdash; close overlays<br>
+  <span style="font-size:14px;color:#777">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
+</div></div>
+<div id="cp"><div class="cpcard">
+  <div class="kicker">Checkpoint &middot; what do you think?</div>
+  <div id="cpQ"></div>
+  <div id="cpOpts"></div>
+  <div id="cpFb"></div>
+  <div style="text-align:right"><button class="btn" id="cpClose">Continue &#9654;</button></div>
+</div></div>
+
+
+
+<ol id="cpA" style="display:none" data-why="Feasible just means <b>all constraints hold</b>. Optimal is the stronger property: feasible <i>and</i> no feasible point has better cost. Keeping these separate is essential vocabulary.">
+  <li>True or false: a <b>feasible</b> solution must minimize the objective function.</li>
+  <li>True</li>
+  <li data-ok>False &mdash; feasible only means it satisfies the constraints</li>
+</ol>
+<ol id="cpB" style="display:none" data-why="With \(y_j\) = nurses working day \(j\), there is no way to write 'each nurse works 5 consecutive days' linearly. Choosing \(x_j\) = nurses <b>starting</b> on day \(j\) bakes the rule into the model. Variable choice is a design decision!">
+  <li>In the nurse-scheduling model, why did we use \(x_j\) = nurses <b>starting</b> their week on day \(j\), instead of \(y_j\) = nurses <b>working</b> on day \(j\)?</li>
+  <li>It gives fewer variables</li>
+  <li data-ok>The 5-consecutive-days rule can't be captured with \(y_j\)</li>
+  <li>\(y_j\) would have to be fractional</li>
+  <li>The objective would become nonlinear</li>
+</ol>
+<ol id="cpC" style="display:none" data-why="An equality is exactly the intersection of the two opposing inequalities: \(a'x = b \iff a'x \ge b\) and \(a'x \le b\).">
+  <li>An equality constraint \(a'x = b\) can be replaced by&hellip;</li>
+  <li>One \(\ge\) constraint</li>
+  <li data-ok>Two opposing inequality constraints</li>
+  <li>A single slack variable</li>
+  <li>Nothing &mdash; equalities can't be converted</li>
+</ol>
+
+<div id="pentools">
+  <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
+  <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
+  <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
+  <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
+  <button id="ppartial" title="precision eraser — cuts pieces out of strokes" style="background:#fff;border:2px solid #999">&#9986;</button>
+  <button id="pclear" style="background:#e8e2da">✕</button>
+    <button id="pexport" title="download annotations backup file" style="background:#33658a;color:#fff">&darr;</button>
+  <button id="pimport" title="load annotations from file" style="background:#1a7d3c;color:#fff">&uarr;</button>
+  <button id="pwipe" title="erase ALL annotations on ALL slides" style="background:#b3261e;color:#fff">&empty;</button>
+  <button id="pclose" style="background:#555;color:#fff">P</button>
+</div>
+
+<script>
+/* ================= slide framework ================= */
+(function(){
+const deck=document.getElementById('deck');
+const slides=[...deck.querySelectorAll('section.slide')];
+let cur=0,penOn=false;
+const bar=document.getElementById('progress'),counter=document.getElementById('counter');
+function frags(s){return [...s.querySelectorAll('.frag')];}
+function update(){
+  bar.style.width=((cur+1)/slides.length*100)+'%';
+  counter.textContent=(cur+1)+' / '+slides.length;
+  history.replaceState(null,'','#'+(cur+1));
+  try{localStorage.setItem('deckpos:'+location.pathname,cur);}catch(e){}
+  redrawInk();
+}
+function show(i,revealAll){
+  i=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===i));
+  cur=i;
+  if(revealAll)frags(slides[i]).forEach(f=>f.classList.add('on'));
+  update();
+  const cpid=slides[i].dataset.checkpoint;
+  if(cpid&&!slides[i].dataset.cpdone){slides[i].dataset.cpdone=1;setTimeout(()=>openCheckpoint(cpid),400);}
+}
+function next(){
+  const f=frags(slides[cur]).find(x=>!x.classList.contains('on'));
+  if(f){f.classList.add('on');return;}
+  if(cur<slides.length-1)show(cur+1);
+}
+function prev(){
+  const on=frags(slides[cur]).filter(x=>x.classList.contains('on'));
+  if(on.length){on[on.length-1].classList.remove('on');return;}
+  if(cur>0)show(cur-1,true);
+}
+addEventListener('keydown',e=>{
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
+  if(penOn&&(e.key==='c'||e.key==='C')){clearInk();return;}
+  switch(e.key){
+    case 'ArrowRight':case ' ':case 'PageDown':e.preventDefault();next();break;
+    case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'f':case 'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case 'p':case 'P':togglePen();break;
+    case 'h':case 'H':toggleHandout();break;
+    case 'l':case 'L':toggleLaser();break;
+    case 'w':case 'W':toggleWhiteboard();break;
+    case 'e':case 'E':cycleEraser();break;
+    case 'k':case 'K':if(slides[cur].dataset.checkpoint)openCheckpoint(slides[cur].dataset.checkpoint);break;
+    case 'm':case 'M':toc.classList.toggle('open');break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(cp)cp.classList.remove('open');break;
+    case '?':document.getElementById('help').classList.toggle('open');break;
+  }
+});
+deck.addEventListener('click',e=>{
+  if(penOn)return;
+  if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
+  next();
+});
+function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
+addEventListener('resize',fit);
+let tx=null;
+addEventListener('touchstart',e=>{if(e.target.closest('.widget'))return;tx=e.changedTouches[0].clientX;});
+addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next():prev());tx=null;});
+const toc=document.getElementById('toc');
+slides.forEach((s,i)=>{
+  const t=s.querySelector('h2,h1');
+  const li=document.createElement('li');
+  li.textContent=(i+1)+'. '+(t?t.textContent.trim():(s.dataset.toc||'Title'));
+  li.onclick=()=>{show(i);toc.classList.remove('open');};
+  toc.querySelector('ul').appendChild(li);
+});
+counter.onclick=()=>toc.classList.toggle('open');
+const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
+let drawing=false,penColor='#c8102e',curStroke=null,inkStore={};
+function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
+try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
+function deckRect(){return deck.getBoundingClientRect();}
+function toDeck(e){const r=deckRect();return [(e.clientX-r.left)/r.width*1280,(e.clientY-r.top)/r.height*720];}
+function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
+function drawStroke(c2,st,mapper,lw){
+  c2.strokeStyle=st.c;c2.lineWidth=lw;c2.lineCap='round';c2.lineJoin='round';c2.beginPath();
+  st.p.forEach((q,i)=>{const m=mapper?mapper(q):q;i?c2.lineTo(m[0],m[1]):c2.moveTo(m[0],m[1]);});
+  c2.stroke();
+}
+function redrawInk(){
+  ictx.clearRect(0,0,ink.width,ink.height);
+  (inkStore[inkKey()]||[]).forEach(st=>drawStroke(ictx,st,fromDeck,3));
+}
+function sizeInk(){ink.width=innerWidth;ink.height=innerHeight;redrawInk();}
+sizeInk();addEventListener('resize',sizeInk);
+function togglePen(){penOn=!penOn;document.getElementById('pentools').style.display=penOn?'flex':'none';ink.style.pointerEvents=penOn?'auto':'none';const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);}
+function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
+function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,ink.width,ink.height);}
+
+/* eraser: 'stroke' removes whole strokes, 'partial' cuts pieces out */
+let erasing=null;
+function setEraser(mode){
+  erasing=mode;
+  const pb=document.getElementById('peraser');if(pb)pb.classList.toggle('on',erasing==='stroke');
+  const pp=document.getElementById('ppartial');if(pp)pp.classList.toggle('on',erasing==='partial');
+  const tb=document.getElementById('tbErase');
+  if(tb){tb.classList.toggle('on',!!erasing);tb.innerHTML=erasing==='partial'?'&#9986;':'&#9676;';}
+  if(erasing&&!penOn)togglePen();
+  if(!erasing)redrawInk();
+}
+function cycleEraser(){setEraser(!erasing?'stroke':(erasing==='stroke'?'partial':null));}
+function drawEraserRing(e){
+  const r=deckRect();const R=Math.max(6,(erasing==='partial'?11:18)*r.width/1280);
+  ictx.beginPath();ictx.arc(e.clientX,e.clientY,R,0,7);
+  ictx.strokeStyle='#b3261e';ictx.lineWidth=1.5;
+  if(erasing!=='partial')ictx.setLineDash([4,4]);
+  ictx.stroke();ictx.setLineDash([]);
+}
+function segHit(q,a,b,R){
+  const dx=b[0]-a[0],dy=b[1]-a[1];
+  const L2=dx*dx+dy*dy||1e-9;
+  let t=((q[0]-a[0])*dx+(q[1]-a[1])*dy)/L2;
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(q[0]-(a[0]+t*dx),q[1]-(a[1]+t*dy))<R;
+}
+function eraseAt(e){
+  const q=toDeck(e),key=inkKey();
+  const arr=inkStore[key]||[];
+  let out;
+  if(erasing==='partial'){
+    const R=11;out=[];let changed=false;
+    arr.forEach(st=>{
+      let touched=false;const runs=[];let run=[];
+      for(let i=0;i<st.p.length;i++){
+        const p=st.p[i];
+        if(Math.hypot(p[0]-q[0],p[1]-q[1])<R){touched=true;if(run.length>1)runs.push(run);run=[];continue;}
+        if(run.length&&segHit(q,run[run.length-1],p,R)){touched=true;if(run.length>1)runs.push(run);run=[p];continue;}
+        run.push(p);
+      }
+      if(run.length>1)runs.push(run);
+      if(!touched){out.push(st);return;}
+      changed=true;
+      runs.forEach(rn=>out.push({c:st.c,p:rn}));
+    });
+    if(!changed)out=arr;
+  }else{
+    const R=18;
+    out=arr.filter(st=>!st.p.some(p=>Math.hypot(p[0]-q[0],p[1]-q[1])<R));
+  }
+  if(out!==arr){
+    if(out.length)inkStore[key]=out;else delete inkStore[key];
+    saveInk();
+  }
+  redrawInk();drawEraserRing(e);
+}
+ink.addEventListener('pointerdown',e=>{
+  e.preventDefault();drawing=true;
+  if(erasing){eraseAt(e);return;}
+  curStroke={c:penColor,p:[toDeck(e)]};
+  (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
+  ictx.beginPath();ictx.moveTo(e.clientX,e.clientY);
+});
+ink.addEventListener('pointermove',e=>{
+  if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
+  if(!drawing)return;e.preventDefault();
+  curStroke.p.push(toDeck(e));
+  ictx.lineTo(e.clientX,e.clientY);ictx.strokeStyle=penColor;ictx.lineWidth=3;ictx.lineCap='round';ictx.stroke();
+});
+addEventListener('pointerup',()=>{if(drawing)saveInk();drawing=false;});
+function injectInkPrints(){
+  removeInkPrints();
+  slides.forEach((sl,i)=>{
+    const sts=inkStore[inkKey(i)];
+    if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
+    if(!sts||!sts.length)return;
+    const c=document.createElement('canvas');
+    c.className='inkprint';c.width=1280;c.height=720;
+    sl.appendChild(c);
+    const c2=c.getContext('2d');
+    sts.forEach(st=>drawStroke(c2,st,null,3.5));
+  });
+}
+function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
+(function(){
+  const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
+  const tb=document.createElement('div');tb.id='touchbar';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbHelp">?</button>';
+  document.body.appendChild(tb);
+  if(coarse)tb.style.display='flex';
+  document.getElementById('tbPen').onclick=togglePen;
+  document.getElementById('tbErase').onclick=cycleEraser;
+  document.getElementById('tbClear').onclick=clearInk;
+  document.getElementById('tbPrev').onclick=prev;
+  document.getElementById('tbNext').onclick=next;
+  document.getElementById('tbWb').onclick=toggleWhiteboard;
+  document.getElementById('tbHand').onclick=toggleHandout;
+  document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
+})();
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);});
+document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
+document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
+document.getElementById('pclear').onclick=clearInk;
+document.getElementById('pclose').onclick=togglePen;
+document.getElementById('pexport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(inkStore)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(location.pathname.split('/').pop()||'deck').replace(/\.html?$/,'')+'-annotations.json';
+  a.click();URL.revokeObjectURL(a.href);
+};
+document.getElementById('pimport').onclick=()=>{
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const fr=new FileReader();
+    fr.onload=()=>{try{inkStore=JSON.parse(fr.result)||{};saveInk();redrawInk();}catch(e){alert('Could not read that annotations file.');}};
+    fr.readAsText(inp.files[0]);
+  };
+  inp.click();
+};
+document.getElementById('pwipe').onclick=()=>{
+  if(confirm('Erase ALL annotations on ALL slides of this deck? (Tip: use the ↓ button first to back them up.)')){inkStore={};saveInk();redrawInk();}
+};
+
+/* handout mode */
+function toggleHandout(){
+  document.body.classList.toggle('handout');
+  if(document.body.classList.contains('handout')){deck.style.transform='none';injectInkPrints();window.scrollTo(0,0);}
+  else{removeInkPrints();fit();redrawInk();}
+}
+addEventListener('beforeprint',()=>{document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
+addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
+/* laser pointer */
+const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
+let laserOn=false;
+function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';}
+addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
+/* whiteboard pages */
+let wbReturn=0;
+function toggleWhiteboard(){
+  const wbIdx=slides.findIndex(sl=>sl.classList.contains('whiteboard'));
+  if(wbIdx<0)return;
+  if(slides[cur].classList.contains('whiteboard')){
+    if(penOn)togglePen();
+    show(wbReturn);
+  }else{
+    wbReturn=cur;
+    show(wbIdx);
+    if(!penOn)togglePen();
+  }
+}
+/* checkpoint questions */
+const cp=document.getElementById('cp');
+function openCheckpoint(id){
+  const data=document.getElementById(id);if(!data||!cp)return;
+  const items=[...data.children];
+  document.getElementById('cpQ').innerHTML=items[0].innerHTML;
+  const opts=document.getElementById('cpOpts'),fb=document.getElementById('cpFb');
+  opts.innerHTML='';fb.innerHTML='';
+  items.slice(1).forEach(li=>{
+    const b=document.createElement('button');b.className='btn sec';
+    b.innerHTML=li.innerHTML;
+    b.onclick=()=>{
+      fb.innerHTML=(li.hasAttribute('data-ok')?'<span class="good">Correct.</span> ':'<span class="bad">Not quite.</span> ')+(data.dataset.why||'');
+      if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([fb]);
+    };
+    opts.appendChild(b);
+  });
+  cp.classList.add('open');
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([cp]);
+}
+if(cp)document.getElementById('cpClose').onclick=()=>cp.classList.remove('open');
+
+let startPos=parseInt(location.hash.slice(1))-1;
+if(isNaN(startPos)){try{startPos=+localStorage.getItem('deckpos:'+location.pathname)||0;}catch(e){startPos=0;}}
+show(startPos);
+fit();
+window.deckAPI={show,next,prev};
+})();
+
+/* ================= derivation players ================= */
+document.querySelectorAll('.derive').forEach(d=>{
+  const steps=[...d.querySelectorAll('.step')];
+  const note=d.querySelector('.dnote'),dots=d.querySelector('.dots');
+  let k=0;
+  steps.forEach((s,i)=>{
+    const dot=document.createElement('span');dot.className='dot';
+    dot.onclick=()=>go(i);dots.appendChild(dot);
+  });
+  function go(i){
+    k=Math.max(0,Math.min(steps.length-1,i));
+    steps.forEach((s,j)=>s.classList.toggle('shown',j<=k));
+    [...dots.children].forEach((dt,j)=>dt.classList.toggle('here',j===k));
+    note.innerHTML='<b>Step '+(k+1)+'/'+steps.length+':</b> '+(steps[k].dataset.note||'');
+    if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([d]);
+  }
+  d.querySelector('.dprev').onclick=()=>go(k-1);
+  d.querySelector('.dnext').onclick=()=>go(k+1);
+  go(0);
+});
+
+/* ================= LP helpers ================= */
+const BIG=500;
+function clipHP(poly,a,b,c){
+  const out=[],n=poly.length;
+  if(!n)return out;
+  for(let i=0;i<n;i++){
+    const P=poly[i],Q=poly[(i+1)%n];
+    const dP=a*P[0]+b*P[1]-c,dQ=a*Q[0]+b*Q[1]-c;
+    if(dP<=1e-9)out.push(P);
+    if((dP<-1e-9&&dQ>1e-9)||(dP>1e-9&&dQ<-1e-9)){
+      const t=dP/(dP-dQ);
+      out.push([P[0]+t*(Q[0]-P[0]),P[1]+t*(Q[1]-P[1])]);
+    }
+  }
+  return out;
+}
+function regionPoly(cons){
+  let poly=[[-BIG,-BIG],[BIG,-BIG],[BIG,BIG],[-BIG,BIG]];
+  for(const cn of cons){
+    if(cn.op==='ge')poly=clipHP(poly,-cn.a,-cn.b,-cn.rhs);
+    else poly=clipHP(poly,cn.a,cn.b,cn.rhs);
+    if(!poly.length)break;
+  }
+  return poly;
+}
+function dedupe(poly){
+  const vs=[];
+  for(const p of poly)if(!vs.some(q=>Math.abs(q[0]-p[0])<1e-6&&Math.abs(q[1]-p[1])<1e-6))vs.push(p);
+  return vs;
+}
+function isBoxVert(p){return Math.abs(p[0])>BIG-1||Math.abs(p[1])>BIG-1;}
+
+/* ================= sandbox widget ================= */
+(function(){
+const cv=document.getElementById('sbCanvas');if(!cv)return;
+const ctx=cv.getContext('2d');
+const els={pa:sbPA,pb:sbPB,L:sbL,M:sbM};
+function run(){
+  const pa=+sbPA.value,pb=+sbPB.value,L=+sbL.value,M=+sbM.value;
+  sbPAv.textContent=pa;sbPBv.textContent=pb;sbLv.textContent=L;sbMv.textContent=M;
+  const cons=[{a:4,b:5,op:'le',rhs:L},{a:2,b:4,op:'le',rhs:M},{a:-1,b:0,op:'le',rhs:0},{a:0,b:-1,op:'le',rhs:0}];
+  const verts=dedupe(regionPoly(cons));
+  const vals=verts.map(p=>pa*p[0]+pb*p[1]);
+  const best=Math.max(...vals),bi=vals.indexOf(best),bp=verts[bi];
+  const laborUsed=4*bp[0]+5*bp[1],matUsed=2*bp[0]+4*bp[1];
+  const bind=[];
+  if(Math.abs(laborUsed-L)<1e-6)bind.push('labor');
+  if(Math.abs(matUsed-M)<1e-6)bind.push('material');
+  sbOut.innerHTML='<b>Optimal plan:</b> make <b>'+bp[0].toFixed(1)+'</b> of A and <b>'+bp[1].toFixed(1)+'</b> of B'+
+    '<br><b>Profit:</b> $'+best.toFixed(0)+
+    '<br><b>Binding:</b> '+(bind.length?bind.join(' + '):'none')+
+    '<br><span style="color:#777">Leftover: '+(L-laborUsed).toFixed(0)+' h labor, '+(M-matUsed).toFixed(0)+' kg material</span>';
+  // draw
+  const vx={xmin:-5,xmax:85,ymin:-5,ymax:70};
+  const X=x=>(x-vx.xmin)/(vx.xmax-vx.xmin)*cv.width;
+  const Y=y=>cv.height-(y-vx.ymin)/(vx.ymax-vx.ymin)*cv.height;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#eee';
+  for(let g=0;g<=80;g+=20){ctx.beginPath();ctx.moveTo(X(g),Y(vx.ymin));ctx.lineTo(X(g),Y(vx.ymax));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(X(vx.xmin),Y(g));ctx.lineTo(X(vx.xmax),Y(g));ctx.stroke();}
+  ctx.beginPath();verts.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.closePath();
+  ctx.fillStyle='rgba(134,31,65,.15)';ctx.fill();ctx.strokeStyle='#861F41';ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle='#555';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(vx.xmin),Y(0));ctx.lineTo(X(vx.xmax),Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(0),Y(vx.ymin));ctx.lineTo(X(0),Y(vx.ymax));ctx.stroke();
+  // iso line at optimum
+  ctx.strokeStyle='#E5751F';ctx.setLineDash([7,5]);ctx.lineWidth=2;
+  ctx.beginPath();
+  if(Math.abs(pb)>1e-9){ctx.moveTo(X(vx.xmin),Y((best-pa*vx.xmin)/pb));ctx.lineTo(X(vx.xmax),Y((best-pa*vx.xmax)/pb));}
+  ctx.stroke();ctx.setLineDash([]);
+  verts.forEach((p,i)=>{
+    ctx.fillStyle=i===bi?'#1a7d3c':'#26282e';
+    ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),i===bi?7:4,0,7);ctx.fill();
+  });
+  ctx.fillStyle='#1a7d3c';ctx.font='bold 13px sans-serif';
+  ctx.fillText('optimum',X(bp[0])+9,Y(bp[1])-9);
+}
+[sbPA,sbPB,sbL,sbM].forEach(s=>s.addEventListener('input',run));
+run();
+})();
+
+/* ================= grapher widget ================= */
+(function(){
+const cv=document.getElementById('gCanvas');if(!cv)return;
+const ctx=cv.getContext('2d');
+let cons=[],obj={c1:-1,c2:-1,sense:'min'},view={xmin:-1,xmax:4,ymin:-1,ymax:4};
+const presets={
+  ex16:{obj:{c1:-1,c2:-1,sense:'min'},view:{xmin:-.7,xmax:3.6,ymin:-.7,ymax:3.6},
+    cons:[{a:1,b:2,op:'le',rhs:3},{a:2,b:1,op:'le',rhs:3},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  prod:{obj:{c1:40,c2:55,sense:'max'},view:{xmin:-6,xmax:60,ymin:-6,ymax:50},
+    cons:[{a:4,b:5,op:'le',rhs:200},{a:2,b:4,op:'le',rhs:160},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  caseA:{obj:{c1:1,c2:1,sense:'min'},view:{xmin:-1,xmax:4,ymin:-1,ymax:4},
+    cons:[{a:-1,b:1,op:'le',rhs:1},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  caseB1:{obj:{c1:1,c2:0,sense:'min'},view:{xmin:-1,xmax:4,ymin:-1,ymax:4},
+    cons:[{a:-1,b:1,op:'le',rhs:1},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  caseB2:{obj:{c1:0,c2:1,sense:'min'},view:{xmin:-1,xmax:4,ymin:-1,ymax:4},
+    cons:[{a:-1,b:1,op:'le',rhs:1},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  caseC:{obj:{c1:-1,c2:-1,sense:'min'},view:{xmin:-1,xmax:4,ymin:-1,ymax:4},
+    cons:[{a:-1,b:1,op:'le',rhs:1},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0}]},
+  caseD:{obj:{c1:1,c2:1,sense:'min'},view:{xmin:-3,xmax:4,ymin:-3,ymax:4},
+    cons:[{a:-1,b:1,op:'le',rhs:1},{a:1,b:0,op:'ge',rhs:0},{a:0,b:1,op:'ge',rhs:0},{a:1,b:1,op:'le',rhs:-2}]}
+};
+const X=x=>(x-view.xmin)/(view.xmax-view.xmin)*cv.width;
+const Y=y=>cv.height-(y-view.ymin)/(view.ymax-view.ymin)*cv.height;
+const consDiv=document.getElementById('gCons');
+function buildRows(){
+  consDiv.innerHTML='';
+  cons.forEach((c,i)=>{
+    const r=document.createElement('div');r.className='crow';
+    r.innerHTML='<input type="number" step="0.5" value="'+c.a+'"> x₁ + <input type="number" step="0.5" value="'+c.b+'"> x₂ '+
+      '<select><option value="le"'+(c.op==='le'?' selected':'')+'>≤</option><option value="ge"'+(c.op==='ge'?' selected':'')+'>≥</option></select>'+
+      '<input type="number" step="0.5" value="'+c.rhs+'"> <button class="btn sec" style="padding:0 7px">✕</button>';
+    const [ia,ib]= r.querySelectorAll('input[type=number]');
+    const inputs=r.querySelectorAll('input[type=number]');
+    inputs[0].oninput=()=>{c.a=+inputs[0].value||0;draw();};
+    inputs[1].oninput=()=>{c.b=+inputs[1].value||0;draw();};
+    inputs[2].oninput=()=>{c.rhs=+inputs[2].value||0;draw();};
+    r.querySelector('select').onchange=e=>{c.op=e.target.value;draw();};
+    r.querySelector('button').onclick=()=>{cons.splice(i,1);buildRows();draw();};
+    consDiv.appendChild(r);
+  });
+}
+document.getElementById('gAdd').onclick=()=>{if(cons.length<8){cons.push({a:1,b:1,op:'le',rhs:2});buildRows();draw();}};
+const c1In=document.getElementById('gC1'),c2In=document.getElementById('gC2'),
+      tIn=document.getElementById('gT'),senseOut=document.getElementById('gSense'),
+      status=document.getElementById('gStatus'),vtab=document.getElementById('gVerts');
+c1In.oninput=()=>{obj.c1=+c1In.value||0;syncT();draw();};
+c2In.oninput=()=>{obj.c2=+c2In.value||0;syncT();draw();};
+document.getElementById('gFlip').onclick=()=>{obj.sense=obj.sense==='min'?'max':'min';senseOut.textContent=obj.sense;draw();};
+tIn.oninput=draw;
+document.getElementById('gPreset').onchange=e=>load(e.target.value);
+function load(name){
+  const p=presets[name];
+  cons=p.cons.map(c=>({...c}));obj={...p.obj};view={...p.view};
+  c1In.value=obj.c1;c2In.value=obj.c2;senseOut.textContent=obj.sense;
+  buildRows();syncT();draw();
+}
+function syncT(){
+  const verts=dedupe(regionPoly(cons)).filter(p=>!isBoxVert(p));
+  if(!verts.length){tIn.min=-10;tIn.max=10;return;}
+  const vals=verts.map(p=>obj.c1*p[0]+obj.c2*p[1]);
+  const lo=Math.min(...vals),hi=Math.max(...vals),pad=(hi-lo)*0.4+1;
+  tIn.min=(lo-pad).toFixed(2);tIn.max=(hi+pad).toFixed(2);tIn.step=((hi-lo+2*pad)/200).toFixed(3);
+  tIn.value=obj.sense==='min'?lo:hi;
+}
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const poly=regionPoly(cons);
+  const allVerts=dedupe(poly);
+  const verts=allVerts.filter(p=>!isBoxVert(p));
+  // grid
+  const span=view.xmax-view.xmin;
+  const step=span>30?10:(span>12?5:1);
+  ctx.strokeStyle='#eee';ctx.lineWidth=1;
+  for(let g=Math.ceil(view.xmin/step)*step;g<=view.xmax;g+=step){ctx.beginPath();ctx.moveTo(X(g),0);ctx.lineTo(X(g),cv.height);ctx.stroke();}
+  for(let g=Math.ceil(view.ymin/step)*step;g<=view.ymax;g+=step){ctx.beginPath();ctx.moveTo(0,Y(g));ctx.lineTo(cv.width,Y(g));ctx.stroke();}
+  // region (clip to view for drawing)
+  let dpoly=poly.slice();
+  dpoly=clipHP(dpoly,1,0,view.xmax);dpoly=clipHP(dpoly,-1,0,-view.xmin);
+  dpoly=clipHP(dpoly,0,1,view.ymax);dpoly=clipHP(dpoly,0,-1,-view.ymin);
+  if(dpoly.length){
+    ctx.beginPath();dpoly.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.closePath();
+    ctx.fillStyle='rgba(134,31,65,.14)';ctx.fill();
+  }
+  // constraint lines
+  cons.forEach((c,i)=>{
+    ctx.strokeStyle='#8a8078';ctx.lineWidth=1.6;
+    ctx.beginPath();
+    if(Math.abs(c.b)>1e-9){
+      ctx.moveTo(X(view.xmin),Y((c.rhs-c.a*view.xmin)/c.b));
+      ctx.lineTo(X(view.xmax),Y((c.rhs-c.a*view.xmax)/c.b));
+    }else if(Math.abs(c.a)>1e-9){
+      ctx.moveTo(X(c.rhs/c.a),Y(view.ymin));ctx.lineTo(X(c.rhs/c.a),Y(view.ymax));
+    }
+    ctx.stroke();
+  });
+  // axes
+  ctx.strokeStyle='#555';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,Y(0));ctx.lineTo(cv.width,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(0),0);ctx.lineTo(X(0),cv.height);ctx.stroke();
+  // infeasible?
+  if(!poly.length){
+    status.innerHTML='<span class="bad">INFEASIBLE</span> — the constraints have no common point. The feasible set is empty.';
+    vtab.innerHTML='';return;
+  }
+  // objective evaluation
+  const sgn=obj.sense==='min'?1:-1;
+  const vals=allVerts.map(p=>obj.c1*p[0]+obj.c2*p[1]);
+  let bestIdx=0;
+  vals.forEach((v,i)=>{if(sgn*v<sgn*vals[bestIdx])bestIdx=i;});
+  const unbounded=isBoxVert(allVerts[bestIdx]);
+  // iso line
+  const t=+tIn.value;
+  ctx.strokeStyle='#E5751F';ctx.lineWidth=2.5;ctx.setLineDash([8,5]);
+  ctx.beginPath();
+  if(Math.abs(obj.c2)>1e-9){
+    ctx.moveTo(X(view.xmin),Y((t-obj.c1*view.xmin)/obj.c2));
+    ctx.lineTo(X(view.xmax),Y((t-obj.c1*view.xmax)/obj.c2));
+  }else if(Math.abs(obj.c1)>1e-9){
+    ctx.moveTo(X(t/obj.c1),Y(view.ymin));ctx.lineTo(X(t/obj.c1),Y(view.ymax));
+  }
+  ctx.stroke();ctx.setLineDash([]);
+  // c arrow from region centroid
+  if(verts.length||dpoly.length){
+    const base=verts.length?verts:dpoly;
+    const cx=base.reduce((s,p)=>s+p[0],0)/base.length,cy=base.reduce((s,p)=>s+p[1],0)/base.length;
+    const nrm=Math.hypot(obj.c1,obj.c2)||1;
+    const ax=obj.c1/nrm*(span*0.13),ay=obj.c2/nrm*(span*0.13);
+    ctx.strokeStyle='#33658a';ctx.fillStyle='#33658a';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(X(cx),Y(cy));ctx.lineTo(X(cx+ax),Y(cy+ay));ctx.stroke();
+    const ang=Math.atan2(Y(cy+ay)-Y(cy),X(cx+ax)-X(cx));
+    ctx.beginPath();
+    ctx.moveTo(X(cx+ax),Y(cy+ay));
+    ctx.lineTo(X(cx+ax)-11*Math.cos(ang-0.4),Y(cy+ay)-11*Math.sin(ang-0.4));
+    ctx.lineTo(X(cx+ax)-11*Math.cos(ang+0.4),Y(cy+ay)-11*Math.sin(ang+0.4));
+    ctx.closePath();ctx.fill();
+    ctx.font='bold 14px sans-serif';
+    ctx.fillText('c',X(cx+ax)+6,Y(cy+ay)-4);
+  }
+  // vertices + optimal
+  const bestVal=vals[bestIdx];
+  const optSet=allVerts.map((p,i)=>Math.abs(vals[i]-bestVal)<1e-6&&!isBoxVert(p));
+  verts.forEach(p=>{
+    const i=allVerts.indexOf(p);
+    const isOpt=!unbounded&&optSet[i];
+    ctx.fillStyle=isOpt?'#1a7d3c':'#26282e';
+    ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),isOpt?7:4.5,0,7);ctx.fill();
+    ctx.font='12px sans-serif';ctx.fillStyle='#444';
+    ctx.fillText('('+(+p[0].toFixed(2))+', '+(+p[1].toFixed(2))+')',X(p[0])+8,Y(p[1])-8);
+  });
+  // status
+  if(unbounded){
+    status.innerHTML='<span class="bad">UNBOUNDED</span> — the objective improves forever in direction '+(obj.sense==='min'?'−c':'c')+'. Optimal cost is '+(obj.sense==='min'?'−∞':'+∞')+'.';
+  }else{
+    const nOpt=optSet.filter(Boolean).length;
+    const bp=allVerts[bestIdx];
+    status.innerHTML='<span class="good">'+obj.sense.toUpperCase()+' value: '+bestVal.toFixed(2)+'</span> at ('+bp[0].toFixed(2)+', '+bp[1].toFixed(2)+')'+
+      (nOpt>1?' — <span class="mid">multiple optima!</span> the whole edge between green corners is optimal':'')+
+      '<br><span style="color:#777">Drag the t-slider to '+bestVal.toFixed(2)+' to see the objective line touch the optimum.</span>';
+  }
+  // vertex table
+  let html='<tr><th>corner</th><th>c′x</th></tr>';
+  verts.forEach(p=>{
+    const i=allVerts.indexOf(p);
+    html+='<tr'+(!unbounded&&optSet[i]?' class="opt"':'')+'><td>('+(+p[0].toFixed(2))+', '+(+p[1].toFixed(2))+')</td><td>'+vals[i].toFixed(2)+'</td></tr>';
+  });
+  vtab.innerHTML=verts.length?html:'';
+}
+// drag to set c
+let dragging=false;
+function setCFromEvent(e){
+  const r=cv.getBoundingClientRect();
+  const mx=(e.clientX-r.left)/r.width*cv.width,my=(e.clientY-r.top)/r.height*cv.height;
+  const wx=view.xmin+mx/cv.width*(view.xmax-view.xmin);
+  const wy=view.ymin+(cv.height-my)/cv.height*(view.ymax-view.ymin);
+  const poly=dedupe(regionPoly(cons)).filter(p=>!isBoxVert(p));
+  let cx=0,cy=0;
+  if(poly.length){cx=poly.reduce((s,p)=>s+p[0],0)/poly.length;cy=poly.reduce((s,p)=>s+p[1],0)/poly.length;}
+  let dx=wx-cx,dy=wy-cy;
+  const nrm=Math.hypot(dx,dy);
+  if(nrm<1e-6)return;
+  dx/=nrm;dy/=nrm;
+  obj.c1=Math.round(dx*20)/10;obj.c2=Math.round(dy*20)/10;
+  c1In.value=obj.c1;c2In.value=obj.c2;
+  syncT();draw();
+}
+cv.addEventListener('pointerdown',e=>{dragging=true;setCFromEvent(e);});
+cv.addEventListener('pointermove',e=>{if(dragging)setCFromEvent(e);});
+addEventListener('pointerup',()=>dragging=false);
+
+// animated simplex walk along vertices
+let walkAnim=null;
+document.getElementById('gWalk').onclick=()=>{
+  if(walkAnim){cancelAnimationFrame(walkAnim);walkAnim=null;}
+  const polyO=dedupe(regionPoly(cons)).filter(p=>!isBoxVert(p));
+  if(polyO.length<1)return;
+  const sgn=obj.sense==='min'?1:-1;
+  const vv=p=>sgn*(obj.c1*p[0]+obj.c2*p[1]);
+  let iCur=0;polyO.forEach((p,i)=>{if(vv(p)>vv(polyO[iCur]))iCur=i;});
+  const idxPath=[iCur];
+  let guard=0;
+  while(guard++<30){
+    const n=polyO.length,here=idxPath[idxPath.length-1];
+    const nb=[(here+1)%n,(here-1+n)%n];
+    let best=null;
+    nb.forEach(j=>{if(vv(polyO[j])<vv(polyO[here])-1e-9&&(best===null||vv(polyO[j])<vv(polyO[best])))best=j;});
+    if(best===null)break;
+    idxPath.push(best);
+  }
+  const pts=idxPath.map(i=>polyO[i]);
+  const t0=performance.now(),perEdge=900,total=Math.max(1,(pts.length-1))*perEdge;
+  function frame(now){
+    const el=Math.min(now-t0,total);
+    const seg=pts.length>1?Math.min(Math.floor(el/perEdge),pts.length-2):0;
+    const fr=pts.length>1?(el-seg*perEdge)/perEdge:1;
+    draw();
+    ctx.save();
+    ctx.strokeStyle='#1a7d3c';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(X(pts[0][0]),Y(pts[0][1]));
+    for(let k=1;k<=seg;k++)ctx.lineTo(X(pts[k][0]),Y(pts[k][1]));
+    let px=pts[0][0],py=pts[0][1];
+    if(pts.length>1){
+      const a=pts[seg],b=pts[seg+1];
+      px=a[0]+fr*(b[0]-a[0]);py=a[1]+fr*(b[1]-a[1]);
+      ctx.lineTo(X(px),Y(py));
+    }
+    ctx.stroke();
+    ctx.beginPath();ctx.arc(X(px),Y(py),9,0,7);ctx.fillStyle='#1a7d3c';ctx.fill();
+    ctx.beginPath();ctx.arc(X(pts[0][0]),Y(pts[0][1]),6,0,7);ctx.strokeStyle='#b25a12';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.restore();
+    if(now-t0<total)walkAnim=requestAnimationFrame(frame);
+    else walkAnim=null;
+  }
+  walkAnim=requestAnimationFrame(frame);
+};
+load('ex16');
+})();
+
+/* ================= 3D cube (Example 1.7) ================= */
+(function(){
+const cv=document.getElementById('cubeCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+const V=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
+const E=[[0,1],[0,2],[1,3],[2,3],[4,5],[4,6],[5,7],[6,7],[0,4],[1,5],[2,6],[3,7]];
+let rx=-0.42,ry=0.7,dragging=false,lx=0,ly=0,userTouched=false;
+const SC=185;
+function proj(p){
+  const x=p[0]-.5,y=p[1]-.5,z=p[2]-.5;
+  const c1=Math.cos(ry),s1=Math.sin(ry);
+  const X1=c1*x+s1*z,Z1=-s1*x+c1*z;
+  const c2=Math.cos(rx),s2=Math.sin(rx);
+  const Y2=c2*y-s2*Z1,Z2=s2*y+c2*Z1;
+  return [250+SC*X1,205-SC*Y2,Z2];
+}
+function slicePts(t){
+  const out=[];
+  E.forEach(([a,b])=>{
+    const sa=V[a][0]+V[a][1]+V[a][2],sb=V[b][0]+V[b][1]+V[b][2];
+    if((sa-t)*(sb-t)<0){
+      const u=(t-sa)/(sb-sa);
+      out.push([V[a][0]+u*(V[b][0]-V[a][0]),V[a][1]+u*(V[b][1]-V[a][1]),V[a][2]+u*(V[b][2]-V[a][2])]);
+    }
+  });
+  const pr=out.map(proj);
+  if(pr.length<3)return pr;
+  const cx=pr.reduce((s,p)=>s+p[0],0)/pr.length,cy=pr.reduce((s,p)=>s+p[1],0)/pr.length;
+  const order=pr.map((p,i)=>[Math.atan2(p[1]-cy,p[0]-cx),i]).sort((a,b)=>a[0]-b[0]);
+  return order.map(o=>pr[o[1]]);
+}
+function render(){
+  ctx.clearRect(0,0,500,420);
+  // slices (far to near in t)
+  [0.6,1.5,2.4].forEach((t,k)=>{
+    const pts=slicePts(t);
+    if(pts.length>=3){
+      ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+      ctx.fillStyle='rgba(229,117,31,'+(0.10+0.07*k)+')';ctx.fill();
+      ctx.strokeStyle='rgba(229,117,31,.75)';ctx.setLineDash([6,5]);ctx.lineWidth=1.6;ctx.stroke();ctx.setLineDash([]);
+    }
+  });
+  // edges
+  ctx.strokeStyle='#861F41';ctx.lineWidth=2.2;
+  E.forEach(([a,b])=>{
+    const pa=proj(V[a]),pb=proj(V[b]);
+    ctx.globalAlpha=0.45+0.55*Math.max(0,(pa[2]+pb[2])/2+0.5);
+    ctx.beginPath();ctx.moveTo(pa[0],pa[1]);ctx.lineTo(pb[0],pb[1]);ctx.stroke();
+  });
+  ctx.globalAlpha=1;
+  // vertices
+  V.forEach((v,i)=>{
+    const p=proj(v);
+    const opt=(i===7);
+    ctx.beginPath();ctx.arc(p[0],p[1],opt?8:4.5,0,7);
+    ctx.fillStyle=opt?'#1a7d3c':'#26282e';ctx.fill();
+    if(opt){
+      ctx.beginPath();ctx.arc(p[0],p[1],13,0,7);ctx.strokeStyle='#1a7d3c';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.fillStyle='#1a7d3c';ctx.font='bold 15px sans-serif';
+      ctx.fillText('(1,1,1)  cost \u22123',p[0]+16,p[1]+4);
+    }
+  });
+  const o=proj([0,0,0]);
+  ctx.fillStyle='#888';ctx.font='13px sans-serif';ctx.fillText('(0,0,0)',o[0]+8,o[1]+14);
+}
+function loop(){
+  if(!dragging&&!userTouched)ry+=0.004;
+  render();
+  requestAnimationFrame(loop);
+}
+cv.addEventListener('pointerdown',e=>{dragging=true;userTouched=true;lx=e.clientX;ly=e.clientY;cv.style.cursor='grabbing';});
+addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  ry+=(e.clientX-lx)*0.008;rx-=(e.clientY-ly)*0.008;
+  rx=Math.max(-1.4,Math.min(1.4,rx));
+  lx=e.clientX;ly=e.clientY;
+});
+addEventListener('pointerup',()=>{dragging=false;cv.style.cursor='grab';});
+loop();
+})();
+
+/* ================= matrix anatomy ================= */
+(function(){
+const grid=document.getElementById('mxGrid');if(!grid)return;
+const Avals=[[3,-1,0,2],[1,4,-2,0],[0,5,1,-3]];
+const out=document.getElementById('mxOut');
+const cells=[];
+Avals.forEach((row,i)=>row.forEach((v,j)=>{
+  const d=document.createElement('div');d.className='mxc';d.textContent=v;
+  d.onclick=()=>{
+    cells.forEach(c=>c.el.classList.remove('rowhl','colhl','pick'));
+    cells.forEach(c=>{if(c.i===i)c.el.classList.add('rowhl');if(c.j===j)c.el.classList.add('colhl');});
+    d.classList.add('pick');
+    out.innerHTML='\\(a_{'+(i+1)+(j+1)+'} = '+v+'\\) &nbsp;&mdash;&nbsp; <span style="color:#861F41;font-weight:700">row '+(i+1)+'</span>, <span style="color:#33658a;font-weight:700">column '+(j+1)+'</span>';
+    if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([out]);
+  };
+  grid.appendChild(d);cells.push({el:d,i:i,j:j});
+}));
+})();
+
+/* ================= inner product explorer ================= */
+(function(){
+const cv=document.getElementById('ipCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+const a=[2,1];let x=[1,2];
+const C={x:200,y:160},S=40;
+function arrow(v,color,label){
+  const px=C.x+v[0]*S,py=C.y-v[1]*S;
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(px,py);ctx.stroke();
+  const ang=Math.atan2(py-C.y,px-C.x);
+  ctx.beginPath();ctx.moveTo(px,py);
+  ctx.lineTo(px-11*Math.cos(ang-0.4),py-11*Math.sin(ang-0.4));
+  ctx.lineTo(px-11*Math.cos(ang+0.4),py-11*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fill();
+  ctx.font='bold 15px sans-serif';ctx.fillText(label,px+8,py-6);
+}
+function draw(){
+  ctx.clearRect(0,0,400,300);
+  ctx.strokeStyle='#eee';
+  for(let g=-4;g<=4;g++){
+    ctx.beginPath();ctx.moveTo(C.x+g*S,0);ctx.lineTo(C.x+g*S,300);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,C.y+g*S);ctx.lineTo(400,C.y+g*S);ctx.stroke();
+  }
+  ctx.strokeStyle='#999';
+  ctx.beginPath();ctx.moveTo(0,C.y);ctx.lineTo(400,C.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(C.x,0);ctx.lineTo(C.x,300);ctx.stroke();
+  ctx.strokeStyle='#c9b8a8';ctx.setLineDash([6,5]);ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(C.x+a[1]*S*3,C.y+a[0]*S*3);ctx.lineTo(C.x-a[1]*S*3,C.y-a[0]*S*3);ctx.stroke();ctx.setLineDash([]);
+  ctx.font='12px sans-serif';ctx.fillStyle='#999';ctx.fillText("a'x = 0",C.x-a[1]*S*2.4-30,C.y-a[0]*S*2.4-6);
+  arrow(a,'#861F41','a');
+  arrow(x,'#33658a','x');
+  const val=a[0]*x[0]+a[1]*x[1];
+  const cls=val>0.05?'good':(val<-0.05?'bad':'mid');
+  document.getElementById('ipOut').innerHTML="a'x = ("+a[0]+")("+x[0].toFixed(1)+") + ("+a[1]+")("+x[1].toFixed(1)+") = <span class='"+cls+"' style='font-size:21px'>"+val.toFixed(2)+"</span>"+
+    "<br><span class='tiny'>"+(val>0.05?'positive: x on the same side as a (acute angle)':(val<-0.05?'negative: x on the opposite side (obtuse angle)':'zero: x perpendicular to a'))+"</span>";
+}
+let drag=false;
+function setx(e){
+  const r=cv.getBoundingClientRect();
+  const mx=(e.clientX-r.left)*(cv.width/r.width),my=(e.clientY-r.top)*(cv.height/r.height);
+  x=[(mx-C.x)/S,(C.y-my)/S];
+  draw();
+}
+cv.addEventListener('pointerdown',e=>{drag=true;setx(e);});
+cv.addEventListener('pointermove',e=>{if(drag)setx(e);});
+addEventListener('pointerup',()=>drag=false);
+draw();
+})();
+
+/* ================= halfplane explorer ================= */
+(function(){
+const cv=document.getElementById('hpCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+let a=[1.5,1],pT=[-1.2,2.2];
+const C={x:215,y:170},S=44;
+const bs=document.getElementById('hpB'),bv=document.getElementById('hpBv'),out=document.getElementById('hpOut');
+const Pt=v=>[C.x+v[0]*S,C.y-v[1]*S];
+function draw(){
+  const b=+bs.value;bv.textContent=b.toFixed(1);
+  ctx.clearRect(0,0,430,330);
+  let poly=[[-6,-6],[6,-6],[6,6],[-6,6]];
+  poly=clipHP(poly,-a[0],-a[1],-b);
+  if(poly.length){
+    ctx.beginPath();poly.forEach((p,i)=>{const q=Pt(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});ctx.closePath();
+    ctx.fillStyle='rgba(134,31,65,.12)';ctx.fill();
+  }
+  ctx.strokeStyle='#e8e8e8';
+  for(let g=-4;g<=4;g++){
+    ctx.beginPath();ctx.moveTo(C.x+g*S,0);ctx.lineTo(C.x+g*S,330);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,C.y+g*S);ctx.lineTo(430,C.y+g*S);ctx.stroke();
+  }
+  ctx.strokeStyle='#999';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(0,C.y);ctx.lineTo(430,C.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(C.x,0);ctx.lineTo(C.x,330);ctx.stroke();
+  const n=Math.hypot(a[0],a[1])||1;
+  const base=[a[0]*b/(n*n),a[1]*b/(n*n)];
+  const d=[-a[1]/n,a[0]/n];
+  const p1=Pt([base[0]-d[0]*8,base[1]-d[1]*8]),p2=Pt([base[0]+d[0]*8,base[1]+d[1]*8]);
+  ctx.strokeStyle='#861F41';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.stroke();
+  const lb=Pt([base[0]+d[0]*2.4,base[1]+d[1]*2.4]);
+  ctx.fillStyle='#861F41';ctx.font='bold 13px sans-serif';ctx.fillText("a'x = b",lb[0]+6,lb[1]-6);
+  // a from origin
+  const q0=Pt([0,0]),q1=Pt(a);
+  ctx.strokeStyle='#33658a';ctx.fillStyle='#33658a';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(q0[0],q0[1]);ctx.lineTo(q1[0],q1[1]);ctx.stroke();
+  const ang=Math.atan2(q1[1]-q0[1],q1[0]-q0[0]);
+  ctx.beginPath();ctx.moveTo(q1[0],q1[1]);
+  ctx.lineTo(q1[0]-10*Math.cos(ang-0.4),q1[1]-10*Math.sin(ang-0.4));
+  ctx.lineTo(q1[0]-10*Math.cos(ang+0.4),q1[1]-10*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fill();
+  ctx.font='bold 14px sans-serif';ctx.fillText('a',q1[0]+8,q1[1]-5);
+  const val=a[0]*pT[0]+a[1]*pT[1];
+  const ok=val>=b-1e-9;
+  const q=Pt(pT);
+  ctx.beginPath();ctx.arc(q[0],q[1],8,0,7);
+  ctx.fillStyle=ok?'#1a7d3c':'#b3261e';ctx.fill();
+  ctx.font='bold 13px sans-serif';ctx.fillStyle=ok?'#1a7d3c':'#b3261e';
+  ctx.fillText('P',q[0]+11,q[1]-9);
+  out.innerHTML="a = ("+a[0].toFixed(1)+", "+a[1].toFixed(1)+")&nbsp;&nbsp; a'P = "+val.toFixed(2)+" "+(ok?"&ge;":"&lt;")+" "+b.toFixed(1)+
+    " &nbsp;&rarr;&nbsp; <span class='"+(ok?'good':'bad')+"'>P "+(ok?'satisfies':'violates')+" the constraint</span>";
+}
+function world(e){
+  const r=cv.getBoundingClientRect();
+  const mx=(e.clientX-r.left)*(cv.width/r.width),my=(e.clientY-r.top)*(cv.height/r.height);
+  return [(mx-C.x)/S,(C.y-my)/S];
+}
+let mode=null;
+function move(e){
+  if(!mode)return;
+  const w=world(e);
+  if(mode==='a'){if(Math.hypot(w[0],w[1])>0.25)a=[+w[0].toFixed(1),+w[1].toFixed(1)];}
+  else pT=w;
+  draw();
+}
+cv.addEventListener('pointerdown',e=>{
+  const w=world(e);
+  mode=(Math.hypot(w[0]-a[0],w[1]-a[1])<0.55)?'a':'p';
+  move(e);
+});
+cv.addEventListener('pointermove',move);
+addEventListener('pointerup',()=>mode=null);
+bs.addEventListener('input',draw);
+draw();
+})();
+</script>
+</body>
+</html>

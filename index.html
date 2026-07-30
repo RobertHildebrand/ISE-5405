@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISE 5405 — Interactive Lectures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans","Avenir Next","Segoe UI",system-ui,sans-serif;background:#f5f2ee;color:#26282e}
+header{background:linear-gradient(135deg,#861F41 0%,#5e1530 100%);color:#fff;padding:38px 8vw 30px}
+header h1{margin:0 0 6px;font-size:34px;font-family:"Fraunces",Georgia,serif}
+h2,h3,a.card h2{font-family:"Fraunces",Georgia,serif}
+header p{margin:0;opacity:.85}
+main{padding:34px 8vw 60px;max-width:1100px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:10px}
+a.card{display:block;background:#fff;border-radius:12px;padding:22px 24px;text-decoration:none;color:inherit;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);border-top:5px solid #E5751F;transition:transform .15s}
+a.card:hover{transform:translateY(-3px)}
+a.card h2{margin:0 0 8px;font-size:20px;color:#861F41}
+a.card p{margin:0;font-size:15px;color:#555;line-height:1.5}
+.tag{display:inline-block;background:#fdf3ea;color:#b25a12;border-radius:20px;padding:2px 11px;font-size:12.5px;margin:10px 6px 0 0}
+h3{color:#861F41;margin-top:40px}
+kbd{border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 7px;font-family:monospace;background:#fff}
+table{border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+td{padding:8px 16px;border-bottom:1px solid #eee;font-size:15px}
+.note{background:#fff;border-left:5px solid #33658a;padding:12px 18px;border-radius:0 8px 8px 0;font-size:15px;margin-top:26px}
+</style>
+</head>
+<body>
+<header>
+  <h1>ISE 5405 · Optimization I — Interactive Lectures</h1>
+  <p>HTML slide decks with click-through math and hands-on demos · Virginia Tech</p>
+</header>
+<main>
+  <div class="cards">
+    <a class="card" href="lecture01_course_intro.html">
+      <h2>Lecture 1 · Course Introduction</h2>
+      <p>What optimization is, a first LP model, the axioms of linear programming, and course logistics.</p>
+      <span class="tag">Feasible-region preview</span><span class="tag">Brute-force explorer</span><span class="tag">"Is it linear?" quiz</span>
+    </a>
+    <a class="card" href="lecture02_intro_linear_optimization.html">
+      <h2>Lecture 2 · Introduction to Linear Optimization</h2>
+      <p>BT §1.1–1.4: LP forms, modeling examples, standard-form transformations, piecewise-linear tricks, and graphical solution.</p>
+      <span class="tag">2D LP grapher</span><span class="tag">Modeling sandbox</span><span class="tag">Step-through derivations</span>
+    </a>
+    <a class="card" href="lecture03_proofs_and_latex.html">
+      <h2>Lecture 3 · Proof Techniques &amp; LaTeX</h2>
+      <p>Direct, contrapositive, contradiction, induction, counterexamples — plus writing math in LaTeX/Overleaf.</p>
+      <span class="tag">Click-through proofs</span><span class="tag">Falling dominoes</span><span class="tag">Live LaTeX playground</span>
+    </a>
+    <a class="card" href="lecture04_lp_geometry_1.html">
+      <h2>Lecture 4 · LP Geometry I</h2>
+      <p>BT §2.1–2.2: polyhedra, convexity, and the three equivalent definitions of a corner point.</p>
+      <span class="tag">Convexity tester</span><span class="tag">Polyhedron builder</span><span class="tag">Extreme-point tester</span>
+    </a>
+    <a class="card" href="lecture05_lp_geometry_2.html">
+      <h2>Lecture 5 · LP Geometry II</h2>
+      <p>BT §2.3–2.8: bases and BFS in standard form, degeneracy, existence of corners, optimality, Fourier–Motzkin.</p>
+      <span class="tag">Basis chooser</span><span class="tag">Level-line sweep</span><span class="tag">Convex-hull dragger</span>
+    </a>
+  </div>
+
+  <h3>Interactive demo library</h3>
+  <p style="font-size:15px;color:#555;max-width:760px">Companion demos from <i>Mathematical Programming and Operations Research</i> (the course text) — live at
+  <a href="https://open-optimization.github.io/open-optimization-or-book/visualizations/" target="_blank"><b>open-optimization.github.io/…/visualizations</b></a>.
+  Deep-link any demo with a hash, and share links directly with students:</p>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+    <a class="card" target="_blank" href="https://open-optimization.github.io/open-optimization-or-book/visualizations/#modeling-intro">
+      <h2>Words → Math</h2><p>Guided modeling tutorial (embedded in Lecture 2).</p>
+    </a>
+    <a class="card" target="_blank" href="https://open-optimization.github.io/open-optimization-or-book/visualizations/#objective-slider">
+      <h2>Objective Slider</h2><p>Slide the level line across the feasible region.</p>
+    </a>
+    <a class="card" target="_blank" href="https://open-optimization.github.io/open-optimization-or-book/visualizations/#concept-quiz">
+      <h2>Concept Quiz</h2><p>20 LP questions with explanations — great review.</p>
+    </a>
+    <a class="card" target="_blank" href="https://open-optimization.github.io/open-optimization-or-book/visualizations/#simplex-dictionary">
+      <h2>Simplex Pivoter</h2><p>Pivot the bakery example by hand (Ch. 3 onward).</p>
+    </a>
+  </div>
+  <p style="font-size:15px;color:#555">Also bundled offline in <code>figures/</code>:
+    <a href="figures/lp-graphical-method.html" target="_blank">graphical method</a> ·
+    <a href="figures/lp-duality-explorer.html" target="_blank">duality explorer</a> ·
+    <a href="figures/lp-sensitivity-explorer.html" target="_blank">sensitivity explorer</a>
+    — no internet needed, iframe-able into Canvas.</p>
+
+  <h3>Presenting</h3>
+  <table>
+    <tr><td><kbd>→</kbd> / <kbd>Space</kbd> / click</td><td>Next reveal or slide (like beamer pauses)</td></tr>
+    <tr><td><kbd>←</kbd></td><td>Back one reveal / slide</td></tr>
+    <tr><td><kbd>F</kbd></td><td>Fullscreen</td></tr>
+    <tr><td><kbd>P</kbd></td><td>Pen — draw on the slide (then <kbd>C</kbd> clears)</td></tr>
+    <tr><td><kbd>M</kbd> or click the slide counter</td><td>Slide menu / jump to slide</td></tr>
+    <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>First / last slide</td></tr>
+    <tr><td><kbd>H</kbd></td><td>Handout view — then <kbd>Ctrl/Cmd</kbd>+<kbd>P</kbd> prints a one-slide-per-page PDF for Canvas</td></tr>
+    <tr><td><kbd>L</kbd></td><td>Laser pointer (great on shared screens)</td></tr>
+    <tr><td><kbd>K</kbd></td><td>Re-open the checkpoint question on the current slide</td></tr>
+    <tr><td><kbd>?</kbd></td><td>In-deck keyboard help overlay</td></tr>
+  </table>
+  <p style="font-size:15px;color:#555">Checkpoint questions pop up automatically at a few key slides in each deck (once per session) — a built-in pause to poll the class. Decks also remember where you left off.</p>
+
+  <div class="note">
+    <b>Notes:</b> Math is rendered with MathJax from a CDN, so an internet connection is needed.
+    Each deck is a single self-contained HTML file — share them with students directly or post on Canvas;
+    all interactive widgets work for self-study too. The URL hash (e.g. <code>#12</code>) tracks the slide,
+    so you can resume where you left off.
+  </div>
+</main>
+</body>
+</html>

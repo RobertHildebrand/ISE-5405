@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ISE 5405 · Lecture 5 — LP Geometry II: Bases, Degeneracy & Optimality</title>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1c1e22;font-family:"Public Sans","Avenir Next","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#deck{width:1280px;height:720px;background:#fdfcfa;position:relative;flex:none;transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.5);border-radius:6px;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:40px 64px 38px;font-size:22px;color:#26282e;line-height:1.42}
+.slide.active{display:flex;animation:slidein .5s cubic-bezier(.16,.8,.3,1)}
+.slide h1{font-size:48px;color:#861F41;margin:0}
+.slide h2{font-size:31px;color:#861F41;margin:0 0 14px;padding-bottom:7px;border-bottom:3px solid #E5751F}
+.slide ul{margin:6px 0}
+.slide li{margin:6px 0}
+.frag{opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.frag.on{opacity:1;transform:none}
+.cols{display:flex;gap:34px;align-items:flex-start}
+.col{flex:1;min-width:0}
+.box{border-left:5px solid #861F41;background:#f4eef0;padding:9px 15px;border-radius:0 8px 8px 0;margin:9px 0}
+.box.orange{border-color:#E5751F;background:#fdf3ea}
+.box.blue{border-color:#33658a;background:#eef3f7}
+.small{font-size:18px}.tiny{font-size:15px}
+.center{text-align:center}
+table.nice{border-collapse:collapse;margin:8px auto;font-size:18px}
+table.nice th,table.nice td{border-bottom:1px solid #ccc;padding:4px 12px;text-align:center}
+table.nice th{background:#861F41;color:#fff}
+#progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
+#counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#999;cursor:pointer;z-index:50}
+#brand{position:absolute;bottom:10px;left:16px;font-size:13px;color:#b9b2a9;z-index:50}
+#toc{position:fixed;top:0;left:0;bottom:0;width:380px;background:#26282e;color:#eee;transform:translateX(-100%);transition:.25s;z-index:400;overflow-y:auto;padding:18px}
+#toc.open{transform:none}
+#toc h3{margin:4px 0 10px;color:#E5751F}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li{padding:6px 10px;cursor:pointer;border-radius:6px;font-size:14.5px}
+#toc li:hover{background:#3a3d45}
+#ink{position:fixed;inset:0;z-index:300;pointer-events:none}
+#pentools{position:fixed;top:12px;right:14px;z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
+#pentools button{width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;font-size:13px}
+#pentools .pcol{border:2px solid #fff}
+.widget{background:#fff;border:1px solid #ddd;border-radius:10px;padding:13px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:15px;cursor:pointer}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+.kbd{display:inline-block;border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 7px;font-family:monospace;background:#f4f4f4;font-size:15px}
+input[type=range]{accent-color:#E5751F}
+input[type=number]{width:58px;font-size:15px;padding:2px}
+select{font-size:15px}
+.readout{font-family:monospace;font-size:18px}
+.good{color:#1a7d3c;font-weight:600}.bad{color:#b3261e;font-weight:600}.mid{color:#b25a12;font-weight:600}
+.derive .step{display:none;margin:2px 0}
+.derive .step.shown{display:block}
+.derive .dctl{display:flex;align-items:center;gap:12px;margin-top:6px}
+.derive .dots{display:flex;gap:6px}
+.derive .dot{width:11px;height:11px;border-radius:50%;background:#d5cdc4;cursor:pointer}
+.derive .dot.here{background:#E5751F}
+.derive .dnote{margin-top:7px;font-size:17.5px;color:#5a4634;background:#fdf3ea;border-left:4px solid #E5751F;padding:7px 12px;border-radius:0 6px 6px 0;min-height:46px}
+.crow{display:flex;align-items:center;gap:5px;margin:3px 0;font-size:15px}
+.vtab{font-size:14px;border-collapse:collapse;width:100%}
+.vtab td,.vtab th{padding:2px 7px;border-bottom:1px solid #eee;text-align:center}
+.vtab tr.opt{background:#e7f4ea;font-weight:700}
+
+/* ===== polish pass ===== */
+@keyframes slidein{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.slide h1,.slide h2{font-family:"Fraunces",Georgia,serif}
+.slide h1{letter-spacing:-.5px}
+.kicker{font-size:14px;letter-spacing:3px;color:#E5751F;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.slide.title{justify-content:center;align-items:center;text-align:center;background:radial-gradient(1100px 620px at 78% 112%,#f6e3d0 0%,#fdfcfa 58%)}
+.title-art{position:absolute;right:-30px;bottom:-34px;width:500px;pointer-events:none}
+#help{position:fixed;inset:0;background:rgba(20,22,26,.82);z-index:600;display:none;align-items:center;justify-content:center;cursor:pointer}
+#help.open{display:flex}
+#help .card{background:#fdfcfa;border-radius:14px;padding:26px 36px;max-width:580px;font-size:17px;line-height:2.1;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#help h3{margin:0 0 8px;color:#861F41;font-family:"Fraunces",Georgia,serif}
+.chip{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:1px 12px;font-size:14px;font-weight:600;margin-right:6px}
+iframe.embed{border:none;border-radius:10px;background:#fff}
+.widget{transition:box-shadow .25s}
+.widget:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+#counter{background:#f1ece6;border-radius:14px;padding:2px 12px;color:#7a736b}
+
+/* ===== handout / laser / checkpoint ===== */
+body.handout{overflow:auto}
+body.handout #stage{position:static;display:block;height:auto}
+body.handout #deck{transform:none!important;margin:24px auto;height:auto;box-shadow:none}
+body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;height:720px;animation:none;border-bottom:3px solid #e5ded6;overflow:hidden}
+body.handout #progress,body.handout #counter,body.handout #brand{display:none}
+body.handout .frag{opacity:1;transform:none}
+#laser{position:fixed;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff4040 0%,rgba(255,64,64,.4) 55%,transparent 72%);box-shadow:0 0 14px 5px rgba(255,64,64,.55);pointer-events:none;z-index:700;display:none;transform:translate(-50%,-50%)}
+#cp{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:620;display:none;align-items:center;justify-content:center}
+#cp.open{display:flex}
+#cp .cpcard{background:#fdfcfa;border-radius:16px;padding:26px 34px;max-width:700px;min-width:520px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#cpQ{font-size:23px;margin:6px 0 14px;line-height:1.45}
+#cpOpts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+#cpOpts button{text-align:left;font-size:18px;padding:9px 14px}
+#cpFb{min-height:52px;font-size:17px;margin-bottom:8px}
+@media print{
+  @page{size:13.33in 7.5in;margin:0}
+  html,body{background:#fff!important;overflow:visible;height:auto}
+  #stage{position:static;display:block;height:auto}
+  #deck{transform:none!important;box-shadow:none;height:auto;border-radius:0}
+  .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:720px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
+  .frag{opacity:1!important;transform:none!important}
+  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,.printskip{display:none!important}
+}
+#mxGrid{display:grid;grid-template-columns:repeat(4,72px);gap:7px;justify-content:center}
+#mxGrid .mxc{height:56px;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:19px;background:#f6f3ef;border:2px solid #ddd;border-radius:9px;cursor:pointer;transition:.15s}
+#mxGrid .mxc.rowhl{background:#f4dee6;border-color:#861F41}
+#mxGrid .mxc.colhl{background:#dfe9f1;border-color:#33658a}
+#mxGrid .mxc.pick{background:#E5751F;color:#fff;border-color:#b25a12;font-weight:700}
+#ink{touch-action:none}
+body.handout #ink{display:none}
+#touchbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:520;display:none;gap:10px;background:rgba(38,40,46,.88);padding:9px 13px;border-radius:16px}
+#touchbar button{width:48px;height:48px;border:none;border-radius:11px;font-size:21px;background:#3a3d45;color:#fff}
+#touchbar button.on{background:#E5751F}
+canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.slide.whiteboard{background:repeating-linear-gradient(to bottom,#fdfcfa 0 44px,#ebe7e1 44px 45px);padding:20px 40px}
+.wbhead{display:flex;justify-content:space-between;align-items:center}
+body.handout .printskip{display:none!important}
+#pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
+/* guided proof workshop */
+.gproof{display:flex;flex-direction:column}
+.gphead{display:flex;gap:10px;margin-bottom:8px}
+.gpbox{flex:1;background:#f6f3ef;border-radius:8px;padding:5px 12px;font-size:14px}
+.gpbox b{color:#861F41;font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase}
+.gpassume,.gpshow{font-size:15.5px;min-height:22px}
+.gpsteps{overflow-y:auto;flex:1;min-height:100px;max-height:270px}
+.gpstep{border-left:4px solid #d5cdc4;padding:3px 12px;margin:5px 0;font-size:17px;opacity:.7}
+.gpstep.latest{border-color:#E5751F;opacity:1;background:#fdf8f2;border-radius:0 8px 8px 0}
+.gpq{font-size:17px;font-weight:600;color:#861F41;margin:6px 0}
+.gpopts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.gpopts button{text-align:left}
+.gpctl{display:flex;align-items:center;gap:12px;margin-top:6px}
+.gpnote{margin-top:6px;font-size:15.5px;color:#5a4634;background:#fdf3ea;border-left:4px solid #E5751F;padding:6px 12px;border-radius:0 6px 6px 0;min-height:40px}
+</style>
+</head>
+<body>
+<div id="stage"><div id="deck">
+<div id="progress"></div>
+<div id="brand">ISE 5405 · Optimization I</div>
+<div id="counter">1 / 1</div>
+
+<!-- 1 TITLE -->
+<section class="slide title">
+  <svg class="title-art" viewBox="0 0 400 320" aria-hidden="true">
+    <defs><linearGradient id="pgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E5751F" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#861F41" stop-opacity=".30"/></linearGradient></defs>
+    <polygon points="70,240 140,90 250,60 340,140 320,240 180,290" fill="url(#pgGrad)" stroke="#861F41" stroke-width="2.5" stroke-opacity=".5"/>
+    <g stroke="#E5751F" stroke-width="1.6" stroke-dasharray="7 6" opacity=".65">
+      <line x1="20" y1="215" x2="380" y2="118"/><line x1="20" y1="172" x2="380" y2="75"/>
+    </g>
+    <circle cx="250" cy="60" r="10" fill="none" stroke="#1a7d3c" stroke-width="3"/>
+  </svg>
+  <div style="font-size:22px;letter-spacing:3px;color:#E5751F;font-weight:600">ISE 5405 · OPTIMIZATION I</div>
+  <h1 style="margin:14px 0 8px">The Geometry of Linear Programming II</h1>
+  <div style="font-size:24px;color:#555">Lecture 5 · Bases, Degeneracy, Existence &amp; Optimality · BT §2.3–2.8</div>
+  <div style="margin-top:32px" class="tiny">
+    <span class="kbd">&rarr;</span>/<span class="kbd">Space</span> advance &middot; <span class="kbd">&larr;</span> back &middot;
+    <span class="kbd">F</span> fullscreen &middot; <span class="kbd">M</span> menu &middot;
+    <span class="kbd">P</span> pen &middot; <span class="kbd">C</span> clear ink &middot; <span class="kbd">L</span> laser &middot;
+    <span class="kbd">H</span> handout &middot; <span class="kbd">K</span> checkpoint &middot; <span class="kbd">?</span> help
+  </div>
+  <div class="tiny" style="margin-top:14px;max-width:920px;color:#8a837b;font-size:13.5px;line-height:1.55">
+    <b>Saving a PDF handout (annotations included):</b> press <span class="kbd">H</span> for the handout view, then
+    Ctrl/Cmd+P &rarr; &ldquo;Save as PDF&rdquo; &mdash; one slide per page, all reveals shown, and any pen annotations
+    drawn onto the slides. On iPad: tap &#9636; on the on-screen toolbar, then Share &rarr; Print &rarr; Save to Files.
+    Pen annotations also save automatically in this browser, per slide, between sessions.
+  </div>
+</section>
+
+<!-- 2 OUTLINE -->
+<section class="slide">
+  <h2>Today</h2>
+  <ul style="font-size:23px">
+    <li><b>Corners in standard form</b> — bases, basic variables, and how to compute a BFS <span class="tiny" style="color:#999">(§2.3)</span></li>
+    <li class="frag"><b>Degeneracy</b> — when too many constraints pile onto one point <span class="tiny" style="color:#999">(§2.4)</span></li>
+    <li class="frag"><b>Existence</b> — which polyhedra have corners at all <span class="tiny" style="color:#999">(§2.5)</span></li>
+    <li class="frag"><b>Optimality</b> — the theorem that lets us search only corners <span class="tiny" style="color:#999">(§2.6)</span></li>
+    <li class="frag"><b>Two representations + Fourier–Motzkin</b> — polytopes as convex hulls; eliminating variables <span class="tiny" style="color:#999">(§2.7–2.8)</span></li>
+  </ul>
+  <div class="box orange frag">By the end of today, the simplex method is fully motivated: a finite set of candidate points, an adjacency structure to walk on, and a guarantee the walk is worth taking.</div>
+</section>
+
+<!-- 3 STANDARD FORM POLY -->
+<section class="slide">
+  <h2>Polyhedra in Standard Form (§2.3)</h2>
+  <div class="cols">
+    <div class="col small">
+      \[P=\{x\in\mathbb{R}^n : Ax=b,\; x\ge 0\},\qquad A\in\mathbb{R}^{m\times n}\]
+      <div class="box"><b>Standing assumption:</b> the \(m\) rows of \(A\) are linearly independent (full row rank), so \(m\le n\).</div>
+      <div class="box frag"><b>Thm 2.5 (why it's harmless):</b> if \(P\ne\emptyset\) and \(\operatorname{rank}(A)=k<m\), throwing away the dependent rows leaves the <i>same</i> polyhedron. Redundant equations describe nothing new.</div>
+    </div>
+    <div class="col small frag">
+      <div class="box blue"><b>Counting intuition:</b> \(Ax=b\) uses up \(m\) degrees of freedom, leaving an \((n-m)\)-dimensional world. Inside that world, only \(x\ge0\) constrains us. A corner needs the remaining \(n-m\) freedoms pinned — by that many \(x_i=0\).</div>
+      <div class="box orange frag">That's the algebra we're about to make precise: <b>corner = choice of which variables are allowed to be nonzero</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 BASIC STANDARD -->
+<section class="slide">
+  <h2>Basic Solutions in Standard Form (Thm 2.4)</h2>
+  <div class="box small"><b>Theorem.</b> \(x\) is a basic solution of \(\{Ax=b,\,x\ge0\}\) \(\iff\) \(Ax=b\) and there are indices \(B(1),\dots,B(m)\) such that
+    (a) columns \(A_{B(1)},\dots,A_{B(m)}\) are linearly independent, and
+    (b) \(x_i=0\) for every \(i\notin\{B(1),\dots,B(m)\}\).</div>
+  <div class="cols small" style="margin-top:8px">
+    <div class="col frag">
+      <b>The recipe:</b>
+      <ol>
+        <li>Choose \(m\) linearly independent columns of \(A\) — the <b>basis</b></li>
+        <li>Set every other variable to zero (the <b>nonbasic</b> variables)</li>
+        <li>Solve \(B x_B = b\) for the \(m\) <b>basic</b> variables: \(x_B=B^{-1}b\)</li>
+      </ol>
+    </div>
+    <div class="col frag">
+      <div class="box orange">If the solved \(x_B\) comes out \(\ge 0\): a <b>basic feasible solution</b>. If some entry is negative: basic, but infeasible — a corner of the algebra, not of \(P\).</div>
+      <div class="box blue">Terminology: \(B=[A_{B(1)}\cdots A_{B(m)}]\) is the <b>basis matrix</b>; the \(B(i)\) are <b>basic indices</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 BASIS CHOOSER -->
+<section class="slide" style="padding:32px 46px">
+  <div class="kicker">Example 2.1 &middot; drive the theorem</div>
+  <h2 style="margin-bottom:8px">Pick a Basis, Get a Corner (or Not)</h2>
+  <div class="cols" style="gap:20px">
+    <div class="col small" style="flex:0 0 460px">
+      \[\begin{bmatrix}1&1&2&1&0&0&0\\ 0&1&6&0&1&0&0\\ 1&0&0&0&0&1&0\\ 0&1&0&0&0&0&1\end{bmatrix}x=\begin{bmatrix}8\\12\\4\\6\end{bmatrix},\quad x\ge0\]
+      <div class="tiny" style="color:#777">\(n=7\) variables, \(m=4\) equations &rarr; pick 4 columns.</div>
+      <div class="widget" style="margin-top:6px">
+        <b class="small">Basis \(\{B(1),\dots,B(4)\}\):</b>
+        <div id="bcBoxes" style="display:flex;gap:10px;margin:8px 0;font-size:18px"></div>
+        <div class="center">
+          <button class="btn sec" data-pre="4,5,6,7">try {4,5,6,7}</button>
+          <button class="btn sec" data-pre="3,5,6,7">try {3,5,6,7}</button>
+          <button class="btn sec" data-pre="1,2,3,4">try {1,2,3,4}</button>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="widget" id="bcOut" style="min-height:200px;font-size:18px">Select exactly 4 columns&hellip;</div>
+      <div class="box orange small frag" style="margin-top:8px">Different bases &rarr; different corners. Singular choices &rarr; no basic solution at all. Negative entries &rarr; basic but <i>infeasible</i>. This one widget is the whole simplex data structure.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 DEGENERACY -->
+<section class="slide" data-checkpoint="cpA">
+  <h2>Degeneracy (§2.4)</h2>
+  <div class="cols">
+    <div class="col small">
+      <div class="box"><b>Def. 2.10:</b> a basic solution is <b>degenerate</b> if more than \(n\) constraints are active there.<br><br>
+      <b>Def. 2.11 (standard form):</b> \(x\) is degenerate if more than \(n-m\) of its components are zero — i.e. some <i>basic</i> variable is zero too.</div>
+      <div class="frag"><b>BT's example</b> (\(n=3\)): \(x=(2,6,0)\) has exactly 3 active constraints — nondegenerate. \(x=(4,0,2)\) has <b>4</b> active — degenerate.</div>
+      <div class="box orange frag">Why care? Several <i>different bases</i> can describe the <i>same</i> degenerate corner — algorithms can stall walking between them (Ch. 3's cycling problem!).</div>
+    </div>
+    <div class="col" style="flex:0 0 430px">
+      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <line x1="30" y1="270" x2="400" y2="60" stroke="#c9b8a8" stroke-width="2"/>
+        <line x1="60" y1="30" x2="330" y2="290" stroke="#c9b8a8" stroke-width="2"/>
+        <line x1="20" y1="140" x2="410" y2="160" stroke="#c9b8a8" stroke-width="2"/>
+        <circle cx="212" cy="150" r="9" fill="#b25a12"/>
+        <text x="228" y="140" font-size="15" fill="#b25a12" font-weight="bold">3 lines, 1 point: degenerate</text>
+        <text x="228" y="160" font-size="13" fill="#777">(n = 2, but 3 active constraints)</text>
+        <circle cx="345" cy="92" r="7" fill="#1a7d3c"/>
+        <text x="300" y="72" font-size="14" fill="#1a7d3c" font-weight="bold">generic corner: exactly 2</text>
+        <text x="30" y="300" font-size="13" fill="#999">random data almost never does this — structured (real) data does it constantly</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 7 EXISTENCE -->
+<section class="slide">
+  <h2>When Do Corners Exist? (§2.5)</h2>
+  <div class="cols">
+    <div class="col small">
+      <p>Not every polyhedron has one — a halfplane in \(\mathbb{R}^2\) has no extreme point.</p>
+      <div class="box"><b>Def. 2.12:</b> \(P\) <b>contains a line</b> if some \(x\in P\) and direction \(d\ne0\) satisfy \(x+\lambda d\in P\) for <i>all</i> \(\lambda\in\mathbb{R}\).</div>
+      <div class="box frag"><b>Theorem 2.6.</b> For nonempty \(P=\{x: a_i'x\ge b_i\}\), equivalent:
+        <ol type="a">
+          <li>\(P\) has an extreme point</li>
+          <li>\(P\) contains no line</li>
+          <li>\(n\) of the vectors \(a_i\) are linearly independent</li>
+        </ol>
+      </div>
+      <div class="box green frag"><b>Cor. 2.2:</b> nonempty <b>bounded</b> polyhedra and nonempty <b>standard-form</b> polyhedra always have a BFS. (Standard form: the constraints \(x_i \ge 0\) supply \(n\) independent vectors!)</div>
+    </div>
+    <div class="col" style="flex:0 0 420px">
+      <svg viewBox="0 0 420 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <polygon points="0,80 420,20 420,140 0,200" fill="rgba(51,101,138,.14)"/>
+        <line x1="0" y1="80" x2="420" y2="20" stroke="#33658a" stroke-width="2.5"/>
+        <line x1="0" y1="200" x2="420" y2="140" stroke="#33658a" stroke-width="2.5"/>
+        <line x1="20" y1="130" x2="400" y2="76" stroke="#b3261e" stroke-width="3" stroke-dasharray="10 6"/>
+        <text x="150" y="115" font-size="14" fill="#b3261e" font-weight="bold">contains a line &rarr; no corners</text>
+        <g class="frag">
+          <polygon points="60,290 100,225 220,215 330,250 300,300 120,305" fill="rgba(134,31,65,.15)" stroke="#861F41" stroke-width="2.5"/>
+          <circle cx="100" cy="225" r="6" fill="#1a7d3c"/><circle cx="220" cy="215" r="6" fill="#1a7d3c"/><circle cx="330" cy="250" r="6" fill="#1a7d3c"/>
+          <text x="130" y="245" font-size="14" fill="#861F41" font-weight="bold">no line inside &rarr; corners exist</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 8 DP NOLINE -->
+<section class="slide">
+  <h2>Click-through: Extreme Point \(\Rightarrow\) No Line</h2>
+  <div class="widget derive" id="dpNL">
+    <div class="dsteps small">
+      <div class="step" data-note="One direction of Theorem 2.6, proved by contradiction — the template from Lecture 3.">
+        \[\textbf{Claim: } \text{if } P \text{ has an extreme point } x^{ext}, \text{ then } P \text{ contains no line.}\]
+      </div>
+      <div class="step" data-note="Set up the contradiction: suppose a line lives inside P — some point x̄ and direction d with the whole line inside.">
+        \[\textbf{Assume not: } \exists\, \bar{x}\in P,\; d\ne 0:\;\; \bar{x}+\lambda d\in P\;\;\forall\lambda\in\mathbb{R}\]
+      </div>
+      <div class="step" data-note="Key geometric fact (BT Lemma): if P contains a full line in direction d, then from ANY point of P you can travel along ±d forever without leaving. In particular from the extreme point itself.">
+        \[x^{ext}+d\in P \qquad\text{and}\qquad x^{ext}-d\in P\]
+      </div>
+      <div class="step" data-note="But then the extreme point is the exact midpoint of two other points of P — the definition of extreme point is violated.">
+        \[x^{ext}=\tfrac12\,(x^{ext}+d)+\tfrac12\,(x^{ext}-d),\qquad x^{ext}\pm d\in P,\;\ne x^{ext}\]
+      </div>
+      <div class="step" data-note="Contradiction: x^ext was assumed extreme. The assumed line cannot exist. ∎  (The reverse directions use the rank condition — see BT §2.5.)">
+        \[\unicode{x21af}\;\; x^{ext}\text{ extreme}\qquad\Longrightarrow\qquad P \text{ contains no line}\quad\blacksquare\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">&#9664; Prev</button><span class="dots"></span><button class="btn dnext">Next step &#9654;</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 9 OPTIMALITY -->
+<section class="slide" data-checkpoint="cpB">
+  <h2>Optimality of Extreme Points (§2.6)</h2>
+  <div class="cols">
+    <div class="col small">
+      <div class="box"><b>Thm 2.7.</b> If \(P\) has an extreme point and the LP \(\min c'x\) over \(P\) has an optimal solution, then <b>some optimal solution is an extreme point</b>.</div>
+      <div class="box frag"><b>Thm 2.8 (stronger).</b> If \(P\) has an extreme point, then either the optimal cost is \(-\infty\), or an extreme point is optimal.</div>
+      <div class="box green frag"><b>Cor. 2.3 &rArr; Property 1.</b> Every LP over a nonempty polyhedron either has cost \(-\infty\) or attains an optimal solution. <i>No \(e^x\)-style pathologies — LP keeps the trichotomy exact.</i></div>
+    </div>
+    <div class="col widget" style="flex:0 0 470px">
+      <canvas id="optCv" width="440" height="300" style="width:100%"></canvas>
+      <div class="center" style="margin-top:6px"><button class="btn" id="optBtn">Sweep the level line &#9654;</button></div>
+      <div class="tiny center" style="color:#777">the last touch is always a corner (or a whole edge — which includes corners)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9b GP THM 2.7 -->
+<section class="slide" style="padding:26px 50px">
+  <div class="kicker">Proof workshop &middot; Theorem 2.7, carefully</div>
+  <h2 style="margin-bottom:6px">Some Optimal Solution is an Extreme Point</h2>
+  <div class="widget gproof" id="gpOpt" style="flex:1">
+    <div class="gphead">
+      <div class="gpbox"><b>Assumptions</b><div class="gpassume">&mdash;</div></div>
+      <div class="gpbox"><b>To show</b><div class="gpshow">&mdash;</div></div>
+    </div>
+    <div class="gpdata" style="display:none">
+
+<div class="gitem" data-note="Name the objects: v is the optimal cost (it's attained, by hypothesis), Q collects every optimal solution. The strategy in one line: find an extreme point of Q, then promote it to an extreme point of P."
+     data-assume="\(P\) has an extreme point; optimum attained: \(v=\min_{x\in P} c'x\)" data-show="some optimal solution is an extreme point of \(P\)">
+  <b>Setup.</b> Let \(v\) be the optimal cost and \(Q=\{x\in P: c'x=v\}\) — the set of <i>all</i> optimal solutions.
+</div>
+<div class="gitem" data-kind="ask">
+  <div class="gq">First claim: \(Q\) is itself a polyhedron. Why?</div>
+  <span class="gopt" data-ok data-why="Q = P ∩ {x : c'x ≤ v} ∩ {x : c'x ≥ v}: the old constraints plus two new linear inequalities. Intersections of finitely many halfspaces stay polyhedra.">\(Q\) adds the linear constraints \(c'x\le v\) and \(c'x\ge v\) to \(P\)</span>
+  <span class="gopt" data-why="Q need not be bounded at all (a whole optimal edge can be unbounded) — boundedness isn't the reason.">Because \(Q\) is bounded</span>
+  <span class="gopt" data-why="It is one! The equality c'x = v is two opposing linear inequalities — the Lecture-2 trick.">It isn't, in general</span>
+</div>
+<div class="gitem" data-kind="ask">
+  <div class="gq">Why does \(Q\) have an extreme point? (We're allowed to use Theorem 2.6.)</div>
+  <span class="gopt" data-ok data-why="P has an extreme point ⟺ P contains no line (Thm 2.6). A subset of a line-free set is line-free, so Q contains no line — and Q is a nonempty polyhedron, so Thm 2.6 gives it an extreme point. Proofs stacking on proofs.">\(P\) contains no line, so \(Q\subseteq P\) contains no line</span>
+  <span class="gopt" data-why="Nonempty alone isn't enough — a halfplane is nonempty with no extreme points. We need the no-line property, inherited from P.">Because \(Q\) is nonempty</span>
+</div>
+<div class="gitem" data-note="The pivot of the proof: x* is extreme in the SMALLER set Q. The remaining battle is showing this same point is extreme in the BIGGER set P — bigger sets have more candidate y, z pairs to worry about."
+     data-assume="\(x^*\) an extreme point of \(Q\)" data-show="\(x^*\) is an extreme point of \(P\)">
+  Let \(x^*\) be an extreme point of \(Q\). <i>Claim: \(x^*\) is an extreme point of \(P\).</i>
+</div>
+<div class="gitem" data-kind="ask">
+  <div class="gq">Naturally, we argue by contradiction. What do we get to assume?</div>
+  <span class="gopt" data-ok data-why="The negation of extreme-in-P: witnesses y, z from P (not merely Q!) with x* strictly between them.">\(x^*=\lambda y+(1-\lambda)z\) with \(y,z\in P\setminus\{x^*\}\), \(\lambda\in(0,1)\)</span>
+  <span class="gopt" data-why="If y, z were in Q we'd contradict x* extreme in Q immediately — too easy. The witnesses live in P; the work is dragging them into Q.">\(y,z\in Q\)</span>
+</div>
+<div class="gitem" data-note="Averages at the minimum: c'x* = v is the smallest cost in P, y and z each cost at least v, yet their weighted average is exactly v. Positive weights leave no room — both must cost exactly v.">
+  Costs: \(c'y\ge v\), \(c'z\ge v\), but
+  \(\;\lambda c'y+(1-\lambda)c'z = c'x^* = v\).
+  With \(\lambda\in(0,1)\), this forces \(\;c'y=c'z=v\).
+</div>
+<div class="gitem" data-kind="ask">
+  <div class="gq">\(c'y = c'z = v\). So what?</div>
+  <span class="gopt" data-ok data-why="Cost v and membership in P is exactly the definition of Q. Now x* is a strict combination of two points of Q — contradicting that x* is extreme in Q.">\(y,z\in Q\) — contradicting extremality of \(x^*\) in \(Q\)</span>
+  <span class="gopt" data-why="They're optimal, not equal — an optimal face can contain many points. The contradiction lives one level up: in Q.">\(y=z\)</span>
+</div>
+<div class="gitem" data-note="So no witnesses in P exist either: x* is extreme in P, and it sits in Q, so it's optimal. An optimal extreme point exists — and the corner-searching strategy of the simplex method is officially justified." data-show="DONE">
+  \(\unicode{x21af}\) So \(x^*\) is an extreme point of \(P\) — and it is optimal. \(\blacksquare\)
+</div>
+
+    </div>
+    <div class="gpsteps"></div>
+    <div class="gpask"></div>
+    <div class="gpctl"><button class="btn gpnext">Next move &#9654;</button><button class="btn sec gpreset">Restart</button><span class="gpprog tiny" style="color:#999"></span></div>
+    <div class="gpnote"></div>
+  </div>
+</section>
+
+<!-- 10 HULL -->
+<section class="slide">
+  <h2>The Other Representation: Convex Hulls (§2.7)</h2>
+  <div class="cols">
+    <div class="col small">
+      <div class="box"><b>Def. 2.5:</b> a <b>convex combination</b> of \(x_1,\dots,x_k\) is \(\sum\lambda_i x_i\) with \(\lambda_i\ge0\), \(\sum\lambda_i=1\). The <b>convex hull</b> is the set of all of them.</div>
+      <div class="box orange frag"><b>Thm 2.9.</b> A nonempty polytope is <b>the convex hull of its extreme points</b>. Two descriptions of one object: outside-in (inequalities) or inside-out (corners).</div>
+      <div class="frag">Both views get used: inequalities for feasibility checks, corner combinations for proofs and decompositions.</div>
+    </div>
+    <div class="col widget" style="flex:0 0 470px">
+      <div class="tiny" style="margin-bottom:4px"><b>Drag the points</b> — the polytope is whatever their hull is</div>
+      <canvas id="hullCv" width="440" height="300" style="width:100%;cursor:grab"></canvas>
+      <div id="hullOut" class="small center" style="min-height:26px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 FM IDEA -->
+<section class="slide">
+  <h2>Fourier–Motzkin: Solving by Shadows (§2.8)</h2>
+  <div class="cols">
+    <div class="col small">
+      <p><b>Question:</b> is \(P=\{x: Ax\ge b\}\) empty?</p>
+      <div class="box"><b>Projection:</b> \(\Pi_{n-1}(P)\) = the shadow of \(P\) when you forget \(x_n\). Key fact: \(P\ne\emptyset \iff\) its shadow is nonempty.</div>
+      <ul>
+        <li class="frag">Project away one variable at a time: \(\mathbb{R}^n \to \mathbb{R}^{n-1}\to\cdots\to\mathbb{R}\)</li>
+        <li class="frag">In \(\mathbb{R}\), emptiness is trivial to check: is some interval \([l,u]\) with \(l\le u\) left?</li>
+        <li class="frag"><b>Thm 2.10:</b> the eliminated system <i>is</i> the projection &mdash; so projections of polyhedra are polyhedra, and (Cor. 2.6) convex hulls of finite point sets are polyhedra too</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:0 0 430px">
+      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+        <polygon points="110,60 260,40 340,120 300,210 150,220 90,140" fill="rgba(134,31,65,.15)" stroke="#861F41" stroke-width="2.5"/>
+        <g stroke="#c9b8a8" stroke-width="1.5" stroke-dasharray="5 5">
+          <line x1="90" y1="140" x2="90" y2="262"/><line x1="340" y1="120" x2="340" y2="262"/>
+          <line x1="110" y1="60" x2="110" y2="262"/><line x1="300" y1="210" x2="300" y2="262"/>
+        </g>
+        <line x1="40" y1="262" x2="410" y2="262" stroke="#888" stroke-width="1.5"/>
+        <line x1="90" y1="262" x2="340" y2="262" stroke="#E5751F" stroke-width="6"/>
+        <text x="150" y="290" font-size="15" fill="#b25a12" font-weight="bold">shadow = projection &Pi;&#8321;(P)</text>
+        <text x="180" y="140" font-size="15" fill="#861F41" font-weight="bold">P</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 12 FM ALGO -->
+<section class="slide">
+  <h2>The Elimination Step</h2>
+  <div class="cols small">
+    <div class="col">
+      <b>To eliminate \(x_n\):</b> sort constraints by the sign of \(x_n\)'s coefficient, normalize, and rewrite:
+      \[\begin{aligned}
+      x_n &\ge d_i+f_i'\bar{x} && i\in I^+ \quad(\text{lower bounds})\\
+      d_j+f_j'\bar{x} &\ge x_n && j\in I^- \quad(\text{upper bounds})\\
+      0 &\ge d_k+f_k'\bar{x} && k\in I^0 \quad(x_n\text{ absent})
+      \end{aligned}\]
+      <div class="box frag">An \(x_n\) exists \(\iff\) <b>every upper bound \(\ge\) every lower bound</b>. So pair them up: for all \(i\in I^+, j\in I^-\) add
+      \[d_j+f_j'\bar{x}\;\ge\;d_i+f_i'\bar{x}\]
+      and keep the \(I^0\) rows. Done — \(x_n\) is gone.</div>
+    </div>
+    <div class="col frag">
+      <div class="box orange"><b>Cost:</b> removes \(|I^+|+|I^-|\) rows, adds \(|I^+|\cdot|I^-|\) — constraint counts can grow <i>exponentially</i>. Beautiful theory, terrible algorithm.</div>
+      <div class="box blue"><b>Why we teach it anyway:</b> every derived inequality is a <i>nonnegative combination</i> of originals — the seed of <b>Farkas' lemma</b> and LP <b>duality</b> (Ch. 4). Remember this moment.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 FM EXAMPLE -->
+<section class="slide" data-checkpoint="cpC">
+  <h2>Click-through: Fourier–Motzkin in Action</h2>
+  <div class="widget derive" id="dpFM">
+    <div class="dsteps small">
+      <div class="step" data-note="Seven inequalities, three variables. Feasible or not? Let's eliminate x₃ and see what survives.">
+        \[\begin{aligned}
+        &(1)\; -x_1\ge -1 \quad (2)\; -x_2\ge -1 \quad (3)\; -x_3\ge -1\\
+        &(4)\; -x_1-x_2\ge -3 \quad (5)\; -x_1-x_3\ge -3 \quad (6)\; -x_2-x_3\ge -3\\
+        &(7)\; x_1+x_2+x_3\ge 6
+        \end{aligned}\]
+      </div>
+      <div class="step" data-note="Sort by the coefficient of x₃: row 7 gives a lower bound on x₃; rows 3, 5, 6 give upper bounds; rows 1, 2, 4 don't involve x₃.">
+        \[I^+=\{7\}:\; x_3\ge 6-x_1-x_2\qquad I^-=\{3,5,6\}:\; x_3\le 1,\; x_3\le 3-x_1,\; x_3\le 3-x_2\]
+      </div>
+      <div class="step" data-note="Pair the lower bound with each upper bound: lower ≤ upper. Three new inequalities in x₁, x₂ only.">
+        \[\begin{aligned}
+        6-x_1-x_2\le 1 &\;\Rightarrow\; x_1+x_2\ge 5\\
+        6-x_1-x_2\le 3-x_1 &\;\Rightarrow\; x_2\ge 3\\
+        6-x_1-x_2\le 3-x_2 &\;\Rightarrow\; x_1\ge 3
+        \end{aligned}\]
+      </div>
+      <div class="step" data-note="Now compare with the carried-over rows: (1) says x₁ ≤ 1, but we derived x₁ ≥ 3. Empty shadow ⇒ empty polyhedron. Verdict delivered — no clever search required.">
+        \[\text{carried over: } x_1\le 1 \qquad \text{derived: } x_1\ge 3 \qquad\Longrightarrow\qquad P=\emptyset\;\;\blacksquare\]
+      </div>
+    </div>
+    <div class="dctl"><button class="btn sec dprev">&#9664; Prev</button><span class="dots"></span><button class="btn dnext">Next step &#9654;</button></div>
+    <div class="dnote"></div>
+  </div>
+</section>
+
+<!-- 14 WHY SPECIAL -->
+<section class="slide">
+  <h2>Why is LP Special? The Three Properties, Earned</h2>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+    <div class="box" style="margin:0"><b>Property 1.</b> Every LP is infeasible, unbounded, or has an optimal solution — no in-between. <span class="tiny" style="color:#999">(Cor. 2.3)</span></div>
+    <div class="box frag" style="margin:0"><b>Property 2.</b> Every local optimum is a global optimum — linear objectives over convex sets can't trap you. </div>
+    <div class="box frag" style="margin:0"><b>Property 3.</b> Nonempty polytope \(\Rightarrow\) an optimal solution sits at an extreme point. <span class="tiny" style="color:#999">(Thm 2.7/2.8)</span></div>
+  </div>
+  <div class="box orange frag" style="margin-top:14px"><b>The simplex method's birth certificate:</b> finitely many candidate corners (Cor. 2.1) + an edge structure to walk (adjacency) + a guarantee the best corner is globally best. All that's left is <i>how to walk cleverly</i> — Chapter 3.</div>
+</section>
+
+<!-- 15 SUMMARY -->
+<section class="slide">
+  <h2>Key Takeaways</h2>
+  <ul style="font-size:22px">
+    <li>Standard-form corners = <b>bases</b>: choose \(m\) independent columns, zero the rest, solve — feasibility decides BFS</li>
+    <li class="frag"><b>Degeneracy</b>: extra active constraints at a corner; many bases, one point; algorithmic headaches ahead</li>
+    <li class="frag"><b>Existence</b> (Thm 2.6): corners \(\iff\) no line inside \(\iff\) \(n\) independent constraint vectors</li>
+    <li class="frag"><b>Optimality</b> (Thm 2.7/2.8): searching corners is enough — Property 1 falls out as a corollary</li>
+    <li class="frag"><b>Representations</b>: inequalities or convex hull of corners; Fourier–Motzkin converts, projects, and foreshadows duality</li>
+  </ul>
+  <div class="frag center" style="margin-top:18px">
+    <div style="font-size:32px;color:#861F41;font-weight:700;font-family:'Fraunces',Georgia,serif">Next: the Simplex Method</div>
+    <div class="small" style="color:#666">we finally get to walk the corners</div>
+  </div>
+</section>
+
+
+<!-- WHITEBOARDS -->
+<section class="slide whiteboard" data-inkkey="wb1" data-toc="Whiteboard 1">
+  <div class="wbhead"><span class="kicker">Whiteboard 1</span><span class="tiny" style="color:#aaa"><span class="kbd">W</span> returns to your slide &middot; <span class="kbd">C</span> clears &middot; <span class="kbd">&rarr;</span> more boards</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb2" data-toc="Whiteboard 2">
+  <div class="wbhead"><span class="kicker">Whiteboard 2</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb3" data-toc="Whiteboard 3">
+  <div class="wbhead"><span class="kicker">Whiteboard 3</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb4" data-toc="Whiteboard 4">
+  <div class="wbhead"><span class="kicker">Whiteboard 4</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb5" data-toc="Whiteboard 5">
+  <div class="wbhead"><span class="kicker">Whiteboard 5</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb6" data-toc="Whiteboard 6">
+  <div class="wbhead"><span class="kicker">Whiteboard 6</span></div>
+</section>
+<section class="slide whiteboard" data-inkkey="wb7" data-toc="Whiteboard 7">
+  <div class="wbhead"><span class="kicker">Whiteboard 7</span></div>
+</section>
+
+</div></div>
+
+<div id="toc"><h3>Slides</h3><ul></ul></div>
+<canvas id="ink"></canvas>
+<div id="help" onclick="this.classList.remove('open')"><div class="card">
+  <h3>Keyboard controls</h3>
+  <b>&rarr; / Space / click</b> &mdash; next reveal or slide<br>
+  <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
+  <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
+  <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
+
+  <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; blank whiteboard pages, and back (pen auto-on)<br>
+
+  <b>?</b> &mdash; toggle this help &nbsp;&middot;&nbsp; <b>Esc</b> &mdash; close overlays<br>
+  <span style="font-size:14px;color:#777">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
+</div></div>
+<div id="cp"><div class="cpcard">
+  <div class="kicker">Checkpoint &middot; what do you think?</div>
+  <div id="cpQ"></div>
+  <div id="cpOpts"></div>
+  <div id="cpFb"></div>
+  <div style="text-align:right"><button class="btn" id="cpClose">Continue &#9654;</button></div>
+</div></div>
+
+<ol id="cpA" style="display:none" data-why="In standard form, nonbasic variables (n−m of them) are zero by construction. Degeneracy means MORE than n−m zeros — some basic variable is zero too. Here n−m = 7−4 = 3.">
+  <li>Standard form, \(n=7\) variables, \(m=4\) equations. A basic solution is <b>degenerate</b> when&hellip;</li>
+  <li>Exactly 3 components are zero</li>
+  <li data-ok>More than 3 components are zero</li>
+  <li>The basis matrix is singular</li>
+  <li>Some component is negative</li>
+</ol>
+<ol id="cpB" style="display:none" data-why="A halfplane contains lines, so it has no extreme point (Thm 2.6). The square and triangle are polytopes; standard-form polyhedra always have a BFS by Corollary 2.2.">
+  <li>Which polyhedron has <b>no</b> extreme point?</li>
+  <li>The unit square</li>
+  <li data-ok>A halfplane in \(\mathbb{R}^2\)</li>
+  <li>A triangle</li>
+  <li>A nonempty standard-form polyhedron</li>
+</ol>
+<ol id="cpC" style="display:none" data-why="Thm 2.7 says SOME optimal solution is at an extreme point — others may exist (a whole optimal edge, say). It does not force uniqueness or boundedness.">
+  <li>\(P\) has an extreme point and the LP has an optimal solution. Which is guaranteed?</li>
+  <li>Every optimal solution is an extreme point</li>
+  <li data-ok>At least one optimal solution is an extreme point</li>
+  <li>The optimal solution is unique</li>
+  <li>\(P\) is bounded</li>
+</ol>
+
+<div id="pentools">
+  <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
+  <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
+  <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
+  <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
+  <button id="ppartial" title="precision eraser — cuts pieces out of strokes" style="background:#fff;border:2px solid #999">&#9986;</button>
+  <button id="pclear" style="background:#e8e2da">✕</button>
+    <button id="pexport" title="download annotations backup file" style="background:#33658a;color:#fff">&darr;</button>
+  <button id="pimport" title="load annotations from file" style="background:#1a7d3c;color:#fff">&uarr;</button>
+  <button id="pwipe" title="erase ALL annotations on ALL slides" style="background:#b3261e;color:#fff">&empty;</button>
+  <button id="pclose" style="background:#555;color:#fff">P</button>
+</div>
+
+<script>
+/* ================= slide framework ================= */
+(function(){
+const deck=document.getElementById('deck');
+const slides=[...deck.querySelectorAll('section.slide')];
+let cur=0,penOn=false;
+const bar=document.getElementById('progress'),counter=document.getElementById('counter');
+function frags(s){return [...s.querySelectorAll('.frag')];}
+function update(){
+  bar.style.width=((cur+1)/slides.length*100)+'%';
+  counter.textContent=(cur+1)+' / '+slides.length;
+  history.replaceState(null,'','#'+(cur+1));
+  try{localStorage.setItem('deckpos:'+location.pathname,cur);}catch(e){}
+  redrawInk();
+}
+function show(i,revealAll){
+  i=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===i));
+  cur=i;
+  if(revealAll)frags(slides[i]).forEach(f=>f.classList.add('on'));
+  update();
+  const cpid=slides[i].dataset.checkpoint;
+  if(cpid&&!slides[i].dataset.cpdone){slides[i].dataset.cpdone=1;setTimeout(()=>openCheckpoint(cpid),400);}
+}
+function next(){
+  const f=frags(slides[cur]).find(x=>!x.classList.contains('on'));
+  if(f){f.classList.add('on');return;}
+  if(cur<slides.length-1)show(cur+1);
+}
+function prev(){
+  const on=frags(slides[cur]).filter(x=>x.classList.contains('on'));
+  if(on.length){on[on.length-1].classList.remove('on');return;}
+  if(cur>0)show(cur-1,true);
+}
+addEventListener('keydown',e=>{
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
+  if(penOn&&(e.key==='c'||e.key==='C')){clearInk();return;}
+  switch(e.key){
+    case 'ArrowRight':case ' ':case 'PageDown':e.preventDefault();next();break;
+    case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'f':case 'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case 'p':case 'P':togglePen();break;
+    case 'h':case 'H':toggleHandout();break;
+    case 'l':case 'L':toggleLaser();break;
+    case 'w':case 'W':toggleWhiteboard();break;
+    case 'e':case 'E':cycleEraser();break;
+    case 'k':case 'K':if(slides[cur].dataset.checkpoint)openCheckpoint(slides[cur].dataset.checkpoint);break;
+    case 'm':case 'M':toc.classList.toggle('open');break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(cp)cp.classList.remove('open');break;
+    case '?':document.getElementById('help').classList.toggle('open');break;
+  }
+});
+deck.addEventListener('click',e=>{
+  if(penOn)return;
+  if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
+  next();
+});
+function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
+addEventListener('resize',fit);
+let tx=null;
+addEventListener('touchstart',e=>{if(e.target.closest('.widget'))return;tx=e.changedTouches[0].clientX;});
+addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next():prev());tx=null;});
+const toc=document.getElementById('toc');
+slides.forEach((s,i)=>{
+  const t=s.querySelector('h2,h1');
+  const li=document.createElement('li');
+  li.textContent=(i+1)+'. '+(t?t.textContent.trim():(s.dataset.toc||'Title'));
+  li.onclick=()=>{show(i);toc.classList.remove('open');};
+  toc.querySelector('ul').appendChild(li);
+});
+counter.onclick=()=>toc.classList.toggle('open');
+const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
+let drawing=false,penColor='#c8102e',curStroke=null,inkStore={};
+function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
+try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
+function deckRect(){return deck.getBoundingClientRect();}
+function toDeck(e){const r=deckRect();return [(e.clientX-r.left)/r.width*1280,(e.clientY-r.top)/r.height*720];}
+function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
+function drawStroke(c2,st,mapper,lw){
+  c2.strokeStyle=st.c;c2.lineWidth=lw;c2.lineCap='round';c2.lineJoin='round';c2.beginPath();
+  st.p.forEach((q,i)=>{const m=mapper?mapper(q):q;i?c2.lineTo(m[0],m[1]):c2.moveTo(m[0],m[1]);});
+  c2.stroke();
+}
+function redrawInk(){
+  ictx.clearRect(0,0,ink.width,ink.height);
+  (inkStore[inkKey()]||[]).forEach(st=>drawStroke(ictx,st,fromDeck,3));
+}
+function sizeInk(){ink.width=innerWidth;ink.height=innerHeight;redrawInk();}
+sizeInk();addEventListener('resize',sizeInk);
+function togglePen(){penOn=!penOn;document.getElementById('pentools').style.display=penOn?'flex':'none';ink.style.pointerEvents=penOn?'auto':'none';const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);}
+function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
+function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,ink.width,ink.height);}
+
+/* eraser: 'stroke' removes whole strokes, 'partial' cuts pieces out */
+let erasing=null;
+function setEraser(mode){
+  erasing=mode;
+  const pb=document.getElementById('peraser');if(pb)pb.classList.toggle('on',erasing==='stroke');
+  const pp=document.getElementById('ppartial');if(pp)pp.classList.toggle('on',erasing==='partial');
+  const tb=document.getElementById('tbErase');
+  if(tb){tb.classList.toggle('on',!!erasing);tb.innerHTML=erasing==='partial'?'&#9986;':'&#9676;';}
+  if(erasing&&!penOn)togglePen();
+  if(!erasing)redrawInk();
+}
+function cycleEraser(){setEraser(!erasing?'stroke':(erasing==='stroke'?'partial':null));}
+function drawEraserRing(e){
+  const r=deckRect();const R=Math.max(6,(erasing==='partial'?11:18)*r.width/1280);
+  ictx.beginPath();ictx.arc(e.clientX,e.clientY,R,0,7);
+  ictx.strokeStyle='#b3261e';ictx.lineWidth=1.5;
+  if(erasing!=='partial')ictx.setLineDash([4,4]);
+  ictx.stroke();ictx.setLineDash([]);
+}
+function segHit(q,a,b,R){
+  const dx=b[0]-a[0],dy=b[1]-a[1];
+  const L2=dx*dx+dy*dy||1e-9;
+  let t=((q[0]-a[0])*dx+(q[1]-a[1])*dy)/L2;
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(q[0]-(a[0]+t*dx),q[1]-(a[1]+t*dy))<R;
+}
+function eraseAt(e){
+  const q=toDeck(e),key=inkKey();
+  const arr=inkStore[key]||[];
+  let out;
+  if(erasing==='partial'){
+    const R=11;out=[];let changed=false;
+    arr.forEach(st=>{
+      let touched=false;const runs=[];let run=[];
+      for(let i=0;i<st.p.length;i++){
+        const p=st.p[i];
+        if(Math.hypot(p[0]-q[0],p[1]-q[1])<R){touched=true;if(run.length>1)runs.push(run);run=[];continue;}
+        if(run.length&&segHit(q,run[run.length-1],p,R)){touched=true;if(run.length>1)runs.push(run);run=[p];continue;}
+        run.push(p);
+      }
+      if(run.length>1)runs.push(run);
+      if(!touched){out.push(st);return;}
+      changed=true;
+      runs.forEach(rn=>out.push({c:st.c,p:rn}));
+    });
+    if(!changed)out=arr;
+  }else{
+    const R=18;
+    out=arr.filter(st=>!st.p.some(p=>Math.hypot(p[0]-q[0],p[1]-q[1])<R));
+  }
+  if(out!==arr){
+    if(out.length)inkStore[key]=out;else delete inkStore[key];
+    saveInk();
+  }
+  redrawInk();drawEraserRing(e);
+}
+ink.addEventListener('pointerdown',e=>{
+  e.preventDefault();drawing=true;
+  if(erasing){eraseAt(e);return;}
+  curStroke={c:penColor,p:[toDeck(e)]};
+  (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
+  ictx.beginPath();ictx.moveTo(e.clientX,e.clientY);
+});
+ink.addEventListener('pointermove',e=>{
+  if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
+  if(!drawing)return;e.preventDefault();
+  curStroke.p.push(toDeck(e));
+  ictx.lineTo(e.clientX,e.clientY);ictx.strokeStyle=penColor;ictx.lineWidth=3;ictx.lineCap='round';ictx.stroke();
+});
+addEventListener('pointerup',()=>{if(drawing)saveInk();drawing=false;});
+function injectInkPrints(){
+  removeInkPrints();
+  slides.forEach((sl,i)=>{
+    const sts=inkStore[inkKey(i)];
+    if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
+    if(!sts||!sts.length)return;
+    const c=document.createElement('canvas');
+    c.className='inkprint';c.width=1280;c.height=720;
+    sl.appendChild(c);
+    const c2=c.getContext('2d');
+    sts.forEach(st=>drawStroke(c2,st,null,3.5));
+  });
+}
+function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
+(function(){
+  const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
+  const tb=document.createElement('div');tb.id='touchbar';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbHelp">?</button>';
+  document.body.appendChild(tb);
+  if(coarse)tb.style.display='flex';
+  document.getElementById('tbPen').onclick=togglePen;
+  document.getElementById('tbErase').onclick=cycleEraser;
+  document.getElementById('tbClear').onclick=clearInk;
+  document.getElementById('tbPrev').onclick=prev;
+  document.getElementById('tbNext').onclick=next;
+  document.getElementById('tbWb').onclick=toggleWhiteboard;
+  document.getElementById('tbHand').onclick=toggleHandout;
+  document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
+})();
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);});
+document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
+document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
+document.getElementById('pclear').onclick=clearInk;
+document.getElementById('pclose').onclick=togglePen;
+document.getElementById('pexport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(inkStore)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(location.pathname.split('/').pop()||'deck').replace(/\.html?$/,'')+'-annotations.json';
+  a.click();URL.revokeObjectURL(a.href);
+};
+document.getElementById('pimport').onclick=()=>{
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const fr=new FileReader();
+    fr.onload=()=>{try{inkStore=JSON.parse(fr.result)||{};saveInk();redrawInk();}catch(e){alert('Could not read that annotations file.');}};
+    fr.readAsText(inp.files[0]);
+  };
+  inp.click();
+};
+document.getElementById('pwipe').onclick=()=>{
+  if(confirm('Erase ALL annotations on ALL slides of this deck? (Tip: use the ↓ button first to back them up.)')){inkStore={};saveInk();redrawInk();}
+};
+
+/* handout mode */
+function toggleHandout(){
+  document.body.classList.toggle('handout');
+  if(document.body.classList.contains('handout')){deck.style.transform='none';injectInkPrints();window.scrollTo(0,0);}
+  else{removeInkPrints();fit();redrawInk();}
+}
+addEventListener('beforeprint',()=>{document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
+addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
+/* laser pointer */
+const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
+let laserOn=false;
+function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';}
+addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
+/* whiteboard pages */
+let wbReturn=0;
+function toggleWhiteboard(){
+  const wbIdx=slides.findIndex(sl=>sl.classList.contains('whiteboard'));
+  if(wbIdx<0)return;
+  if(slides[cur].classList.contains('whiteboard')){
+    if(penOn)togglePen();
+    show(wbReturn);
+  }else{
+    wbReturn=cur;
+    show(wbIdx);
+    if(!penOn)togglePen();
+  }
+}
+/* checkpoint questions */
+const cp=document.getElementById('cp');
+function openCheckpoint(id){
+  const data=document.getElementById(id);if(!data||!cp)return;
+  const items=[...data.children];
+  document.getElementById('cpQ').innerHTML=items[0].innerHTML;
+  const opts=document.getElementById('cpOpts'),fb=document.getElementById('cpFb');
+  opts.innerHTML='';fb.innerHTML='';
+  items.slice(1).forEach(li=>{
+    const b=document.createElement('button');b.className='btn sec';
+    b.innerHTML=li.innerHTML;
+    b.onclick=()=>{
+      fb.innerHTML=(li.hasAttribute('data-ok')?'<span class="good">Correct.</span> ':'<span class="bad">Not quite.</span> ')+(data.dataset.why||'');
+      if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([fb]);
+    };
+    opts.appendChild(b);
+  });
+  cp.classList.add('open');
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([cp]);
+}
+if(cp)document.getElementById('cpClose').onclick=()=>cp.classList.remove('open');
+
+let startPos=parseInt(location.hash.slice(1))-1;
+if(isNaN(startPos)){try{startPos=+localStorage.getItem('deckpos:'+location.pathname)||0;}catch(e){startPos=0;}}
+show(startPos);
+fit();
+window.deckAPI={show,next,prev};
+})();
+
+/* ================= derivation players ================= */
+document.querySelectorAll('.derive').forEach(d=>{
+  const steps=[...d.querySelectorAll('.step')];
+  const note=d.querySelector('.dnote'),dots=d.querySelector('.dots');
+  let k=0;
+  steps.forEach((s,i)=>{
+    const dot=document.createElement('span');dot.className='dot';
+    dot.onclick=()=>go(i);dots.appendChild(dot);
+  });
+  function go(i){
+    k=Math.max(0,Math.min(steps.length-1,i));
+    steps.forEach((s,j)=>s.classList.toggle('shown',j<=k));
+    [...dots.children].forEach((dt,j)=>dt.classList.toggle('here',j===k));
+    note.innerHTML='<b>Step '+(k+1)+'/'+steps.length+':</b> '+(steps[k].dataset.note||'');
+    if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([d]);
+  }
+  d.querySelector('.dprev').onclick=()=>go(k-1);
+  d.querySelector('.dnext').onclick=()=>go(k+1);
+  go(0);
+});
+
+/* ================= LP helpers ================= */
+const BIG=500;
+function clipHP(poly,a,b,c){
+  const out=[],n=poly.length;
+  if(!n)return out;
+  for(let i=0;i<n;i++){
+    const P=poly[i],Q=poly[(i+1)%n];
+    const dP=a*P[0]+b*P[1]-c,dQ=a*Q[0]+b*Q[1]-c;
+    if(dP<=1e-9)out.push(P);
+    if((dP<-1e-9&&dQ>1e-9)||(dP>1e-9&&dQ<-1e-9)){
+      const t=dP/(dP-dQ);
+      out.push([P[0]+t*(Q[0]-P[0]),P[1]+t*(Q[1]-P[1])]);
+    }
+  }
+  return out;
+}
+function regionPoly(cons){
+  let poly=[[-BIG,-BIG],[BIG,-BIG],[BIG,BIG],[-BIG,BIG]];
+  for(const cn of cons){
+    if(cn.op==='ge')poly=clipHP(poly,-cn.a,-cn.b,-cn.rhs);
+    else poly=clipHP(poly,cn.a,cn.b,cn.rhs);
+    if(!poly.length)break;
+  }
+  return poly;
+}
+function dedupe(poly){
+  const vs=[];
+  for(const p of poly)if(!vs.some(q=>Math.abs(q[0]-p[0])<1e-6&&Math.abs(q[1]-p[1])<1e-6))vs.push(p);
+  return vs;
+}
+function isBoxVert(p){return Math.abs(p[0])>BIG-1||Math.abs(p[1])>BIG-1;}
+
+
+/* ================= basis chooser (Example 2.1) ================= */
+(function(){
+const boxes=document.getElementById('bcBoxes');if(!boxes)return;
+const A=[[1,1,2,1,0,0,0],[0,1,6,0,1,0,0],[1,0,0,0,0,1,0],[0,1,0,0,0,0,1]];
+const b=[8,12,4,6];
+const out=document.getElementById('bcOut');
+const cbs=[];
+for(let j=0;j<7;j++){
+  const l=document.createElement('label');
+  l.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer';
+  const c=document.createElement('input');c.type='checkbox';c.style.transform='scale(1.4)';
+  c.onchange=solve;
+  l.appendChild(document.createTextNode('A'+(j+1)));l.appendChild(c);
+  boxes.appendChild(l);cbs.push(c);
+}
+function solve(){
+  const idx=cbs.map((c,j)=>c.checked?j:-1).filter(j=>j>=0);
+  if(idx.length!==4){out.innerHTML='Select exactly 4 columns ('+idx.length+' selected)&hellip;';return;}
+  // build B (4x4) and gaussian-solve B xB = b
+  const M=[0,1,2,3].map(i=>idx.map(j=>A[i][j]).concat([b[i]]));
+  let sing=false;
+  for(let col=0;col<4;col++){
+    let piv=col;
+    for(let r=col;r<4;r++)if(Math.abs(M[r][col])>Math.abs(M[piv][col]))piv=r;
+    if(Math.abs(M[piv][col])<1e-9){sing=true;break;}
+    [M[col],M[piv]]=[M[piv],M[col]];
+    for(let r=0;r<4;r++){
+      if(r===col)continue;
+      const f=M[r][col]/M[col][col];
+      for(let k=col;k<5;k++)M[r][k]-=f*M[col][k];
+    }
+  }
+  if(sing){out.innerHTML='<span class="bad">Singular!</span> Columns {'+idx.map(j=>j+1).join(', ')+'} are linearly <b>dependent</b> — no basic solution from this choice. (Condition (a) of Thm 2.4 fails.)';return;}
+  const xB=[0,1,2,3].map(r=>M[r][4]/M[r][r]);
+  const x=[0,0,0,0,0,0,0];
+  idx.forEach((j,k)=>x[j]=xB[k]);
+  const feas=x.every(v=>v>=-1e-9);
+  const zeros=x.filter(v=>Math.abs(v)<1e-9).length;
+  const degen=feas&&zeros>3;
+  out.innerHTML='<b>Basis:</b> {'+idx.map(j=>'A'+(j+1)).join(', ')+'}'+
+    '<br><b>Basic solution:</b> x = ('+x.map(v=>+v.toFixed(2)).join(', ')+')'+
+    '<br>'+(feas?'<span class="good">All components &ge; 0 &rarr; BASIC FEASIBLE SOLUTION ✓</span>':'<span class="bad">Negative component &rarr; basic but INFEASIBLE</span>')+
+    (degen?'<br><span class="mid">…and degenerate: more than n−m = 3 zeros!</span>':'');
+}
+document.querySelectorAll('button[data-pre]').forEach(bt=>bt.onclick=()=>{
+  const set=bt.dataset.pre.split(',').map(Number);
+  cbs.forEach((c,j)=>c.checked=set.includes(j+1));
+  solve();
+});
+solve();
+})();
+
+/* ================= optimality sweep ================= */
+(function(){
+const cv=document.getElementById('optCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+const P=[[80,250],[110,105],[225,58],[345,120],[325,240],[205,278]];
+const c=[0.55,-1];  // minimize => move opposite
+let t=0,anim=null,run=false;
+const vals=P.map(p=>c[0]*p[0]+c[1]*p[1]);
+const lo=Math.min(...vals),hi=Math.max(...vals);
+const best=P[vals.indexOf(lo)];
+function draw(){
+  ctx.clearRect(0,0,440,300);
+  ctx.beginPath();P.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+  ctx.fillStyle='rgba(134,31,65,.13)';ctx.fill();ctx.strokeStyle='#861F41';ctx.lineWidth=2.5;ctx.stroke();
+  P.forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],4.5,0,7);ctx.fillStyle='#26282e';ctx.fill();});
+  const v=hi-(hi-lo)*t;
+  ctx.strokeStyle='#E5751F';ctx.lineWidth=2.6;ctx.setLineDash([9,6]);
+  ctx.beginPath();
+  // line c·p = v : param by x
+  ctx.moveTo(0,(c[0]*0-v)/ (-c[1]));
+  ctx.lineTo(440,(c[0]*440-v)/(-c[1]));
+  ctx.stroke();ctx.setLineDash([]);
+  if(t>0.985){
+    ctx.beginPath();ctx.arc(best[0],best[1],11,0,7);
+    ctx.strokeStyle='#1a7d3c';ctx.lineWidth=3.5;ctx.stroke();
+    ctx.fillStyle='#1a7d3c';ctx.font='bold 15px sans-serif';
+    ctx.fillText('last touch: an extreme point',best[0]-90,best[1]-18);
+  }
+}
+document.getElementById('optBtn').onclick=()=>{
+  if(anim)cancelAnimationFrame(anim);
+  t=0;
+  const t0=performance.now();
+  function fr(now){
+    t=Math.min((now-t0)/2600,1);
+    draw();
+    if(t<1)anim=requestAnimationFrame(fr);else anim=null;
+  }
+  anim=requestAnimationFrame(fr);
+};
+draw();
+})();
+
+/* ================= convex hull dragger ================= */
+(function(){
+const cv=document.getElementById('hullCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+let pts=[[90,220],[150,70],[290,55],[380,150],[300,255],[210,160]];
+const out=document.getElementById('hullOut');
+function hull(points){
+  const p=[...points].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lower=[],upper=[];
+  for(const q of p){
+    while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],q)<=0)lower.pop();
+    lower.push(q);
+  }
+  for(const q of p.reverse()){
+    while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],q)<=0)upper.pop();
+    upper.push(q);
+  }
+  return lower.slice(0,-1).concat(upper.slice(0,-1));
+}
+function draw(){
+  ctx.clearRect(0,0,440,300);
+  const H=hull(pts);
+  ctx.beginPath();H.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+  ctx.fillStyle='rgba(134,31,65,.13)';ctx.fill();ctx.strokeStyle='#861F41';ctx.lineWidth=2.5;ctx.stroke();
+  let inside=0;
+  pts.forEach(p=>{
+    const onHull=H.some(q=>q===p);
+    if(!onHull)inside++;
+    ctx.beginPath();ctx.arc(p[0],p[1],7,0,7);
+    ctx.fillStyle=onHull?'#861F41':'#b9b2a9';ctx.fill();
+  });
+  out.innerHTML=H.length+' extreme points'+(inside?' · <span style="color:#999">'+inside+' point'+(inside>1?'s':'')+' swallowed by the hull — not extreme, not needed</span>':'');
+}
+let dragIdx=-1;
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*(cv.width/r.width),(e.clientY-r.top)*(cv.height/r.height)];
+}
+cv.addEventListener('pointerdown',e=>{
+  const [x,y]=pos(e);
+  dragIdx=pts.findIndex(p=>Math.hypot(p[0]-x,p[1]-y)<16);
+});
+cv.addEventListener('pointermove',e=>{
+  if(dragIdx<0)return;
+  const [x,y]=pos(e);
+  pts[dragIdx]=[Math.max(12,Math.min(428,x)),Math.max(12,Math.min(288,y))];
+  draw();
+});
+addEventListener('pointerup',()=>dragIdx=-1);
+draw();
+})();
+
+
+/* ================= guided proof workshop ================= */
+document.querySelectorAll('.gproof').forEach(g=>{
+  const items=[...g.querySelectorAll('.gpdata > .gitem')];
+  const stepsEl=g.querySelector('.gpsteps'),askEl=g.querySelector('.gpask'),
+        note=g.querySelector('.gpnote'),prog=g.querySelector('.gpprog'),
+        assumeEl=g.querySelector('.gpassume'),showEl=g.querySelector('.gpshow'),
+        nextBtn=g.querySelector('.gpnext'),resetBtn=g.querySelector('.gpreset');
+  let k=0,awaiting=false;
+  function typeset(){if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([g]);}
+  function upd(){prog.textContent='move '+Math.min(k,items.length)+' / '+items.length;}
+  function reveal(){
+    if(k>=items.length)return;
+    const it=items[k];
+    if(it.dataset.kind==='ask'){
+      awaiting=true;nextBtn.disabled=true;
+      const q=it.querySelector('.gq');
+      askEl.innerHTML='';
+      const qd=document.createElement('div');qd.className='gpq';qd.innerHTML=q?q.innerHTML:'';askEl.appendChild(qd);
+      const wrap=document.createElement('div');wrap.className='gpopts';
+      [...it.querySelectorAll('.gopt')].forEach(o=>{
+        const b=document.createElement('button');b.className='btn sec';b.innerHTML=o.innerHTML;
+        b.onclick=()=>{
+          const ok=o.hasAttribute('data-ok');
+          const why=o.dataset.why||it.dataset.why||'';
+          note.innerHTML=(ok?'<span class="good">Yes.</span> ':'<span class="bad">Not quite — try again.</span> ')+why;
+          if(ok){
+            awaiting=false;nextBtn.disabled=false;
+            wrap.querySelectorAll('button').forEach(x=>x.disabled=true);
+            b.classList.remove('sec');
+          }
+          typeset();
+        };
+        wrap.appendChild(b);
+      });
+      askEl.appendChild(wrap);
+      k++;upd();typeset();
+      return;
+    }
+    askEl.innerHTML='';
+    const d=document.createElement('div');d.className='gpstep';d.innerHTML=it.innerHTML;
+    stepsEl.querySelectorAll('.gpstep').forEach(x=>x.classList.remove('latest'));
+    d.classList.add('latest');
+    stepsEl.appendChild(d);
+    if(it.dataset.note)note.innerHTML=it.dataset.note;
+    if(it.dataset.assume)assumeEl.innerHTML=it.dataset.assume;
+    if(it.dataset.show)showEl.innerHTML=it.dataset.show;
+    k++;upd();typeset();
+    if(stepsEl.scrollTo)stepsEl.scrollTo({top:stepsEl.scrollHeight,behavior:'smooth'});
+    if(k>=items.length){nextBtn.disabled=true;nextBtn.innerHTML='Q.E.D. &#9632;';}
+  }
+  nextBtn.onclick=()=>{if(!awaiting)reveal();};
+  resetBtn.onclick=()=>{
+    k=0;awaiting=false;stepsEl.innerHTML='';askEl.innerHTML='';note.innerHTML='';
+    assumeEl.innerHTML='&mdash;';showEl.innerHTML='&mdash;';
+    nextBtn.disabled=false;nextBtn.innerHTML='Next move &#9654;';upd();
+  };
+  upd();
+});
+</script>
+</body>
+</html>
