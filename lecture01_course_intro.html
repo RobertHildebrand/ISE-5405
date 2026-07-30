@@ -1028,6 +1028,8 @@ body.handout .printskip{display:none!important}
   <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
   <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
   <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
+  <button class="pcol" data-c="HL" title="highlighter" style="background:#FFD60A"></button>
+  <button id="pwidth" title="pen thickness" style="background:#26282e;color:#fff;font-size:17px">&#9679;</button>
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
   <button id="ppartial" title="precision eraser — cuts pieces out of strokes" style="background:#fff;border:2px solid #999">&#9986;</button>
   <button id="pclear" style="background:#e8e2da">✕</button>
@@ -1112,27 +1114,69 @@ slides.forEach((s,i)=>{
 counter.onclick=()=>toc.classList.toggle('open');
 /* pen */
 const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
-let drawing=false,penColor='#c8102e',curStroke=null,inkStore={};
-function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
+let drawing=false,penColor='#c8102e',penWidth=3.5,curStroke=null,inkStore={},inkDirty=false;
 try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
+let pencilEver=false;
+try{pencilEver=localStorage.getItem('pencilSeen')==='1';}catch(e){}
+function allowDraw(e){
+  if(e.pointerType==='pen'){if(!pencilEver){pencilEver=true;try{localStorage.setItem('pencilSeen','1');}catch(_){}}return true;}
+  if(e.pointerType==='touch'&&pencilEver)return false; /* palm rejection once a Pencil has been seen */
+  return true;
+}
+function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
 function deckRect(){return deck.getBoundingClientRect();}
-function toDeck(e){const r=deckRect();return [(e.clientX-r.left)/r.width*1280,(e.clientY-r.top)/r.height*720];}
+function toDeck(e){const r=deckRect();return [Math.round((e.clientX-r.left)/r.width*12800)/10,Math.round((e.clientY-r.top)/r.height*7200)/10];}
 function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
-function drawStroke(c2,st,mapper,lw){
-  c2.strokeStyle=st.c;c2.lineWidth=lw;c2.lineCap='round';c2.lineJoin='round';c2.beginPath();
-  st.p.forEach((q,i)=>{const m=mapper?mapper(q):q;i?c2.lineTo(m[0],m[1]):c2.moveTo(m[0],m[1]);});
-  c2.stroke();
+/* smoothed, pressure-aware stroke renderer (quadratic midpoint splines) */
+function renderStroke(c2,st,mapper,wscale){
+  const base=(st.w||3.5)*(wscale||1);
+  c2.globalAlpha=st.a==null?1:st.a;
+  c2.strokeStyle=st.c==='HL'?'#FFD60A':st.c;
+  c2.lineCap='round';c2.lineJoin='round';
+  const P=st.p.map(q=>{const m=mapper?mapper(q):q;return [m[0],m[1],(q[2]==null?0.5:q[2])];});
+  if(P.length<2){
+    c2.beginPath();c2.arc(P[0][0],P[0][1],base*0.55,0,7);
+    c2.fillStyle=c2.strokeStyle;c2.fill();
+  }else{
+    for(let i=1;i<P.length;i++){
+      const p0=P[i-1],p1=P[i];
+      c2.lineWidth=base*(0.4+0.9*((p0[2]+p1[2])/2));
+      c2.beginPath();
+      if(i>1){
+        const pm=P[i-2];
+        c2.moveTo((pm[0]+p0[0])/2,(pm[1]+p0[1])/2);
+        c2.quadraticCurveTo(p0[0],p0[1],(p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+      }else{
+        c2.moveTo(p0[0],p0[1]);
+        c2.lineTo((p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+      }
+      c2.stroke();
+    }
+    const a=P[P.length-2],b=P[P.length-1];
+    c2.beginPath();c2.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);c2.lineTo(b[0],b[1]);
+    c2.lineWidth=base*(0.4+0.9*b[2]);c2.stroke();
+  }
+  c2.globalAlpha=1;
 }
 function redrawInk(){
-  ictx.clearRect(0,0,ink.width,ink.height);
-  (inkStore[inkKey()]||[]).forEach(st=>drawStroke(ictx,st,fromDeck,3));
+  ictx.clearRect(0,0,innerWidth,innerHeight);
+  (inkStore[inkKey()]||[]).forEach(st=>renderStroke(ictx,st,fromDeck,deckRect().width/1280));
 }
-function sizeInk(){ink.width=innerWidth;ink.height=innerHeight;redrawInk();}
+function scheduleInk(){
+  if(inkDirty)return;inkDirty=true;
+  requestAnimationFrame(()=>{inkDirty=false;redrawInk();});
+}
+function sizeInk(){
+  const dpr=window.devicePixelRatio||1;
+  ink.width=innerWidth*dpr;ink.height=innerHeight*dpr;
+  ink.style.width=innerWidth+'px';ink.style.height=innerHeight+'px';
+  ictx.setTransform(dpr,0,0,dpr,0,0);
+  redrawInk();
+}
 sizeInk();addEventListener('resize',sizeInk);
 function togglePen(){penOn=!penOn;document.getElementById('pentools').style.display=penOn?'flex':'none';ink.style.pointerEvents=penOn?'auto':'none';const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);}
 function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
-function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,ink.width,ink.height);}
-
+function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,innerWidth,innerHeight);}
 /* eraser: 'stroke' removes whole strokes, 'partial' cuts pieces out */
 let erasing=null;
 function setEraser(mode){
@@ -1176,7 +1220,7 @@ function eraseAt(e){
       if(run.length>1)runs.push(run);
       if(!touched){out.push(st);return;}
       changed=true;
-      runs.forEach(rn=>out.push({c:st.c,p:rn}));
+      runs.forEach(rn=>out.push({c:st.c,w:st.w,a:st.a,p:rn}));
     });
     if(!changed)out=arr;
   }else{
@@ -1189,18 +1233,30 @@ function eraseAt(e){
   }
   redrawInk();drawEraserRing(e);
 }
+function pushPoint(ev){
+  const d=toDeck(ev);
+  const last=curStroke.p[curStroke.p.length-1];
+  if(last&&Math.hypot(last[0]-d[0],last[1]-d[1])<0.7)return;
+  curStroke.p.push([d[0],d[1],Math.round((ev.pressure||0.5)*100)/100]);
+}
 ink.addEventListener('pointerdown',e=>{
-  e.preventDefault();drawing=true;
+  if(!allowDraw(e))return;
+  e.preventDefault();
+  if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
+  drawing=true;
   if(erasing){eraseAt(e);return;}
-  curStroke={c:penColor,p:[toDeck(e)]};
+  const isHL=penColor==='HL';
+  curStroke={c:isHL?'HL':penColor,w:isHL?14:penWidth,a:isHL?0.35:1,p:[]};
+  pushPoint(e);
   (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
-  ictx.beginPath();ictx.moveTo(e.clientX,e.clientY);
+  scheduleInk();
 });
 ink.addEventListener('pointermove',e=>{
   if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
   if(!drawing)return;e.preventDefault();
-  curStroke.p.push(toDeck(e));
-  ictx.lineTo(e.clientX,e.clientY);ictx.strokeStyle=penColor;ictx.lineWidth=3;ictx.lineCap='round';ictx.stroke();
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of evs)pushPoint(ev);
+  scheduleInk();
 });
 addEventListener('pointerup',()=>{if(drawing)saveInk();drawing=false;});
 function injectInkPrints(){
@@ -1210,10 +1266,11 @@ function injectInkPrints(){
     if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
     if(!sts||!sts.length)return;
     const c=document.createElement('canvas');
-    c.className='inkprint';c.width=1280;c.height=720;
+    c.className='inkprint';c.width=2560;c.height=1440;
     sl.appendChild(c);
     const c2=c.getContext('2d');
-    sts.forEach(st=>drawStroke(c2,st,null,3.5));
+    c2.setTransform(2,0,0,2,0,0);
+    sts.forEach(st=>renderStroke(c2,st,null,1.1));
   });
 }
 function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
@@ -1236,6 +1293,7 @@ document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=
 document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
 document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
 document.getElementById('pclear').onclick=clearInk;
+(function(){const b=document.getElementById('pwidth');if(!b)return;const Ws=[2,3.5,6],G=['\u00b7','\u25cf','\u2b24'];let wi=1;b.onclick=()=>{wi=(wi+1)%3;penWidth=Ws[wi];b.innerHTML=G[wi];};})();
 document.getElementById('pclose').onclick=togglePen;
 document.getElementById('pexport').onclick=()=>{
   const blob=new Blob([JSON.stringify(inkStore)],{type:'application/json'});
