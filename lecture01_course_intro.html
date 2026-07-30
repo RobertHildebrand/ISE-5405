@@ -1269,9 +1269,9 @@ function pushPoint(ev){
   curStroke.p.push([d[0],d[1],Math.round((ev.pressure||0.5)*100)/100]);
 }
 ink.addEventListener('pointerdown',e=>{
-  if(!allowDraw(e))return;
   e.preventDefault();
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
+  if(!allowDraw(e))return;
   drawing=true;
   if(erasing){eraseAt(e);return;}
   const isHL=penColor==='HL';
@@ -1288,6 +1288,7 @@ ink.addEventListener('pointermove',e=>{
   scheduleInk();
 });
 addEventListener('pointerup',()=>{if(drawing)saveInk();drawing=false;});
+addEventListener('pointercancel',()=>{if(drawing)saveInk();drawing=false;redrawInk();});
 function injectInkPrints(){
   removeInkPrints();
   slides.forEach((sl,i)=>{
