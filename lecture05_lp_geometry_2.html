@@ -810,10 +810,17 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b731';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b732';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
+let lastVVSig='';
+function syncZoom(){
+  const v=vvState();
+  const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100)].join(',');
+  if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();}
+}
+setInterval(syncZoom,400);
 ink.addEventListener('touchstart',e=>{if(e.touches.length===1)e.preventDefault();},{passive:false});
 ink.addEventListener('touchmove',e=>{if(e.touches.length===1)e.preventDefault();},{passive:false});
 function togglePen(){
@@ -837,8 +844,12 @@ function setEraser(mode){
   if(tb){tb.classList.toggle('on',!!erasing);tb.innerHTML=erasing==='partial'?'&#9986;':'&#9676;';}
   if(erasing&&!penOn)togglePen();
   if(!erasing)redrawInk();
+  updateToolUI();
 }
 function cycleEraser(){setEraser(!erasing?'stroke':(erasing==='stroke'?'partial':null));}
+function updateToolUI(){
+  document.querySelectorAll('#pentools .pcol').forEach(b=>b.classList.toggle('on',!erasing&&b.dataset.c===penColor));
+}
 function drawEraserRing(e){
   const r=deckRect();const R=Math.max(6,(erasing==='partial'?11:18)*r.width/1280);
   const ir=inkRect();
@@ -942,6 +953,7 @@ addEventListener('pagehide',saveInk);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveInk();});
 ink.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  syncZoom();
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
   if(!allowDraw(e))return;
   drawing=true;
@@ -990,7 +1002,8 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbHand').onclick=toggleHandout;
   document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
 })();
-document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);});
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);updateToolUI();});
+updateToolUI();
 document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
 document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
 document.getElementById('pclear').onclick=clearInk;
