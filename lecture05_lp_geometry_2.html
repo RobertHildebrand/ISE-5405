@@ -845,9 +845,56 @@ function eraseAt(e){
 function pushPoint(ev){
   const d=toDeck(ev);
   const last=curStroke.p[curStroke.p.length-1];
-  if(last&&Math.hypot(last[0]-d[0],last[1]-d[1])<0.7)return;
+  if(last&&Math.hypot(last[0]-d[0],last[1]-d[1])<0.7)return false;
   curStroke.p.push([d[0],d[1],Math.round((ev.pressure||0.5)*100)/100]);
+  return true;
 }
+/* incremental rendering: draw ONLY the newest segment — O(1) per pen sample */
+function penStyle(){
+  ictx.globalAlpha=curStroke.a==null?1:curStroke.a;
+  ictx.strokeStyle=curStroke.c==='HL'?'#FFD60A':curStroke.c;
+  ictx.lineCap='round';ictx.lineJoin='round';
+}
+function drawIncrement(){
+  const P=curStroke.p,n=P.length;
+  const base=(curStroke.w||3.5)*(deckRect().width/1280);
+  penStyle();
+  const q=i=>fromDeck(P[i]);
+  if(n===1){
+    const m=q(0);
+    ictx.beginPath();ictx.arc(m[0],m[1],base*0.55,0,7);
+    ictx.fillStyle=ictx.strokeStyle;ictx.fill();
+  }else{
+    const p0=q(n-2),p1=q(n-1);
+    ictx.lineWidth=base*(0.4+0.9*((P[n-2][2]+P[n-1][2])/2));
+    ictx.beginPath();
+    if(n>=3){
+      const pm=q(n-3);
+      ictx.moveTo((pm[0]+p0[0])/2,(pm[1]+p0[1])/2);
+      ictx.quadraticCurveTo(p0[0],p0[1],(p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+    }else{
+      ictx.moveTo(p0[0],p0[1]);
+      ictx.lineTo((p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+    }
+    ictx.stroke();
+  }
+  ictx.globalAlpha=1;
+}
+function finishStroke(){
+  if(!curStroke||curStroke.p.length<2)return;
+  const P=curStroke.p,n=P.length;
+  const base=(curStroke.w||3.5)*(deckRect().width/1280);
+  penStyle();
+  const a=fromDeck(P[n-2]),b=fromDeck(P[n-1]);
+  ictx.beginPath();ictx.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);ictx.lineTo(b[0],b[1]);
+  ictx.lineWidth=base*(0.4+0.9*P[n-1][2]);ictx.stroke();
+  ictx.globalAlpha=1;
+}
+/* debounced persistence: one write shortly after you stop, not per stroke */
+let saveT=null;
+function saveInkSoon(){clearTimeout(saveT);saveT=setTimeout(saveInk,350);}
+addEventListener('pagehide',saveInk);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveInk();});
 ink.addEventListener('pointerdown',e=>{
   e.preventDefault();
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
@@ -858,17 +905,16 @@ ink.addEventListener('pointerdown',e=>{
   curStroke={c:isHL?'HL':penColor,w:isHL?14:penWidth,a:isHL?0.35:1,p:[]};
   pushPoint(e);
   (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
-  scheduleInk();
+  drawIncrement();
 });
 ink.addEventListener('pointermove',e=>{
   if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
   if(!drawing)return;e.preventDefault();
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
-  for(const ev of evs)pushPoint(ev);
-  scheduleInk();
+  for(const ev of evs)if(pushPoint(ev))drawIncrement();
 });
-addEventListener('pointerup',()=>{if(drawing)saveInk();drawing=false;});
-addEventListener('pointercancel',()=>{if(drawing)saveInk();drawing=false;redrawInk();});
+addEventListener('pointerup',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
+addEventListener('pointercancel',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
 function injectInkPrints(){
   removeInkPrints();
   slides.forEach((sl,i)=>{
