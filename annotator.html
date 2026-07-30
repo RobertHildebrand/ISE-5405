@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ink Pad — ISE 5405 Annotator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1c1e22;font-family:"Public Sans","Avenir Next","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#deck{width:1280px;height:720px;background:#fdfcfa;position:relative;flex:none;transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.5);border-radius:6px;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:44px 64px 40px;font-size:22px;color:#26282e;line-height:1.45}
+.slide.active{display:flex;animation:slidein .5s cubic-bezier(.16,.8,.3,1)}
+.slide h1{font-size:50px;color:#861F41;margin:0}
+.slide h2{font-size:32px;color:#861F41;margin:0 0 16px;padding-bottom:8px;border-bottom:3px solid #E5751F}
+.slide ul{margin:6px 0}
+.slide li{margin:7px 0}
+.frag{opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.frag.on{opacity:1;transform:none}
+.cols{display:flex;gap:36px;align-items:flex-start}
+.col{flex:1;min-width:0}
+.box{border-left:5px solid #861F41;background:#f4eef0;padding:10px 16px;border-radius:0 8px 8px 0;margin:10px 0}
+.box.orange{border-color:#E5751F;background:#fdf3ea}
+.box.blue{border-color:#33658a;background:#eef3f7}
+.small{font-size:18px}.tiny{font-size:15px}
+.center{text-align:center}
+table.nice{border-collapse:collapse;margin:8px auto;font-size:19px}
+table.nice th,table.nice td{border-bottom:1px solid #ccc;padding:5px 14px;text-align:center}
+table.nice th{background:#861F41;color:#fff}
+#progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
+#counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#999;cursor:pointer;z-index:50}
+#brand{position:absolute;bottom:10px;left:16px;font-size:13px;color:#b9b2a9;z-index:50}
+#toc{position:fixed;top:0;left:0;bottom:0;width:360px;background:#26282e;color:#eee;transform:translateX(-100%);transition:.25s;z-index:400;overflow-y:auto;padding:18px}
+#toc.open{transform:none}
+#toc h3{margin:4px 0 10px;color:#E5751F}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li{padding:7px 10px;cursor:pointer;border-radius:6px;font-size:15px}
+#toc li:hover{background:#3a3d45}
+#ink{position:fixed;inset:0;z-index:300;pointer-events:none}
+#pentools{position:fixed;top:12px;right:14px;z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
+#pentools button{width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;font-size:13px}
+#pentools .pcol{border:2px solid #fff}
+.widget{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+button.btn{background:#861F41;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:16px;cursor:pointer}
+button.btn:hover{background:#a33257}
+button.btn.sec{background:#e8e2da;color:#333}
+.kbd{display:inline-block;border:1px solid #bbb;border-bottom-width:2px;border-radius:5px;padding:0 7px;font-family:monospace;background:#f4f4f4;font-size:15px}
+input[type=range]{accent-color:#E5751F}
+.readout{font-family:monospace;font-size:19px}
+.good{color:#1a7d3c;font-weight:600}.bad{color:#b3261e;font-weight:600}.mid{color:#b25a12;font-weight:600}
+
+/* ===== polish pass ===== */
+@keyframes slidein{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.slide h1,.slide h2{font-family:"Fraunces",Georgia,serif}
+.slide h1{letter-spacing:-.5px}
+.kicker{font-size:14px;letter-spacing:3px;color:#E5751F;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.slide.title{justify-content:center;align-items:center;text-align:center;background:radial-gradient(1100px 620px at 78% 112%,#f6e3d0 0%,#fdfcfa 58%)}
+.title-art{position:absolute;right:-30px;bottom:-34px;width:500px;pointer-events:none}
+#help{position:fixed;inset:0;background:rgba(20,22,26,.82);z-index:600;display:none;align-items:center;justify-content:center;cursor:pointer}
+#help.open{display:flex}
+#help .card{background:#fdfcfa;border-radius:14px;padding:26px 36px;max-width:580px;font-size:17px;line-height:2.1;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#help h3{margin:0 0 8px;color:#861F41;font-family:"Fraunces",Georgia,serif}
+.chip{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:1px 12px;font-size:14px;font-weight:600;margin-right:6px}
+iframe.embed{border:none;border-radius:10px;background:#fff}
+.widget{transition:box-shadow .25s}
+.widget:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+#counter{background:#f1ece6;border-radius:14px;padding:2px 12px;color:#7a736b}
+
+/* ===== handout / laser / checkpoint ===== */
+body.handout{overflow:auto}
+body.handout #stage{position:static;display:block;height:auto}
+body.handout #deck{transform:none!important;margin:24px auto;height:auto;box-shadow:none}
+body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;height:720px;animation:none;border-bottom:3px solid #e5ded6;overflow:hidden}
+body.handout #progress,body.handout #counter,body.handout #brand{display:none}
+body.handout .frag{opacity:1;transform:none}
+#laser{position:fixed;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff4040 0%,rgba(255,64,64,.4) 55%,transparent 72%);box-shadow:0 0 14px 5px rgba(255,64,64,.55);pointer-events:none;z-index:700;display:none;transform:translate(-50%,-50%)}
+#cp{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:620;display:none;align-items:center;justify-content:center}
+#cp.open{display:flex}
+#cp .cpcard{background:#fdfcfa;border-radius:16px;padding:26px 34px;max-width:700px;min-width:520px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#cpQ{font-size:23px;margin:6px 0 14px;line-height:1.45}
+#cpOpts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+#cpOpts button{text-align:left;font-size:18px;padding:9px 14px}
+#cpFb{min-height:52px;font-size:17px;margin-bottom:8px}
+@media print{
+  @page{size:13.33in 7.5in;margin:0}
+  html,body{background:#fff!important;overflow:visible;height:auto}
+  #stage{position:static;display:block;height:auto}
+  #deck{transform:none!important;box-shadow:none;height:auto;border-radius:0}
+  .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:720px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
+  .frag{opacity:1!important;transform:none!important}
+  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,#handoutbar,.printskip{display:none!important}
+}
+#ink{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.penmode,body.penmode *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+body.handout #ink{display:none}
+#touchbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:520;display:none;gap:10px;background:rgba(38,40,46,.88);padding:9px 13px;border-radius:16px}
+#touchbar button{width:48px;height:48px;border:none;border-radius:11px;font-size:21px;background:#3a3d45;color:#fff}
+#touchbar button.on{background:#E5751F}
+canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.axbtn{float:right;padding:1px 10px;font-size:12.5px;margin-left:8px}
+#appx{position:fixed;inset:0;background:rgba(20,22,26,.82);z-index:620;display:none;align-items:center;justify-content:center}
+#appx.open{display:flex}
+#appx .axcard{background:#fdfcfa;border-radius:16px;padding:24px 32px;max-width:900px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#appx h3{margin:2px 0 10px;color:#861F41;font-family:"Fraunces",Georgia,serif;font-size:27px}
+.ax3{display:flex;gap:12px;margin:10px 0}
+.ax3>div{flex:1;background:#f6f3ef;border-radius:10px;padding:9px 13px;font-size:15px}
+.ax3 b{color:#861F41}
+.ax3 ul{margin:5px 0 0;padding-left:18px}
+.ax3 li{margin:3px 0}
+.axflavor{font-size:14.5px;background:#fdf3ea;border-left:4px solid #E5751F;padding:7px 12px;border-radius:0 8px 8px 0;margin-top:4px}
+.axdata{font-size:14.5px;background:#eef3f7;border-left:4px solid #33658a;padding:7px 12px;border-radius:0 8px 8px 0;margin-top:8px}
+.slide.whiteboard{background:repeating-linear-gradient(to bottom,#fdfcfa 0 44px,#ebe7e1 44px 45px);padding:20px 40px}
+.wbhead{display:flex;justify-content:space-between;align-items:center}
+body.handout .printskip{display:none!important}
+#pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
+#handoutbar{display:none;position:fixed;top:12px;right:14px;z-index:530;gap:10px}
+body.handout #handoutbar{display:flex}
+
+.cover{justify-content:center;align-items:center;text-align:center}
+.cover .drop{border:3px dashed #c9b8a8;border-radius:16px;padding:34px 60px;background:#fff}
+.pdfimg{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%}
+#pgprog{position:fixed;inset:0;background:rgba(20,22,26,.85);z-index:800;display:none;align-items:center;justify-content:center;color:#fff;font-size:22px;font-family:"Fraunces",Georgia,serif}
+.slide.pdfpage{background:#3a3d45}
+@media print{.noprint{display:none!important}.slide.pdfpage{background:#fff}}
+body.handout .noprint{display:none}
+</style>
+</head>
+<body>
+<div id="stage"><div id="deck">
+<div id="progress"></div>
+<div id="brand">ISE 5405 · Ink Pad</div>
+<div id="counter">1 / 1</div>
+
+<section class="slide cover noprint" data-inkkey="cover">
+  <div style="font-size:20px;letter-spacing:3px;color:#E5751F;font-weight:600">ISE 5405 · TOOLS</div>
+  <h1 style="margin:12px 0 6px">Ink Pad</h1>
+  <div style="font-size:20px;color:#555;margin-bottom:26px">Blank pages + annotate your own PDFs — same pen as the lectures</div>
+  <div class="drop">
+    <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
+    <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
+    <div class="tiny" style="color:#888;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
+    Annotations save in this browser and <b>reattach automatically</b> when you open the same PDF again.</div>
+  </div>
+  <div style="margin-top:26px" class="tiny">
+    <span class="kbd">&rarr;</span>/<span class="kbd">&larr;</span> pages &middot; <span class="kbd">P</span> pen &middot; <span class="kbd">E</span> eraser &middot;
+    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">?</span> help
+  </div>
+</section>
+
+</div></div>
+
+<div id="toc"><h3>Pages</h3><ul></ul></div>
+<canvas id="ink"></canvas>
+<div id="help" onclick="this.classList.remove('open')"><div class="card">
+  <h3>Keyboard controls</h3>
+  <b>&rarr; / Space / click</b> &mdash; next reveal or slide<br>
+  <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
+  <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
+  <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
+
+  <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; blank whiteboard pages, and back (pen auto-on)<br>
+
+  <b>?</b> &mdash; toggle this help &nbsp;&middot;&nbsp; <b>Esc</b> &mdash; close overlays<br>
+  <span style="font-size:14px;color:#777">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
+</div></div>
+<div id="handoutbar">
+  <button class="btn" id="hbPrint">&#128190; Save / Print PDF</button>
+  <button class="btn sec" id="hbExit">Exit handout</button>
+</div>
+<div id="pgprog">Rendering&hellip;</div>
+<div id="pentools">
+  <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
+  <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
+  <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
+  <button class="pcol" data-c="HL" title="highlighter" style="background:#FFD60A"></button>
+  <button id="pwidth" title="pen thickness" style="background:#26282e;color:#fff;font-size:17px">&#9679;</button>
+  <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
+  <button id="ppartial" title="precision eraser — cuts pieces out of strokes" style="background:#fff;border:2px solid #999">&#9986;</button>
+  <button id="pclear" style="background:#e8e2da">✕</button>
+    <button id="pexport" title="download annotations backup file" style="background:#33658a;color:#fff">&darr;</button>
+  <button id="pimport" title="load annotations from file" style="background:#1a7d3c;color:#fff">&uarr;</button>
+  <button id="pwipe" title="erase ALL annotations on ALL slides" style="background:#b3261e;color:#fff">&empty;</button>
+  <button id="pclose" style="background:#555;color:#fff">P</button>
+</div>
+
+<script>
+const deck=document.getElementById('deck');
+let slides=[],cur=0,penOn=false;
+const bar=document.getElementById('progress'),counter=document.getElementById('counter');
+const toc=document.getElementById('toc');
+function refreshSlides(){
+  slides=[...deck.querySelectorAll('section.slide')];
+  const ul=toc.querySelector('ul');ul.innerHTML='';
+  slides.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.textContent=(i+1)+'. '+(s.dataset.toc||(s.classList.contains('cover')?'Start':'Page '+(i+1)));
+    li.onclick=()=>{show(i);toc.classList.remove('open');};
+    ul.appendChild(li);
+  });
+}
+function update(){
+  bar.style.width=((cur+1)/slides.length*100)+'%';
+  counter.textContent=(cur+1)+' / '+slides.length;
+  redrawInk();
+}
+function show(i){
+  i=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===i));
+  cur=i;update();
+}
+function next(){show(cur+1);}
+function prev(){show(cur-1);}
+function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
+addEventListener('resize',fit);
+function toggleHandout(){
+  document.body.classList.toggle('handout');
+  if(document.body.classList.contains('handout')){deck.style.transform='none';injectInkPrints();window.scrollTo(0,0);}
+  else{removeInkPrints();fit();redrawInk();}
+}
+addEventListener('beforeprint',()=>{document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
+addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
+(function(){
+  const p=document.getElementById('hbPrint'),x=document.getElementById('hbExit');
+  if(p)p.onclick=()=>window.print();
+  if(x)x.onclick=()=>{if(document.body.classList.contains('handout'))toggleHandout();};
+})();
+const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
+let laserOn=false;
+function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';}
+addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
+function toggleWhiteboard(){
+  const wbIdx=slides.findIndex(sl=>sl.classList.contains('whiteboard'));
+  if(wbIdx>=0){show(wbIdx);if(!penOn)togglePen();}
+}
+let wbCount=0;
+function addPage(){
+  wbCount++;
+  const sec=document.createElement('section');
+  sec.className='slide whiteboard';
+  sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount;
+  sec.dataset.toc='Blank page '+wbCount;
+  sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page '+wbCount+'</span></div>';
+  deck.appendChild(sec);
+  refreshSlides();
+  return slides.length-1;
+}
+addEventListener('keydown',e=>{
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
+  if(penOn&&(e.key==='c'||e.key==='C')){clearInk();return;}
+  switch(e.key){
+    case 'ArrowRight':case ' ':case 'PageDown':e.preventDefault();next();break;
+    case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'f':case 'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case 'p':case 'P':togglePen();break;
+    case 'e':case 'E':cycleEraser();break;
+    case 'l':case 'L':toggleLaser();break;
+    case 'h':case 'H':toggleHandout();break;
+    case 'w':case 'W':toggleWhiteboard();break;
+    case 'n':case 'N':show(addPage());break;
+    case 'm':case 'M':toc.classList.toggle('open');break;
+    case '?':document.getElementById('help').classList.toggle('open');break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');break;
+  }
+});
+counter.onclick=()=>toc.classList.toggle('open');
+let tx=null,tyv=null,tt0=0;
+addEventListener('touchstart',e=>{
+  const t=e.changedTouches[0];
+  if(penOn||(t.touchType&&t.touchType==='stylus')){tx=null;return;}
+  if(e.target.closest('.widget,button,input'))return;
+  tx=t.clientX;tyv=t.clientY;tt0=Date.now();
+});
+addEventListener('touchend',e=>{
+  if(penOn||tx===null){tx=null;return;}
+  const t=e.changedTouches[0];
+  if(t.touchType&&t.touchType==='stylus'){tx=null;return;}
+  const dx=t.clientX-tx,dy=t.clientY-tyv;
+  if(Date.now()-tt0<600&&Math.abs(dx)>70&&Math.abs(dx)>2.2*Math.abs(dy))(dx<0?next():prev());
+  tx=null;
+});
+
+/* ================= ink engine (identical to the lecture decks) ================= */
+const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
+let drawing=false,penColor='#c8102e',penWidth=3.5,curStroke=null,inkStore={},inkDirty=false;
+try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
+let pencilEver=false;
+try{pencilEver=localStorage.getItem('pencilSeen')==='1';}catch(e){}
+function allowDraw(e){
+  if(e.pointerType==='pen'){if(!pencilEver){pencilEver=true;try{localStorage.setItem('pencilSeen','1');}catch(_){}}return true;}
+  if(e.pointerType==='touch'&&pencilEver)return false; /* palm rejection once a Pencil has been seen */
+  return true;
+}
+function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
+function deckRect(){return deck.getBoundingClientRect();}
+function toDeck(e){const r=deckRect();return [Math.round((e.clientX-r.left)/r.width*12800)/10,Math.round((e.clientY-r.top)/r.height*7200)/10];}
+function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
+/* smoothed, pressure-aware stroke renderer (quadratic midpoint splines) */
+function renderStroke(c2,st,mapper,wscale){
+  const base=(st.w||3.5)*(wscale||1);
+  c2.globalAlpha=st.a==null?1:st.a;
+  c2.strokeStyle=st.c==='HL'?'#FFD60A':st.c;
+  c2.lineCap='round';c2.lineJoin='round';
+  const P=st.p.map(q=>{const m=mapper?mapper(q):q;return [m[0],m[1],(q[2]==null?0.5:q[2])];});
+  if(P.length<2){
+    c2.beginPath();c2.arc(P[0][0],P[0][1],base*0.55,0,7);
+    c2.fillStyle=c2.strokeStyle;c2.fill();
+  }else{
+    for(let i=1;i<P.length;i++){
+      const p0=P[i-1],p1=P[i];
+      c2.lineWidth=base*(0.4+0.9*((p0[2]+p1[2])/2));
+      c2.beginPath();
+      if(i>1){
+        const pm=P[i-2];
+        c2.moveTo((pm[0]+p0[0])/2,(pm[1]+p0[1])/2);
+        c2.quadraticCurveTo(p0[0],p0[1],(p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+      }else{
+        c2.moveTo(p0[0],p0[1]);
+        c2.lineTo((p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+      }
+      c2.stroke();
+    }
+    const a=P[P.length-2],b=P[P.length-1];
+    c2.beginPath();c2.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);c2.lineTo(b[0],b[1]);
+    c2.lineWidth=base*(0.4+0.9*b[2]);c2.stroke();
+  }
+  c2.globalAlpha=1;
+}
+function redrawInk(){
+  ictx.clearRect(0,0,innerWidth,innerHeight);
+  (inkStore[inkKey()]||[]).forEach(st=>renderStroke(ictx,st,fromDeck,deckRect().width/1280));
+}
+function scheduleInk(){
+  if(inkDirty)return;inkDirty=true;
+  requestAnimationFrame(()=>{inkDirty=false;redrawInk();});
+}
+function sizeInk(){
+  const dpr=window.devicePixelRatio||1;
+  ink.width=innerWidth*dpr;ink.height=innerHeight*dpr;
+  ink.style.width=innerWidth+'px';ink.style.height=innerHeight+'px';
+  ictx.setTransform(dpr,0,0,dpr,0,0);
+  redrawInk();
+}
+sizeInk();addEventListener('resize',sizeInk);
+ink.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+ink.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+function togglePen(){
+  penOn=!penOn;
+  document.getElementById('pentools').style.display=penOn?'flex':'none';
+  ink.style.pointerEvents=penOn?'auto':'none';
+  document.body.classList.toggle('penmode',penOn);
+  try{const sel=window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges();}catch(e){}
+  const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);
+}
+function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
+function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,innerWidth,innerHeight);}
+/* eraser: 'stroke' removes whole strokes, 'partial' cuts pieces out */
+let erasing=null;
+function setEraser(mode){
+  erasing=mode;
+  const pb=document.getElementById('peraser');if(pb)pb.classList.toggle('on',erasing==='stroke');
+  const pp=document.getElementById('ppartial');if(pp)pp.classList.toggle('on',erasing==='partial');
+  const tb=document.getElementById('tbErase');
+  if(tb){tb.classList.toggle('on',!!erasing);tb.innerHTML=erasing==='partial'?'&#9986;':'&#9676;';}
+  if(erasing&&!penOn)togglePen();
+  if(!erasing)redrawInk();
+}
+function cycleEraser(){setEraser(!erasing?'stroke':(erasing==='stroke'?'partial':null));}
+function drawEraserRing(e){
+  const r=deckRect();const R=Math.max(6,(erasing==='partial'?11:18)*r.width/1280);
+  ictx.beginPath();ictx.arc(e.clientX,e.clientY,R,0,7);
+  ictx.strokeStyle='#b3261e';ictx.lineWidth=1.5;
+  if(erasing!=='partial')ictx.setLineDash([4,4]);
+  ictx.stroke();ictx.setLineDash([]);
+}
+function segHit(q,a,b,R){
+  const dx=b[0]-a[0],dy=b[1]-a[1];
+  const L2=dx*dx+dy*dy||1e-9;
+  let t=((q[0]-a[0])*dx+(q[1]-a[1])*dy)/L2;
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(q[0]-(a[0]+t*dx),q[1]-(a[1]+t*dy))<R;
+}
+function eraseAt(e){
+  const q=toDeck(e),key=inkKey();
+  const arr=inkStore[key]||[];
+  let out;
+  if(erasing==='partial'){
+    const R=11;out=[];let changed=false;
+    arr.forEach(st=>{
+      let touched=false;const runs=[];let run=[];
+      for(let i=0;i<st.p.length;i++){
+        const p=st.p[i];
+        if(Math.hypot(p[0]-q[0],p[1]-q[1])<R){touched=true;if(run.length>1)runs.push(run);run=[];continue;}
+        if(run.length&&segHit(q,run[run.length-1],p,R)){touched=true;if(run.length>1)runs.push(run);run=[p];continue;}
+        run.push(p);
+      }
+      if(run.length>1)runs.push(run);
+      if(!touched){out.push(st);return;}
+      changed=true;
+      runs.forEach(rn=>out.push({c:st.c,w:st.w,a:st.a,p:rn}));
+    });
+    if(!changed)out=arr;
+  }else{
+    const R=18;
+    out=arr.filter(st=>!st.p.some(p=>Math.hypot(p[0]-q[0],p[1]-q[1])<R));
+  }
+  if(out!==arr){
+    if(out.length)inkStore[key]=out;else delete inkStore[key];
+    saveInk();
+  }
+  redrawInk();drawEraserRing(e);
+}
+function pushPoint(ev){
+  const d=toDeck(ev);
+  const last=curStroke.p[curStroke.p.length-1];
+  if(last&&Math.hypot(last[0]-d[0],last[1]-d[1])<0.7)return false;
+  curStroke.p.push([d[0],d[1],Math.round((ev.pressure||0.5)*100)/100]);
+  return true;
+}
+/* incremental rendering: draw ONLY the newest segment — O(1) per pen sample */
+function penStyle(){
+  ictx.globalAlpha=curStroke.a==null?1:curStroke.a;
+  ictx.strokeStyle=curStroke.c==='HL'?'#FFD60A':curStroke.c;
+  ictx.lineCap='round';ictx.lineJoin='round';
+}
+function drawIncrement(){
+  const P=curStroke.p,n=P.length;
+  const base=(curStroke.w||3.5)*(deckRect().width/1280);
+  penStyle();
+  const q=i=>fromDeck(P[i]);
+  if(n===1){
+    const m=q(0);
+    ictx.beginPath();ictx.arc(m[0],m[1],base*0.55,0,7);
+    ictx.fillStyle=ictx.strokeStyle;ictx.fill();
+  }else{
+    const p0=q(n-2),p1=q(n-1);
+    ictx.lineWidth=base*(0.4+0.9*((P[n-2][2]+P[n-1][2])/2));
+    ictx.beginPath();
+    if(n>=3){
+      const pm=q(n-3);
+      ictx.moveTo((pm[0]+p0[0])/2,(pm[1]+p0[1])/2);
+      ictx.quadraticCurveTo(p0[0],p0[1],(p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+    }else{
+      ictx.moveTo(p0[0],p0[1]);
+      ictx.lineTo((p0[0]+p1[0])/2,(p0[1]+p1[1])/2);
+    }
+    ictx.stroke();
+  }
+  ictx.globalAlpha=1;
+}
+function finishStroke(){
+  if(!curStroke||curStroke.p.length<2)return;
+  const P=curStroke.p,n=P.length;
+  const base=(curStroke.w||3.5)*(deckRect().width/1280);
+  penStyle();
+  const a=fromDeck(P[n-2]),b=fromDeck(P[n-1]);
+  ictx.beginPath();ictx.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);ictx.lineTo(b[0],b[1]);
+  ictx.lineWidth=base*(0.4+0.9*P[n-1][2]);ictx.stroke();
+  ictx.globalAlpha=1;
+}
+/* debounced persistence: one write shortly after you stop, not per stroke */
+let saveT=null;
+function saveInkSoon(){clearTimeout(saveT);saveT=setTimeout(saveInk,350);}
+addEventListener('pagehide',saveInk);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveInk();});
+ink.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
+  if(!allowDraw(e))return;
+  drawing=true;
+  if(erasing){eraseAt(e);return;}
+  const isHL=penColor==='HL';
+  curStroke={c:isHL?'HL':penColor,w:isHL?14:penWidth,a:isHL?0.35:1,p:[]};
+  pushPoint(e);
+  (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
+  drawIncrement();
+});
+ink.addEventListener('pointermove',e=>{
+  if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
+  if(!drawing)return;e.preventDefault();
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of evs)if(pushPoint(ev))drawIncrement();
+});
+addEventListener('pointerup',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
+addEventListener('pointercancel',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
+function injectInkPrints(){
+  removeInkPrints();
+  slides.forEach((sl,i)=>{
+    const sts=inkStore[inkKey(i)];
+    if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
+    if(!sts||!sts.length)return;
+    const c=document.createElement('canvas');
+    c.className='inkprint';c.width=2560;c.height=1440;
+    sl.appendChild(c);
+    const c2=c.getContext('2d');
+    c2.setTransform(2,0,0,2,0,0);
+    sts.forEach(st=>renderStroke(c2,st,null,1.1));
+  });
+}
+function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
+(function(){
+  const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
+  const tb=document.createElement('div');tb.id='touchbar';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbHelp">?</button>';
+  document.body.appendChild(tb);
+  if(coarse)tb.style.display='flex';
+  document.getElementById('tbPen').onclick=togglePen;
+  document.getElementById('tbErase').onclick=cycleEraser;
+  document.getElementById('tbClear').onclick=clearInk;
+  document.getElementById('tbPrev').onclick=prev;
+  document.getElementById('tbNext').onclick=next;
+  document.getElementById('tbWb').onclick=toggleWhiteboard;
+  document.getElementById('tbHand').onclick=toggleHandout;
+  document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
+})();
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);});
+document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
+document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
+document.getElementById('pclear').onclick=clearInk;
+(function(){const b=document.getElementById('pwidth');if(!b)return;const Ws=[2,3.5,6],G=['\u00b7','\u25cf','\u2b24'];let wi=1;b.onclick=()=>{wi=(wi+1)%3;penWidth=Ws[wi];b.innerHTML=G[wi];};})();
+document.getElementById('pclose').onclick=togglePen;
+document.getElementById('pexport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(inkStore)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(location.pathname.split('/').pop()||'deck').replace(/\.html?$/,'')+'-annotations.json';
+  a.click();URL.revokeObjectURL(a.href);
+};
+document.getElementById('pimport').onclick=()=>{
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const fr=new FileReader();
+    fr.onload=()=>{try{inkStore=JSON.parse(fr.result)||{};saveInk();redrawInk();}catch(e){alert('Could not read that annotations file.');}};
+    fr.readAsText(inp.files[0]);
+  };
+  inp.click();
+};
+document.getElementById('pwipe').onclick=()=>{
+  if(confirm('Erase ALL annotations on ALL slides of this deck? (Tip: use the ↓ button first to back them up.)')){inkStore={};saveInk();redrawInk();}
+};
+document.getElementById('pclose').onclick=togglePen;
+
+/* ================= PDF loading ================= */
+let currentFP=null;
+const pgprog=document.getElementById('pgprog');
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+document.getElementById('pdfBtn').onclick=()=>document.getElementById('pdfFile').click();
+document.getElementById('pdfFile').addEventListener('change',async e=>{
+  const file=e.target.files[0];if(!file)return;
+  if(!window.pdfjsLib){alert('PDF library failed to load — check your internet connection and reload.');return;}
+  pgprog.style.display='flex';pgprog.textContent='Opening '+file.name+'…';
+  try{
+    const buf=await file.arrayBuffer();
+    const doc=await pdfjsLib.getDocument({data:buf}).promise;
+    currentFP=(doc.fingerprints&&doc.fingerprints[0])||doc.fingerprint||('f'+buf.byteLength);
+    document.querySelectorAll('section.pdfpage').forEach(s=>s.remove());
+    const anchor=deck.querySelector('section.whiteboard');
+    const scale=doc.numPages<=25?1.6:(doc.numPages<=60?1.15:0.85);
+    for(let p=1;p<=doc.numPages;p++){
+      pgprog.textContent='Rendering page '+p+' / '+doc.numPages+'…';
+      const page=await doc.getPage(p);
+      let vp=page.getViewport({scale:1});
+      const s=Math.min(1280/vp.width,720/vp.height)*scale;
+      vp=page.getViewport({scale:s});
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
+      const cx=cv.getContext('2d');
+      cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+      await page.render({canvasContext:cx,viewport:vp}).promise;
+      const url=cv.toDataURL('image/jpeg',0.87);
+      cv.width=0;cv.height=0;
+      const sec=document.createElement('section');
+      sec.className='slide pdfpage';
+      sec.dataset.inkkey='pdf-'+currentFP+'-'+p;
+      sec.dataset.toc=file.name.replace(/\.pdf$/i,'')+' · p.'+p;
+      sec.style.padding='0';
+      sec.innerHTML='<img class="pdfimg" src="'+url+'" alt="PDF page '+p+'">';
+      deck.insertBefore(sec,anchor);
+    }
+    refreshSlides();
+    pgprog.style.display='none';
+    show(1);
+  }catch(err){
+    pgprog.style.display='none';
+    alert('Could not open that PDF: '+err.message);
+  }
+  e.target.value='';
+});
+
+/* boot: cover + 6 blank pages */
+for(let i=0;i<6;i++)addPage();
+refreshSlides();
+show(0);fit();
+window.deckAPI={show,next,prev,addPage,refreshSlides};
+</script>
+</body>
+</html>
