@@ -1101,9 +1101,22 @@ deck.addEventListener('click',e=>{
 });
 function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
 addEventListener('resize',fit);
-let tx=null;
-addEventListener('touchstart',e=>{if(penOn){tx=null;return;}if(e.target.closest('.widget'))return;tx=e.changedTouches[0].clientX;});
-addEventListener('touchend',e=>{if(penOn||tx===null){tx=null;return;}const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next():prev());tx=null;});
+let tx=null,tyv=null,tt0=0;
+addEventListener('touchstart',e=>{
+  const t=e.changedTouches[0];
+  if(penOn||(t.touchType&&t.touchType==='stylus')){tx=null;return;}  /* never swipe with the Pencil */
+  if(e.target.closest('.widget'))return;
+  tx=t.clientX;tyv=t.clientY;tt0=Date.now();
+});
+addEventListener('touchend',e=>{
+  if(penOn||tx===null){tx=null;return;}
+  const t=e.changedTouches[0];
+  if(t.touchType&&t.touchType==='stylus'){tx=null;return;}
+  const dx=t.clientX-tx,dy=t.clientY-tyv;
+  /* a swipe must be quick, long, and clearly horizontal */
+  if(Date.now()-tt0<600&&Math.abs(dx)>70&&Math.abs(dx)>2.2*Math.abs(dy))(dx<0?next():prev());
+  tx=null;
+});
 const toc=document.getElementById('toc');
 slides.forEach((s,i)=>{
   const t=s.querySelector('h2,h1');
