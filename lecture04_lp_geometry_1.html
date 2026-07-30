@@ -863,6 +863,11 @@ function deckRect(){return deck.getBoundingClientRect();}
 function toDeck(e){const r=deckRect();return [Math.round((e.clientX-r.left)/r.width*12800)/10,Math.round((e.clientY-r.top)/r.height*7200)/10];}
 function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
 /* smoothed, pressure-aware stroke renderer (quadratic midpoint splines) */
+function widthFor(base,p,wPrev){
+  const t=base*(0.65+0.5*p);            /* gentler pressure response */
+  if(wPrev==null)return t;
+  return Math.max(wPrev*0.9,Math.min(wPrev*1.1,t));  /* slew limit: no beading between segments */
+}
 function renderStroke(c2,st,mapper,wscale){
   const base=(st.w||3.5)*(wscale||1);
   c2.globalAlpha=st.a==null?1:st.a;
@@ -873,9 +878,11 @@ function renderStroke(c2,st,mapper,wscale){
     c2.beginPath();c2.arc(P[0][0],P[0][1],base*0.55,0,7);
     c2.fillStyle=c2.strokeStyle;c2.fill();
   }else{
+    let wCur=null;
     for(let i=1;i<P.length;i++){
       const p0=P[i-1],p1=P[i];
-      c2.lineWidth=base*(0.4+0.9*((p0[2]+p1[2])/2));
+      wCur=widthFor(base,(p0[2]+p1[2])/2,wCur);
+      c2.lineWidth=wCur;
       c2.beginPath();
       if(i>1){
         const pm=P[i-2];
@@ -889,7 +896,7 @@ function renderStroke(c2,st,mapper,wscale){
     }
     const a=P[P.length-2],b=P[P.length-1];
     c2.beginPath();c2.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);c2.lineTo(b[0],b[1]);
-    c2.lineWidth=base*(0.4+0.9*b[2]);c2.stroke();
+    c2.lineWidth=widthFor(base,b[2],wCur);c2.stroke();
   }
   c2.globalAlpha=1;
 }
@@ -945,7 +952,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b733';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b734';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1032,9 +1039,18 @@ function eraseAt(e){
 }
 function pushPoint(ev){
   const d=toDeck(ev);
+  let x=d[0],y=d[1];
+  const pr=(ev.pressure||0.5);
+  if(curStroke.p.length){                 /* exponential smoothing: steadies sensor jitter */
+    x=curStroke._sx+(x-curStroke._sx)*0.55;
+    y=curStroke._sy+(y-curStroke._sy)*0.55;
+  }
+  curStroke._sx=x;curStroke._sy=y;
+  const sp=curStroke.p.length?curStroke._sp+(pr-curStroke._sp)*0.25:pr;  /* heavier smoothing on pressure */
+  curStroke._sp=sp;
   const last=curStroke.p[curStroke.p.length-1];
-  if(last&&Math.hypot(last[0]-d[0],last[1]-d[1])<0.7)return false;
-  curStroke.p.push([d[0],d[1],Math.round((ev.pressure||0.5)*100)/100]);
+  if(last&&Math.hypot(last[0]-x,last[1]-y)<1.2)return false;
+  curStroke.p.push([Math.round(x*10)/10,Math.round(y*10)/10,Math.round(sp*100)/100]);
   return true;
 }
 /* incremental rendering: draw ONLY the newest segment — O(1) per pen sample */
@@ -1055,7 +1071,8 @@ function drawIncrement(){
     ictx.fillStyle=ictx.strokeStyle;ictx.fill();
   }else{
     const p0=q(n-2),p1=q(n-1);
-    ictx.lineWidth=base*(0.4+0.9*((P[n-2][2]+P[n-1][2])/2));
+    curStroke._w=widthFor(base,(P[n-2][2]+P[n-1][2])/2,curStroke._w);
+    ictx.lineWidth=curStroke._w;
     ictx.beginPath();
     if(n>=3){
       const pm=q(n-3);
@@ -1078,7 +1095,7 @@ function finishStroke(){
   const mp=i=>{const m=fromDeck(P[i]);return[m[0]-ir.left,m[1]-ir.top];};
   const a=mp(n-2),b=mp(n-1);
   ictx.beginPath();ictx.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);ictx.lineTo(b[0],b[1]);
-  ictx.lineWidth=base*(0.4+0.9*P[n-1][2]);ictx.stroke();
+  ictx.lineWidth=widthFor(base,P[n-1][2],curStroke._w);ictx.stroke();
   ictx.globalAlpha=1;
 }
 /* debounced persistence: one write shortly after you stop, not per stroke */
