@@ -126,6 +126,13 @@ body.handout .printskip{display:none!important}
 #pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
 #handoutbar{display:none;position:fixed;top:12px;right:14px;z-index:530;gap:10px}
 body.handout #handoutbar{display:flex}
+/* iPad/iOS printing: WebKit ignores @page landscape — rotate slides to fill portrait pages */
+@media print{
+  body.iosprint .slide{
+    transform:translate(-238px,185px) rotate(90deg) scale(0.76);
+    transform-origin:640px 360px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1584,6 +1591,7 @@ function openCheckpoint(id){
 }
 if(cp)document.getElementById('cpClose').onclick=()=>cp.classList.remove('open');
 
+if(/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))document.body.classList.add('iosprint');
 let startPos=parseInt(location.hash.slice(1))-1;
 if(isNaN(startPos)){try{startPos=+localStorage.getItem('deckpos:'+location.pathname)||0;}catch(e){startPos=0;}}
 show(startPos);
