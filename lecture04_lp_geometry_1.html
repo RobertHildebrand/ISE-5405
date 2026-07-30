@@ -113,7 +113,8 @@ body.handout .frag{opacity:1;transform:none}
 #mxGrid .mxc.rowhl{background:#f4dee6;border-color:#861F41}
 #mxGrid .mxc.colhl{background:#dfe9f1;border-color:#33658a}
 #mxGrid .mxc.pick{background:#E5751F;color:#fff;border-color:#b25a12;font-weight:700}
-#ink{touch-action:none}
+#ink{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.penmode,body.penmode *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.handout #ink{display:none}
 #touchbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:520;display:none;gap:10px;background:rgba(38,40,46,.88);padding:9px 13px;border-radius:16px}
 #touchbar button{width:48px;height:48px;border:none;border-radius:11px;font-size:21px;background:#3a3d45;color:#fff}
@@ -769,8 +770,8 @@ deck.addEventListener('click',e=>{
 function fit(){if(document.body.classList.contains('handout')){deck.style.transform='none';return;}deck.style.transform='scale('+Math.min(innerWidth/1280,innerHeight/720)+')';}
 addEventListener('resize',fit);
 let tx=null;
-addEventListener('touchstart',e=>{if(e.target.closest('.widget'))return;tx=e.changedTouches[0].clientX;});
-addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next():prev());tx=null;});
+addEventListener('touchstart',e=>{if(penOn){tx=null;return;}if(e.target.closest('.widget'))return;tx=e.changedTouches[0].clientX;});
+addEventListener('touchend',e=>{if(penOn||tx===null){tx=null;return;}const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next():prev());tx=null;});
 const toc=document.getElementById('toc');
 slides.forEach((s,i)=>{
   const t=s.querySelector('h2,h1');
@@ -841,7 +842,16 @@ function sizeInk(){
   redrawInk();
 }
 sizeInk();addEventListener('resize',sizeInk);
-function togglePen(){penOn=!penOn;document.getElementById('pentools').style.display=penOn?'flex':'none';ink.style.pointerEvents=penOn?'auto':'none';const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);}
+ink.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+ink.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+function togglePen(){
+  penOn=!penOn;
+  document.getElementById('pentools').style.display=penOn?'flex':'none';
+  ink.style.pointerEvents=penOn?'auto':'none';
+  document.body.classList.toggle('penmode',penOn);
+  try{const sel=window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges();}catch(e){}
+  const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);
+}
 function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
 function clearInk(){delete inkStore[inkKey()];saveInk();ictx.clearRect(0,0,innerWidth,innerHeight);}
 /* eraser: 'stroke' removes whole strokes, 'partial' cuts pieces out */
