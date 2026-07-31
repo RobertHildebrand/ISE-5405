@@ -21,15 +21,17 @@ input[type=text]{font-size:16px;padding:8px 12px;border:1px solid #ccc;border-ra
 .pill{display:inline-block;background:#f4eef0;color:#861F41;border-radius:20px;padding:2px 14px;font-weight:600;font-size:14px;margin-right:8px}
 .scorebar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:16px}
 .codebox{background:#26282e;color:#7ce38b;font-family:monospace;font-size:22px;padding:14px 20px;border-radius:10px;letter-spacing:1px;user-select:all;text-align:center}
-.note{font-size:14px;color:#777}
+.note{font-size:14px;color:#6d6d6d}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #33658a;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style></head><body>
 <header><h1>Completion Code Verifier</h1><div class="sub">Instructor/TA tool — checks that a code matches the student's name. <a href="index.html">&larr; practice hub</a></div></header>
 <main>
 <div class="card">
   <p>Paste the student's <b>name exactly as they entered it</b> (Canvas roster name) and their code:</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <input type="text" id="vname" placeholder="Student name" style="flex:1;min-width:220px">
-    <input type="text" id="vcode" placeholder="e.g. CH-850-20260902-K3F9QZ" style="flex:1;min-width:260px">
+    <input type="text" id="vname" aria-label="Student name" placeholder="Student name" style="flex:1;min-width:220px">
+    <input type="text" id="vcode" aria-label="Completion code" placeholder="e.g. CH-850-20260902-K3F9QZ" style="flex:1;min-width:260px">
     <button class="btn" id="vbtn">Verify</button>
   </div>
   <div id="vout" style="margin-top:16px;font-size:17px;min-height:60px"></div>
@@ -62,4 +64,88 @@ document.getElementById('vbtn').onclick=()=>{
     out.innerHTML='<span class="bad">INVALID ✗</span> — code does not match this name (or was altered).';
   }
 };
+
+/* ===== accessibility bootstrap (purely additive) ===== */
+(function(){
+  const $=s=>document.querySelectorAll(s);
+  const st=document.createElement('style');
+  st.textContent='.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}';
+  document.head.appendChild(st);
+  const deckEl=document.getElementById('deck');
+  if(deckEl){
+    deckEl.setAttribute('role','main');
+    const intro=document.createElement('p');
+    intro.className='sr-only';
+    intro.textContent='Slide presentation. Use Left and Right arrow keys to move between slides and reveal content step by step. Press H for a scrollable handout view of all slides, the recommended reading order for screen readers. Press question mark for keyboard help.';
+    deckEl.prepend(intro);
+  }
+  $('section.slide').forEach((s,i)=>{
+    s.setAttribute('role','group');
+    s.setAttribute('aria-roledescription','slide');
+    if(!s.getAttribute('aria-label')){
+      const h=s.querySelector('h1,h2');
+      s.setAttribute('aria-label',h?h.textContent.trim():(s.dataset.toc||'Slide '+(i+1)));
+    }
+  });
+  const cmap={
+    pvCanvas:'Interactive plot of the production LP: the feasible region with a movable profit line. Use the slider to move the line; the adjacent text reports the optimal corner and profit.',
+    triLP:'Diagram of a linear program: a polygon feasible region with straight cost contours; the optimum sits at a corner.',
+    triMIP:'Diagram of a mixed-integer program: only lattice points inside the polygon are feasible. The Relax button overlays the LP relaxation and marks both optima.',
+    triNLP:'Diagram of a nonlinear program: curved feasible region and curved contours; the Approximate button overlays tangent-line LP approximations.',
+    gCanvas:'Interactive LP grapher. Keyboard-accessible equivalents: the constraint number inputs, objective coefficient inputs, and slider beside the plot; the corner-point table below lists every vertex with its objective value.',
+    sbCanvas:'Plot of the production-sandbox feasible region. The text panel reports the optimal plan, profit, and binding constraints for the current slider values.',
+    ipCv:'Inner-product explorer: fixed vector a and a movable vector x. The text below reports the inner product value and its sign meaning.',
+    hpCv:'Halfplane explorer showing the line a-transpose-x equals b, its normal vector, and a test point. The b slider is keyboard accessible; the text below reports whether the point satisfies the constraint.',
+    cubeCv:'Rotatable 3-D unit cube with level planes of the objective; the optimal corner (1,1,1) is highlighted. The adjacent text states all key facts.',
+    cvxCv:'Convexity tester: choose a shape and click two points; the result text reports whether the connecting segment stays inside the set.',
+    pbCv:'Polyhedron builder: each Add halfspace press carves the plane; the caption counts halfspaces and corners.',
+    epCv:'Extreme-point tester: click a point of the polygon; the result text explains whether it is extreme and exhibits witness points when it is not.',
+    optCv:'Animation of the objective level line sweeping across a polygon until it last touches an extreme point.',
+    hullCv:'Draggable points with their convex hull; the caption reports how many points are extreme versus swallowed by the hull.',
+    stCv:'Animated proof-without-words: two staircase copies of 1 plus 2 up to n interlock into an n by n-plus-1 rectangle.',
+    cv:'Corner Hunt game plot: a random LP feasible region, its candidate corner points, and the objective direction arrow.'};
+  Object.keys(cmap).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.setAttribute('role','img');el.setAttribute('aria-label',cmap[id]);}
+  });
+  const inkEl=document.getElementById('ink');
+  if(inkEl){inkEl.setAttribute('role','application');inkEl.setAttribute('aria-label','Freehand annotation layer. P toggles the pen, E cycles erasers, C clears the current slide.');}
+  $('svg').forEach(sv=>{
+    if(sv.classList.contains('title-art')||sv.getAttribute('aria-hidden')||sv.getAttribute('aria-label')||sv.getAttribute('role'))return;
+    const sec=sv.closest('section.slide');
+    const h=sec?sec.querySelector('h2,h1'):null;
+    sv.setAttribute('role','img');
+    sv.setAttribute('aria-label',(h?h.textContent.trim():'Diagram')+' — illustration; the key facts are stated in the surrounding slide text.');
+  });
+  const smap={pvSlider:'Profit line value',gT:'Objective line value t',sbPA:'Profit of product A',sbPB:'Profit of product B',sbL:'Labor hours available',sbM:'Material available',hpB:'Right-hand side b',stSlider:'Number of terms n',cexSlider:'Value of n',bfSlider:'Number of people n'};
+  Object.keys(smap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',smap[id]);});
+  $('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.getAttribute('title'));});
+  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'Go to whiteboard pages',tbHand:'Handout view',tbHelp:'Keyboard help',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
+  Object.keys(tmap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',tmap[id]);});
+  $('#pentools .pcol').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.dataset.c==='HL'?'Highlighter':'Pen color '+b.dataset.c);});
+  ['quizFb','trainFb','cpFb','ipOut','hpOut','gStatus','sbOut','cexStatus','mxOut','bcOut','ttOut','fb','vout','pvMsg','bfVerdict','hullOut','pbOut','epOut','cvxOut'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.setAttribute('aria-live','polite');
+  });
+  $('.dnote,.gpnote').forEach(el=>el.setAttribute('aria-live','polite'));
+  ['help','cp','appx'].forEach(id=>{
+    const d=document.getElementById(id);if(!d)return;
+    d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.setAttribute('aria-label',id==='help'?'Keyboard help':(id==='cp'?'Checkpoint question':'Application details'));
+    let ret=null;
+    new MutationObserver(()=>{
+      if(d.classList.contains('open')){
+        ret=document.activeElement;
+        const b=d.querySelector('button');if(b)b.focus();
+      }else if(ret&&ret.focus){ret.focus();ret=null;}
+    }).observe(d,{attributes:true,attributeFilter:['class']});
+  });
+  const live=document.createElement('div');
+  live.className='sr-only';live.setAttribute('aria-live','polite');
+  document.body.appendChild(live);
+  const cnt=document.getElementById('counter');
+  if(cnt)new MutationObserver(()=>{
+    const act=document.querySelector('section.slide.active');
+    live.textContent='Slide '+cnt.textContent+(act?': '+(act.getAttribute('aria-label')||''):'');
+  }).observe(cnt,{childList:true,characterData:true,subtree:true});
+})();
 </script></body></html>

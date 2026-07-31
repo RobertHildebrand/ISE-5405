@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>ISE 5405 · Lecture 2 — Introduction to Linear Optimization</title>
 <script>
-window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false,enableAssistiveMml:true},loader:{load:['a11y/assistive-mml']}};
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@ table.nice{border-collapse:collapse;margin:8px auto;font-size:18px}
 table.nice th,table.nice td{border-bottom:1px solid #ccc;padding:4px 12px;text-align:center}
 table.nice th{background:#861F41;color:#fff}
 #progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
-#counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#999;cursor:pointer;z-index:50}
+#counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#757575;cursor:pointer;z-index:50}
 #brand{position:absolute;bottom:10px;left:16px;font-size:13px;color:#b9b2a9;z-index:50}
 #toc{position:fixed;top:0;left:0;bottom:0;width:380px;background:#26282e;color:#eee;transform:translateX(-100%);transition:.25s;z-index:400;overflow-y:auto;padding:18px}
 #toc.open{transform:none}
@@ -126,6 +126,10 @@ body.handout .printskip{display:none!important}
 #pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
 #handoutbar{display:none;position:fixed;top:12px;right:14px;z-index:530;gap:10px}
 body.handout #handoutbar{display:flex}
+/* ===== accessibility (additive) ===== */
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #33658a;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.kicker{color:#a4520e}
 </style>
 </head>
 <body>
@@ -176,11 +180,11 @@ body.handout #handoutbar{display:flex}
 <section class="slide">
   <h2>Outline</h2>
   <ul style="font-size:23px">
-    <li><b>Setup</b> — notation, what an LP is, feasibility &amp; optimality <span class="tiny" style="color:#999">(BT &sect;1.1)</span></li>
-    <li class="frag"><b>Modeling, modeling, modeling</b> — production, bakery, diet, power, scheduling <span class="tiny" style="color:#999">(&sect;1.2)</span></li>
-    <li class="frag"><b>Geometry</b> — graphical solution, the four possibilities, corners <span class="tiny" style="color:#999">(&sect;1.4)</span></li>
-    <li class="frag"><b>Canonical forms</b> — general &amp; standard form, and how to convert <span class="tiny" style="color:#999">(&sect;1.1 revisited)</span></li>
-    <li class="frag"><b>LPs in disguise</b> — max-objectives and absolute values via the epigraph trick <span class="tiny" style="color:#999">(&sect;1.3)</span></li>
+    <li><b>Setup</b> — notation, what an LP is, feasibility &amp; optimality <span class="tiny" style="color:#757575">(BT &sect;1.1)</span></li>
+    <li class="frag"><b>Modeling, modeling, modeling</b> — production, bakery, diet, power, scheduling <span class="tiny" style="color:#757575">(&sect;1.2)</span></li>
+    <li class="frag"><b>Geometry</b> — graphical solution, the four possibilities, corners <span class="tiny" style="color:#757575">(&sect;1.4)</span></li>
+    <li class="frag"><b>Canonical forms</b> — general &amp; standard form, and how to convert <span class="tiny" style="color:#757575">(&sect;1.1 revisited)</span></li>
+    <li class="frag"><b>LPs in disguise</b> — max-objectives and absolute values via the epigraph trick <span class="tiny" style="color:#757575">(&sect;1.3)</span></li>
   </ul>
   <div class="box orange frag" style="margin-top:18px">We <b>model first</b> and formalize second — conversions to standard form matter once algorithms enter the story, so they come after you've built some models.</div>
 </section>
@@ -292,7 +296,7 @@ body.handout #handoutbar{display:flex}
     <div class="col widget" style="flex:0 0 420px">
       <canvas id="ipCv" width="400" height="300" style="width:100%;cursor:crosshair"></canvas>
       <div id="ipOut" class="small center" style="min-height:52px"></div>
-      <div class="tiny center" style="color:#777">drag the blue vector \(x\); sign of \(a'x\) &harr; which side of the dashed line</div>
+      <div class="tiny center" style="color:#6d6d6d">drag the blue vector \(x\); sign of \(a'x\) &harr; which side of the dashed line</div>
     </div>
   </div>
 </section>
@@ -318,7 +322,7 @@ body.handout #handoutbar{display:flex}
         <input id="hpB" type="range" min="-3" max="3" step="0.1" value="1" style="flex:1">
       </div>
       <div id="hpOut" class="small center" style="min-height:44px"></div>
-      <div class="tiny center" style="color:#777">drag the tip of \(a\) to re-aim it &middot; drag anywhere else to move the test point P</div>
+      <div class="tiny center" style="color:#6d6d6d">drag the tip of \(a\) to re-aim it &middot; drag anywhere else to move the test point P</div>
     </div>
   </div>
 </section>
@@ -527,7 +531,7 @@ body.handout #handoutbar{display:flex}
   <div class="widget" style="padding:6px;flex:1;display:flex">
     <iframe class="embed" src="https://open-optimization.github.io/open-optimization-or-book/visualizations/#modeling-intro" style="width:100%;height:100%;min-height:520px" loading="lazy" title="Modeling introduction demo"></iframe>
   </div>
-  <div class="tiny center" style="color:#777;margin-top:4px">Guided modeling tutorial &mdash; students can revisit it any time at <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> (requires internet)</div>
+  <div class="tiny center" style="color:#6d6d6d;margin-top:4px">Guided modeling tutorial &mdash; students can revisit it any time at <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> (requires internet)</div>
 </section>
 
 <!-- 17 PRODUCTION -->
@@ -567,12 +571,12 @@ body.handout #handoutbar{display:flex}
       <div class="crow">Profit B: $<span id="sbPBv" class="readout">55</span> <input id="sbPB" type="range" min="10" max="100" value="55" style="flex:1"></div>
       <div class="crow">Labor: <span id="sbLv" class="readout">200</span> h <input id="sbL" type="range" min="100" max="320" value="200" style="flex:1"></div>
       <div class="crow">Material: <span id="sbMv" class="readout">160</span> kg <input id="sbM" type="range" min="80" max="260" value="160" style="flex:1"></div>
-      <div class="tiny" style="color:#777">A uses 4 h + 2 kg per unit; B uses 5 h + 4 kg.</div>
+      <div class="tiny" style="color:#6d6d6d">A uses 4 h + 2 kg per unit; B uses 5 h + 4 kg.</div>
       <div class="box small" id="sbOut" style="margin-top:8px;min-height:100px"></div>
     </div>
     <div class="col">
       <div class="widget" style="display:inline-block"><canvas id="sbCanvas" width="470" height="380"></canvas></div>
-      <div class="tiny" style="color:#777;margin-top:4px">Watch which corner is optimal — and when the optimum <i>jumps</i> from one corner to another as prices change.</div>
+      <div class="tiny" style="color:#6d6d6d;margin-top:4px">Watch which corner is optimal — and when the optimum <i>jumps</i> from one corner to another as prices change.</div>
     </div>
   </div>
 </section>
@@ -716,7 +720,7 @@ body.handout #handoutbar{display:flex}
       & x_j \ge 0,\; x_j \in \mathbb{Z}
       \end{aligned}
       \]
-      <div class="tiny" style="color:#777">Row \(j\): who is on duty on day \(j\)? Those who started within the last 5 days.</div>
+      <div class="tiny" style="color:#6d6d6d">Row \(j\): who is on duty on day \(j\)? Those who started within the last 5 days.</div>
     </div>
   </div>
 </section>
@@ -753,7 +757,7 @@ body.handout #handoutbar{display:flex}
   <div class="cols" style="gap:18px">
     <div class="widget" style="flex:none">
       <canvas id="gCanvas" width="600" height="470" style="display:block;cursor:crosshair"></canvas>
-      <div class="tiny" style="color:#777;margin-top:3px">Drag on the plot to re-aim the objective vector \(c\).</div>
+      <div class="tiny" style="color:#6d6d6d;margin-top:3px">Drag on the plot to re-aim the objective vector \(c\).</div>
     </div>
     <div class="col tiny" style="font-size:14px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
@@ -815,7 +819,7 @@ body.handout #handoutbar{display:flex}
   <div class="cols">
     <div class="widget" style="flex:0 0 520px">
       <canvas id="cubeCv" width="500" height="420" style="display:block;cursor:grab"></canvas>
-      <div class="tiny center" style="color:#777">drag to rotate &middot; orange slices are level sets \(x_1{+}x_2{+}x_3 = t\) sweeping toward the far corner</div>
+      <div class="tiny center" style="color:#6d6d6d">drag to rotate &middot; orange slices are level sets \(x_1{+}x_2{+}x_3 = t\) sweeping toward the far corner</div>
     </div>
     <div class="col small">
       \[\begin{aligned}\min\quad & -x_1-x_2-x_3\\ \text{s.t.}\quad & 0\le x_i\le 1,\;\; i=1,2,3\end{aligned}\]
@@ -1182,7 +1186,7 @@ body.handout #handoutbar{display:flex}
   <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; blank whiteboard pages, and back (pen auto-on)<br>
 
   <b>?</b> &mdash; toggle this help &nbsp;&middot;&nbsp; <b>Esc</b> &mdash; close overlays<br>
-  <span style="font-size:14px;color:#777">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
+  <span style="font-size:14px;color:#6d6d6d">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
 </div></div>
 <div id="cp"><div class="cpcard">
   <div class="kicker">Checkpoint &middot; what do you think?</div>
@@ -1471,7 +1475,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b734';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b735';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1833,7 +1837,7 @@ function run(){
   sbOut.innerHTML='<b>Optimal plan:</b> make <b>'+bp[0].toFixed(1)+'</b> of A and <b>'+bp[1].toFixed(1)+'</b> of B'+
     '<br><b>Profit:</b> $'+best.toFixed(0)+
     '<br><b>Binding:</b> '+(bind.length?bind.join(' + '):'none')+
-    '<br><span style="color:#777">Leftover: '+(L-laborUsed).toFixed(0)+' h labor, '+(M-matUsed).toFixed(0)+' kg material</span>';
+    '<br><span style="color:#6d6d6d">Leftover: '+(L-laborUsed).toFixed(0)+' h labor, '+(M-matUsed).toFixed(0)+' kg material</span>';
   // draw
   const vx={xmin:-5,xmax:85,ymin:-5,ymax:70};
   const X=x=>(x-vx.xmin)/(vx.xmax-vx.xmin)*cv.width;
@@ -2020,7 +2024,7 @@ function draw(){
     const bp=allVerts[bestIdx];
     status.innerHTML='<span class="good">'+obj.sense.toUpperCase()+' value: '+bestVal.toFixed(2)+'</span> at ('+bp[0].toFixed(2)+', '+bp[1].toFixed(2)+')'+
       (nOpt>1?' — <span class="mid">multiple optima!</span> the whole edge between green corners is optimal':'')+
-      '<br><span style="color:#777">Drag the t-slider to '+bestVal.toFixed(2)+' to see the objective line touch the optimum.</span>';
+      '<br><span style="color:#6d6d6d">Drag the t-slider to '+bestVal.toFixed(2)+' to see the objective line touch the optimum.</span>';
   }
   // vertex table
   let html='<tr><th>corner</th><th>c′x</th></tr>';
@@ -2166,7 +2170,7 @@ function render(){
   ctx.fillStyle='#888';ctx.font='13px sans-serif';ctx.fillText('(0,0,0)',o[0]+8,o[1]+14);
 }
 function loop(){
-  if(!dragging&&!userTouched)ry+=0.004;
+  if(!dragging&&!userTouched&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))ry+=0.004;
   render();
   requestAnimationFrame(loop);
 }
@@ -2325,6 +2329,90 @@ cv.addEventListener('pointermove',move);
 addEventListener('pointerup',()=>mode=null);
 bs.addEventListener('input',draw);
 draw();
+})();
+
+/* ===== accessibility bootstrap (purely additive) ===== */
+(function(){
+  const $=s=>document.querySelectorAll(s);
+  const st=document.createElement('style');
+  st.textContent='.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}';
+  document.head.appendChild(st);
+  const deckEl=document.getElementById('deck');
+  if(deckEl){
+    deckEl.setAttribute('role','main');
+    const intro=document.createElement('p');
+    intro.className='sr-only';
+    intro.textContent='Slide presentation. Use Left and Right arrow keys to move between slides and reveal content step by step. Press H for a scrollable handout view of all slides, the recommended reading order for screen readers. Press question mark for keyboard help.';
+    deckEl.prepend(intro);
+  }
+  $('section.slide').forEach((s,i)=>{
+    s.setAttribute('role','group');
+    s.setAttribute('aria-roledescription','slide');
+    if(!s.getAttribute('aria-label')){
+      const h=s.querySelector('h1,h2');
+      s.setAttribute('aria-label',h?h.textContent.trim():(s.dataset.toc||'Slide '+(i+1)));
+    }
+  });
+  const cmap={
+    pvCanvas:'Interactive plot of the production LP: the feasible region with a movable profit line. Use the slider to move the line; the adjacent text reports the optimal corner and profit.',
+    triLP:'Diagram of a linear program: a polygon feasible region with straight cost contours; the optimum sits at a corner.',
+    triMIP:'Diagram of a mixed-integer program: only lattice points inside the polygon are feasible. The Relax button overlays the LP relaxation and marks both optima.',
+    triNLP:'Diagram of a nonlinear program: curved feasible region and curved contours; the Approximate button overlays tangent-line LP approximations.',
+    gCanvas:'Interactive LP grapher. Keyboard-accessible equivalents: the constraint number inputs, objective coefficient inputs, and slider beside the plot; the corner-point table below lists every vertex with its objective value.',
+    sbCanvas:'Plot of the production-sandbox feasible region. The text panel reports the optimal plan, profit, and binding constraints for the current slider values.',
+    ipCv:'Inner-product explorer: fixed vector a and a movable vector x. The text below reports the inner product value and its sign meaning.',
+    hpCv:'Halfplane explorer showing the line a-transpose-x equals b, its normal vector, and a test point. The b slider is keyboard accessible; the text below reports whether the point satisfies the constraint.',
+    cubeCv:'Rotatable 3-D unit cube with level planes of the objective; the optimal corner (1,1,1) is highlighted. The adjacent text states all key facts.',
+    cvxCv:'Convexity tester: choose a shape and click two points; the result text reports whether the connecting segment stays inside the set.',
+    pbCv:'Polyhedron builder: each Add halfspace press carves the plane; the caption counts halfspaces and corners.',
+    epCv:'Extreme-point tester: click a point of the polygon; the result text explains whether it is extreme and exhibits witness points when it is not.',
+    optCv:'Animation of the objective level line sweeping across a polygon until it last touches an extreme point.',
+    hullCv:'Draggable points with their convex hull; the caption reports how many points are extreme versus swallowed by the hull.',
+    stCv:'Animated proof-without-words: two staircase copies of 1 plus 2 up to n interlock into an n by n-plus-1 rectangle.',
+    cv:'Corner Hunt game plot: a random LP feasible region, its candidate corner points, and the objective direction arrow.'};
+  Object.keys(cmap).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.setAttribute('role','img');el.setAttribute('aria-label',cmap[id]);}
+  });
+  const inkEl=document.getElementById('ink');
+  if(inkEl){inkEl.setAttribute('role','application');inkEl.setAttribute('aria-label','Freehand annotation layer. P toggles the pen, E cycles erasers, C clears the current slide.');}
+  $('svg').forEach(sv=>{
+    if(sv.classList.contains('title-art')||sv.getAttribute('aria-hidden')||sv.getAttribute('aria-label')||sv.getAttribute('role'))return;
+    const sec=sv.closest('section.slide');
+    const h=sec?sec.querySelector('h2,h1'):null;
+    sv.setAttribute('role','img');
+    sv.setAttribute('aria-label',(h?h.textContent.trim():'Diagram')+' — illustration; the key facts are stated in the surrounding slide text.');
+  });
+  const smap={pvSlider:'Profit line value',gT:'Objective line value t',sbPA:'Profit of product A',sbPB:'Profit of product B',sbL:'Labor hours available',sbM:'Material available',hpB:'Right-hand side b',stSlider:'Number of terms n',cexSlider:'Value of n',bfSlider:'Number of people n'};
+  Object.keys(smap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',smap[id]);});
+  $('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.getAttribute('title'));});
+  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'Go to whiteboard pages',tbHand:'Handout view',tbHelp:'Keyboard help',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
+  Object.keys(tmap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',tmap[id]);});
+  $('#pentools .pcol').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.dataset.c==='HL'?'Highlighter':'Pen color '+b.dataset.c);});
+  ['quizFb','trainFb','cpFb','ipOut','hpOut','gStatus','sbOut','cexStatus','mxOut','bcOut','ttOut','fb','vout','pvMsg','bfVerdict','hullOut','pbOut','epOut','cvxOut'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.setAttribute('aria-live','polite');
+  });
+  $('.dnote,.gpnote').forEach(el=>el.setAttribute('aria-live','polite'));
+  ['help','cp','appx'].forEach(id=>{
+    const d=document.getElementById(id);if(!d)return;
+    d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.setAttribute('aria-label',id==='help'?'Keyboard help':(id==='cp'?'Checkpoint question':'Application details'));
+    let ret=null;
+    new MutationObserver(()=>{
+      if(d.classList.contains('open')){
+        ret=document.activeElement;
+        const b=d.querySelector('button');if(b)b.focus();
+      }else if(ret&&ret.focus){ret.focus();ret=null;}
+    }).observe(d,{attributes:true,attributeFilter:['class']});
+  });
+  const live=document.createElement('div');
+  live.className='sr-only';live.setAttribute('aria-live','polite');
+  document.body.appendChild(live);
+  const cnt=document.getElementById('counter');
+  if(cnt)new MutationObserver(()=>{
+    const act=document.querySelector('section.slide.active');
+    live.textContent='Slide '+cnt.textContent+(act?': '+(act.getAttribute('aria-label')||''):'');
+  }).observe(cnt,{childList:true,characterData:true,subtree:true});
 })();
 </script>
 </body>

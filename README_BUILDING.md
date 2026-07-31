@@ -105,3 +105,14 @@ Decks remember the last slide via localStorage; URL hash `#12` deep-links a slid
 - Every abstract definition gets a picture or a widget; every proof-y slide leans on the Lecture 3 toolkit by name (contradiction template, negation practice).
 - Don't quiz ahead of the material (e.g., no branch-and-bound questions in early lectures — mention as forward-pointers only).
 - Checkpoints: 3 per deck, at natural pause points, answerable from what's on screen.
+
+## Accessibility conventions (WCAG 2.1 AA — additive, never at the cost of functionality)
+
+- Every new canvas/SVG widget: add its id + a one-sentence description to the a11y bootstrap `cmap`, and always report results in adjacent text (which the bootstrap marks `aria-live`).
+- Decorative art: `aria-hidden="true"`. Icon-only buttons: `title` (bootstrap mirrors it to `aria-label`).
+- New sliders/inputs: add to the bootstrap `smap` or give explicit `aria-label`s.
+- Keep feedback as text next to color coding; never color alone.
+- Timed activities need an untimed mode (see Corner Hunt's relaxed mode).
+- Respect `prefers-reduced-motion` for any auto-animation.
+- The handout view (H) doubles as the linearized screen-reader reading order — keep it working.
+- Caption-gray text: use #6d6d6d or darker on light backgrounds (AA contrast).
