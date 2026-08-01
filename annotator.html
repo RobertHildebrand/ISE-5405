@@ -86,9 +86,9 @@ body.handout .frag{opacity:1;transform:none}
   html,body{background:#fff!important;overflow:visible;height:auto}
   #stage{position:static;display:block;height:auto}
   #deck{transform:none!important;box-shadow:none;height:auto;border-radius:0}
-  .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:720px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
+  .slide{position:relative;display:flex!important;inset:auto;width:1280px;height:718px;page-break-after:always;break-after:page;animation:none;border:none;overflow:hidden}
   .frag{opacity:1!important;transform:none!important}
-  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,#handoutbar,.printskip{display:none!important}
+  #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,#handoutbar,#zoomctl,.printskip{display:none!important}
 }
 #ink{touch-action:pinch-zoom;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.penmode,body.penmode *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
@@ -127,6 +127,10 @@ body.handout .noprint{display:none}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #33658a;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .kicker{color:#a4520e}
+#zoomctl{position:fixed;right:14px;bottom:64px;z-index:520;display:flex;flex-direction:column;gap:6px;align-items:center;background:rgba(38,40,46,.88);padding:8px;border-radius:12px}
+#zoomctl button{width:44px;height:40px;font-size:20px;padding:0}
+#zPct{color:#fff;font-size:12px;min-height:14px}
+body.handout #zoomctl{display:none}
 </style>
 </head>
 <body>
@@ -147,7 +151,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   </div>
   <div style="margin-top:26px" class="tiny">
     <span class="kbd">&rarr;</span>/<span class="kbd">&larr;</span> pages &middot; <span class="kbd">P</span> pen &middot; <span class="kbd">E</span> eraser &middot;
-    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">?</span> help
+    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed
   </div>
 </section>
 
@@ -172,11 +176,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <button class="btn sec" id="hbExit">Exit handout</button>
 </div>
 <div id="pgprog">Rendering&hellip;</div>
+<div id="zoomctl" role="group" aria-label="Zoom controls">
+  <button class="btn sec" id="zIn" title="Zoom in (+ key)">+</button>
+  <div id="zPct" aria-live="polite">100%</div>
+  <button class="btn sec" id="zOut" title="Zoom out (− key)">−</button>
+  <button class="btn sec" id="zFit" title="Fit to window (0 key)">⤡</button>
+</div>
 <div id="pentools">
   <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
   <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
   <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
-  <button class="pcol" data-c="HL" title="highlighter" style="background:#FFD60A"></button>
+  <button class="pcol" data-c="#FFD60A" data-hl="1" title="Yellow highlighter" style="background:#FFD60A"></button>
+  <button class="pcol" data-c="#7CE38B" data-hl="1" title="Green highlighter" style="background:#7CE38B"></button>
+  <button class="pcol" data-c="#FF8FC0" data-hl="1" title="Pink highlighter" style="background:#FF8FC0"></button>
+  <button class="pcol" data-c="#7CC5FF" data-hl="1" title="Blue highlighter" style="background:#7CC5FF"></button>
   <button id="pwidth" title="pen thickness" style="background:#26282e;color:#fff;font-size:17px">&#9679;</button>
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
   <button id="ppartial" title="precision eraser — cuts pieces out of strokes" style="background:#fff;border:2px solid #999">&#9986;</button>
@@ -226,6 +239,7 @@ function setDeckView(nx,ny,W){
   deck.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
   viewZ=s/baseFit();
   if(typeof syncZoom==='function')syncZoom();
+  if(typeof updZ==='function')updZ();
 }
 function fit(){
   if(document.body.classList.contains('handout')){deck.style.transform='none';return;}
@@ -272,7 +286,7 @@ async function toggleHandout(){
   if(document.body.classList.contains('handout')){deck.style.transform='none';injectInkPrints();window.scrollTo(0,0);}
   else{removeInkPrints();fit();redrawInk();}
 }
-addEventListener('beforeprint',()=>{document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
+addEventListener('beforeprint',()=>{applyPrintSize();document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
 addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
 (function(){
   const p=document.getElementById('hbPrint'),x=document.getElementById('hbExit');
@@ -323,7 +337,7 @@ counter.onclick=()=>toc.classList.toggle('open');
 let tx=null,tyv=null,tt0=0;
 addEventListener('touchstart',e=>{
   const t=e.changedTouches[0];
-  if(penOn||(t.touchType&&t.touchType==='stylus')){tx=null;return;}
+  if(penOn||(viewZ||1)>1.01||(t.touchType&&t.touchType==='stylus')){tx=null;return;}
   if(e.target.closest('.widget,button,input'))return;
   tx=t.clientX;tyv=t.clientY;tt0=Date.now();
 });
@@ -338,7 +352,7 @@ addEventListener('touchend',e=>{
 
 /* ================= ink engine (identical to the lecture decks) ================= */
 const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
-let drawing=false,penColor='#c8102e',penWidth=3.5,curStroke=null,inkStore={},inkDirty=false;
+let drawing=false,penColor='#c8102e',penIsHL=false,penWidth=3.5,curStroke=null,inkStore={},inkDirty=false;
 try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
 let pencilEver=false;
 try{pencilEver=localStorage.getItem('pencilSeen')==='1';}catch(e){}
@@ -441,7 +455,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b735';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b737';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -599,8 +613,8 @@ ink.addEventListener('pointerdown',e=>{
   if(!allowDraw(e))return;
   drawing=true;
   if(erasing){eraseAt(e);return;}
-  const isHL=penColor==='HL';
-  curStroke={c:isHL?'HL':penColor,w:isHL?14:penWidth,a:isHL?0.35:1,p:[]};
+  const isHL=penIsHL||penColor==='HL';
+  curStroke={c:penColor==='HL'?'HL':penColor,w:isHL?16:penWidth,a:isHL?0.35:1,p:[]};
   pushPoint(e);
   (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
   drawIncrement();
@@ -609,22 +623,65 @@ ink.addEventListener('pointermove',e=>{
   if(erasing){e.preventDefault();if(drawing)eraseAt(e);else{redrawInk();drawEraserRing(e);}return;}
   if(!drawing)return;e.preventDefault();
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  if(e.shiftKey&&curStroke){
+    for(const ev of evs)pushPoint(ev);
+    if(curStroke.p.length>1){
+      curStroke.p=[curStroke.p[0],curStroke.p[curStroke.p.length-1]];
+      curStroke._line=true;curStroke._w=null;
+      redrawInk();
+    }
+    return;
+  }
   for(const ev of evs)if(pushPoint(ev))drawIncrement();
 });
-addEventListener('pointerup',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
+function maybeStraighten(){
+  if(!curStroke||curStroke.a==null||curStroke.a>=1)return false;  /* highlighters only */
+  const P=curStroke.p;if(P.length<3)return false;
+  const a=P[0],b=P[P.length-1];
+  const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L<20)return false;
+  let maxd=0;
+  for(const q of P){
+    const t=Math.max(0,Math.min(1,((q[0]-a[0])*(b[0]-a[0])+(q[1]-a[1])*(b[1]-a[1]))/(L*L)));
+    maxd=Math.max(maxd,Math.hypot(q[0]-(a[0]+t*(b[0]-a[0])),q[1]-(a[1]+t*(b[1]-a[1]))));
+  }
+  if(maxd<Math.max(5,L*0.045)){curStroke.p=[a,b];redrawInk();return true;}
+  return false;
+}
+addEventListener('pointerup',()=>{if(drawing){if(!maybeStraighten())finishStroke();saveInkSoon();}drawing=false;});
 addEventListener('pointercancel',()=>{if(drawing){finishStroke();saveInkSoon();}drawing=false;});
 function injectInkPrints(){
   removeInkPrints();
+  const fitted=!!(pdfDoc&&pdfAspect);
   slides.forEach((sl,i)=>{
     const sts=inkStore[inkKey(i)];
     if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
     if(!sts||!sts.length)return;
+    const pw=fitted?printPW:1280,ph=fitted?printPH:720;
+    let mapper=null,wsc=1.1;
+    if(fitted){
+      if(sl.classList.contains('pdfpage')){
+        const ar=parseFloat(sl.dataset.ar)||pdfAspect;
+        /* where the page image sits in the live 1280x720 layout */
+        const dh=Math.min(720,1280/ar),dw=dh*ar;
+        const ox=(1280-dw)/2,oy=(720-dh)/2;
+        /* where it sits on the fitted print page */
+        const dh2=Math.min(ph,pw/ar),dw2=dh2*ar;
+        const ox2=(pw-dw2)/2,oy2=(ph-dh2)/2;
+        mapper=q=>[(q[0]-ox)/dw*dw2+ox2,(q[1]-oy)/dh*dh2+oy2];
+        wsc=1.1*(dw2/dw);
+      }else{
+        const sfit=Math.min(pw/1280,ph/720);
+        const ox2=(pw-1280*sfit)/2,oy2=(ph-720*sfit)/2;
+        mapper=q=>[q[0]*sfit+ox2,q[1]*sfit+oy2];
+        wsc=1.1*sfit;
+      }
+    }
     const c=document.createElement('canvas');
-    c.className='inkprint';c.width=2560;c.height=1440;
+    c.className='inkprint';c.width=pw*2;c.height=ph*2;
     sl.appendChild(c);
     const c2=c.getContext('2d');
     c2.setTransform(2,0,0,2,0,0);
-    sts.forEach(st=>renderStroke(c2,st,null,1.1));
+    sts.forEach(st=>renderStroke(c2,st,mapper,wsc));
   });
 }
 function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
@@ -643,7 +700,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbHand').onclick=toggleHandout;
   document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
 })();
-document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);updateToolUI();});
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;penIsHL=!!b.dataset.hl;setEraser(null);updateToolUI();});
 updateToolUI();
 document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
 document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
@@ -672,7 +729,7 @@ document.getElementById('pwipe').onclick=()=>{
 document.getElementById('pclose').onclick=togglePen;
 
 /* ================= PDF loading: lazy, full-resolution ================= */
-let currentFP=null,pdfDoc=null,renderChain=Promise.resolve();
+let currentFP=null,pdfDoc=null,pdfAspect=null,printPW=1280,printPH=718,renderChain=Promise.resolve();
 const pgprog=document.getElementById('pgprog');
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 function fitScale(page){
@@ -692,6 +749,7 @@ async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder +
   if(sec.querySelector('img.pdfimg')||!pdfDoc)return;
   const p=+sec.dataset.pdfpage;
   const page=await pdfDoc.getPage(p);
+  const v0=page.getViewport({scale:1});sec.dataset.ar=(v0.width/v0.height).toFixed(5);
   const vp=page.getViewport({scale:fitScale(page)*2});
   const cv=document.createElement('canvas');
   cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
@@ -739,7 +797,20 @@ function updatePdfWindow(){
     }
   });
 }
+function applyPrintSize(){
+  let st=document.getElementById('pszDyn');
+  if(!pdfDoc||!pdfAspect){if(st)st.remove();printPW=1280;printPH=718;return;}
+  const LONG=1054; /* ~11in at 96dpi, minus rounding slack */
+  if(pdfAspect<1){printPH=LONG;printPW=Math.round(LONG*pdfAspect);}
+  else{printPW=LONG;printPH=Math.round(LONG/pdfAspect);}
+  if(!st){st=document.createElement('style');st.id='pszDyn';document.head.appendChild(st);}
+  st.textContent='@media print{@page{size:'+((printPW+2)/96).toFixed(3)+'in '+((printPH+2)/96).toFixed(3)+'in;margin:0}'+
+    '.slide{width:'+printPW+'px!important;height:'+printPH+'px!important}'+
+    '.slide.whiteboard{background:#fff!important}'+
+    '.slide.pdfpage{background:#fff!important}}';
+}
 async function renderAllForPrint(){
+  applyPrintSize();
   if(!pdfDoc)return;
   const secs=slides.filter(s=>s.classList.contains('pdfpage'));
   pgprog.style.display='flex';
@@ -758,6 +829,7 @@ document.getElementById('pdfFile').addEventListener('change',async e=>{
     const buf=await file.arrayBuffer();
     pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
     currentFP=(pdfDoc.fingerprints&&pdfDoc.fingerprints[0])||pdfDoc.fingerprint||('f'+buf.byteLength);
+    try{const p1=await pdfDoc.getPage(1);const v1=p1.getViewport({scale:1});pdfAspect=v1.width/v1.height;}catch(_){pdfAspect=null;}
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
     const anchor=deck.querySelector('section.whiteboard');
     for(let p=1;p<=pdfDoc.numPages;p++){
@@ -783,7 +855,45 @@ document.getElementById('pdfFile').addEventListener('change',async e=>{
 for(let i=0;i<6;i++)addPage();
 refreshSlides();
 show(0);fit();
-window.deckAPI={show,next,prev,addPage,refreshSlides};
+/* ===== laptop zoom & pan ===== */
+function updZ(){const el=document.getElementById('zPct');if(el)el.textContent=Math.round((viewZ||1)*100)+'%';}
+function zoomBy(fct){const c=[innerWidth/2,innerHeight/2];appZoom(fct,c,c);updZ();}
+function zoomFit(){fit();if(typeof syncZoom==='function')syncZoom();if(typeof updatePdfWindow==='function')updatePdfWindow();updZ();}
+document.getElementById('zIn').onclick=()=>zoomBy(1.25);
+document.getElementById('zOut').onclick=()=>zoomBy(1/1.25);
+document.getElementById('zFit').onclick=zoomFit;
+addEventListener('keydown',e=>{
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
+  if(e.key==='+'||e.key==='=')zoomBy(1.25);
+  else if(e.key==='-'||e.key==='_')zoomBy(1/1.25);
+  else if(e.key==='0')zoomFit();
+});
+addEventListener('wheel',e=>{
+  if(document.body.classList.contains('handout'))return;
+  if(e.ctrlKey||e.metaKey){
+    e.preventDefault();
+    appZoom(e.deltaY<0?1.12:1/1.12,[e.clientX,e.clientY],[e.clientX,e.clientY]);
+    updZ();
+  }else if((viewZ||1)>1.01){
+    e.preventDefault();
+    const r0=deck.getBoundingClientRect();
+    setDeckView(r0.left-e.deltaX,r0.top-e.deltaY,r0.width);
+    updZ();
+  }
+},{passive:false});
+let panSt=null;
+addEventListener('pointerdown',e=>{
+  if(penOn||document.body.classList.contains('handout'))return;
+  if((viewZ||1)<=1.01)return;
+  if(e.target.closest('button,input,select,textarea,a,#toc,#pentools,#zoomctl,#handoutbar,#touchbar,#help'))return;
+  panSt={x:e.clientX,y:e.clientY,r:deck.getBoundingClientRect()};
+});
+addEventListener('pointermove',e=>{
+  if(!panSt)return;
+  setDeckView(panSt.r.left+(e.clientX-panSt.x),panSt.r.top+(e.clientY-panSt.y),panSt.r.width);
+});
+addEventListener('pointerup',()=>panSt=null);
+window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit};
 
 /* ===== accessibility bootstrap (purely additive) ===== */
 (function(){
