@@ -138,6 +138,9 @@ body.handout #zoomctl{display:none}
 #texted{position:fixed;display:none;z-index:545;background:transparent}
 #texted textarea{font:600 22px "Public Sans",sans-serif;background:rgba(255,255,255,.92);border:2px dashed #33658a;border-radius:6px;padding:4px 8px;min-width:180px;min-height:40px;resize:both}
 #texted .tbar{display:flex;gap:6px;margin-top:4px}
+#quickExp{position:fixed;top:12px;left:14px;z-index:515}
+body.handout #quickExp{display:none}
+@media print{#quickExp{display:none!important}}
 </style>
 </head>
 <body>
@@ -192,6 +195,7 @@ body.handout #zoomctl{display:none}
 <div id="texted"><textarea aria-label="Text annotation"></textarea>
   <div class="tbar"><button class="btn" id="tedOk">Place</button><button class="btn sec" id="tedCancel">Cancel</button></div>
 </div>
+<button class="btn" id="quickExp" title="Download annotated PDF (vector — keeps selectable text)">&#10515; Annotated PDF</button>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
   <button class="btn sec" id="zIn" title="Zoom in (+ key)">+</button>
   <div id="zPct" aria-live="polite">100%</div>
@@ -543,7 +547,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b739';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b740';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -975,39 +979,44 @@ addEventListener('keydown',e=>{
 function injectInkPrints(){
   removeInkPrints();
   const fitted=!!(pdfDoc&&pdfAspect);
+  let last=null;
   slides.forEach((sl,i)=>{
     const sts=inkStore[inkKey(i)];
     if(sl.classList.contains('whiteboard'))sl.classList.toggle('printskip',!sts||!sts.length);
+    if(!sl.classList.contains('printskip')&&!sl.classList.contains('noprint'))last=sl;
     if(!sts||!sts.length)return;
     const pw=fitted?printPW:1280,ph=fitted?printPH:720;
-    let mapper=null,wsc=1.1;
+    let mapper=null,wsc=1.1,rect=[0,0,pw,ph];
     if(fitted){
       if(sl.classList.contains('pdfpage')){
         const ar=parseFloat(sl.dataset.ar)||pdfAspect;
-        /* where the page image sits in the live 1280x720 layout */
         const dh=Math.min(720,1280/ar),dw=dh*ar;
         const ox=(1280-dw)/2,oy=(720-dh)/2;
-        /* where it sits on the fitted print page */
         const dh2=Math.min(ph,pw/ar),dw2=dh2*ar;
-        const ox2=(pw-dw2)/2,oy2=(ph-dh2)/2;
-        mapper=q=>[(q[0]-ox)/dw*dw2+ox2,(q[1]-oy)/dh*dh2+oy2];
+        rect=[(pw-dw2)/2,(ph-dh2)/2,dw2,dh2];
+        mapper=q=>[(q[0]-ox)/dw*dw2,(q[1]-oy)/dh*dh2];
         wsc=1.1*(dw2/dw);
       }else{
         const sfit=Math.min(pw/1280,ph/720);
-        const ox2=(pw-1280*sfit)/2,oy2=(ph-720*sfit)/2;
-        mapper=q=>[q[0]*sfit+ox2,q[1]*sfit+oy2];
+        rect=[(pw-1280*sfit)/2,(ph-720*sfit)/2,1280*sfit,720*sfit];
+        mapper=q=>[q[0]*sfit,q[1]*sfit];
         wsc=1.1*sfit;
       }
     }
     const c=document.createElement('canvas');
-    c.className='inkprint';c.width=pw*2;c.height=ph*2;
+    c.className='inkprint';
+    c.width=Math.round(rect[2]*2);c.height=Math.round(rect[3]*2);
+    c.style.inset='auto';
+    c.style.left=rect[0]+'px';c.style.top=rect[1]+'px';
+    c.style.width=rect[2]+'px';c.style.height=rect[3]+'px';
     sl.appendChild(c);
     const c2=c.getContext('2d');
     c2.setTransform(2,0,0,2,0,0);
     sts.forEach(st=>renderItem(c2,st,mapper,wsc));
   });
+  if(last)last.classList.add('lastprint');
 }
-function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));}
+function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(c=>c.remove());document.querySelectorAll('.printskip').forEach(sl=>sl.classList.remove('printskip'));document.querySelectorAll('.lastprint').forEach(sl=>sl.classList.remove('lastprint'));}
 (function(){
   const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
   const tb=document.createElement('div');tb.id='touchbar';
@@ -1144,10 +1153,15 @@ function applyPrintSize(){
   if(pdfAspect<1){printPH=LONG;printPW=Math.round(LONG*pdfAspect);}
   else{printPW=LONG;printPH=Math.round(LONG/pdfAspect);}
   if(!st){st=document.createElement('style');st.id='pszDyn';document.head.appendChild(st);}
-  st.textContent='@media print{@page{size:'+((printPW+2)/96).toFixed(3)+'in '+((printPH+2)/96).toFixed(3)+'in;margin:0}'+
-    '.slide{width:'+printPW+'px!important;height:'+printPH+'px!important}'+
-    '.slide.whiteboard{background:#fff!important}'+
-    '.slide.pdfpage{background:#fff!important}}';
+  const boxRules='width:'+printPW+'px!important;height:'+printPH+'px!important;background:#fff!important';
+  st.textContent=
+    '@media print{@page{size:'+((printPW+2)/96).toFixed(3)+'in '+((printPH+2)/96).toFixed(3)+'in;margin:0}'+
+    '.slide{'+boxRules+'}#deck{width:'+printPW+'px!important}'+
+    '.slide.whiteboard{background:#fff!important}.slide.pdfpage{background:#fff!important}'+
+    '.lastprint{page-break-after:auto!important}}'+
+    'body.handout .slide{'+boxRules+'}'+
+    'body.handout #deck{width:'+printPW+'px!important}'+
+    'body.handout .slide.pdfpage{background:#fff!important}';
 }
 async function renderAllForPrint(){
   applyPrintSize();
@@ -1420,6 +1434,7 @@ for(let i=0;i<6;i++)addPage();
 refreshSlides();
 show(0);fit();
 if(window.indexedDB)refreshRecents();
+setTimeout(function(){redrawInk();},400);
 /* ===== laptop zoom & pan ===== */
 function updZ(){const el=document.getElementById('zPct');if(el)el.textContent=Math.round((viewZ||1)*100)+'%';}
 function zoomBy(fct){const c=[innerWidth/2,innerHeight/2];appZoom(fct,c,c);updZ();}
@@ -1428,6 +1443,7 @@ document.getElementById('zIn').onclick=()=>zoomBy(1.25);
 document.getElementById('zOut').onclick=()=>zoomBy(1/1.25);
 document.getElementById('zFit').onclick=zoomFit;
 document.getElementById('vecExp').onclick=exportVectorPdf;
+const qx=document.getElementById('quickExp');if(qx)qx.onclick=exportVectorPdf;
 const hbv=document.getElementById('hbVec');if(hbv)hbv.onclick=exportVectorPdf;
 addEventListener('keydown',e=>{
   if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
