@@ -141,6 +141,19 @@ body.handout #zoomctl{display:none}
 #quickExp{position:fixed;top:12px;left:14px;z-index:515}
 body.handout #quickExp{display:none}
 @media print{#quickExp{display:none!important}}
+#org{position:fixed;inset:0;background:rgba(20,22,26,.88);z-index:640;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 3vw}
+#org.open{display:flex}
+#org .orgcard{background:#f5f2ee;border-radius:16px;padding:20px 24px;max-width:1100px;width:100%}
+#org .orghead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+#org .orghead b{font-family:"Fraunces",Georgia,serif;color:#861F41;font-size:22px;margin-right:auto}
+#orgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.orgpg{background:#fff;border-radius:10px;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
+.orgpg img{width:100%;border-radius:5px;border:1px solid #eee}
+.orgpg .ph{height:110px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b;font-size:13px}
+.orgpg .cap{font-size:12px;color:#555;margin:5px 0;min-height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.orgpg .ops{display:flex;gap:4px;justify-content:center}
+.orgpg .ops button{border:none;background:#e8e2da;border-radius:6px;width:30px;height:28px;cursor:pointer;font-size:13px}
+.orgpg .ops button:hover{background:#d8d0c6}
 </style>
 </head>
 <body>
@@ -156,7 +169,8 @@ body.handout #quickExp{display:none}
   <div class="drop">
     <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
     <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
-    <div id="recents" style="display:none;max-width:520px;margin:18px auto 0;text-align:left"></div>
+    <div style="margin-top:14px"><button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
+  <div id="recents" style="display:none;max-width:520px;margin:18px auto 0;text-align:left"></div>
   <div class="tiny" style="color:#707070;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
     Annotations save in this browser and <b>reattach automatically</b> when you open the same PDF again.</div>
   </div>
@@ -192,9 +206,19 @@ body.handout #quickExp{display:none}
   <button class="btn sec" id="hbExit">Exit handout</button>
 </div>
 <div id="pgprog">Rendering&hellip;</div>
+<div id="org" role="dialog" aria-modal="true" aria-label="Page organizer"><div class="orgcard">
+  <div class="orghead"><b>Pages</b>
+    <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
+    <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
+    <button class="btn sec" id="orgAddBlank">&#65291; Blank page</button>
+    <button class="btn" id="orgClose">Done</button>
+  </div>
+  <div id="orgGrid"></div>
+</div></div>
 <div id="texted"><textarea aria-label="Text annotation"></textarea>
   <div class="tbar"><button class="btn sec" id="tedSmall" title="Smaller text">A&#8722;</button><span id="tedSize" style="color:#fff;background:#26282e;border-radius:6px;padding:4px 8px;font-size:13px">22</span><button class="btn sec" id="tedBig" title="Larger text">A+</button><button class="btn" id="tedOk">Place</button><button class="btn sec" id="tedCancel">Cancel</button></div>
 </div>
+<button class="btn sec" id="pagesBtn" title="Page organizer: reorder, delete, insert, append" style="position:fixed;top:12px;left:190px;z-index:515">&#9776; Pages</button>
 <button class="btn" id="quickExp" title="Download annotated PDF (vector — keeps selectable text)">&#10515; Annotated PDF</button>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
   <button class="btn sec" id="zIn" title="Zoom in (+ key)">+</button>
@@ -360,7 +384,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':document.getElementById('help').classList.toggle('open');break;
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -553,7 +577,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b741';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b742';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1103,6 +1127,8 @@ document.getElementById('pclose').onclick=togglePen;
 
 /* ================= PDF loading: lazy, full-resolution ================= */
 let currentFP=null,pdfDoc=null,pdfAspect=null,pdfBytes=null,pdfName='document',printPW=1280,printPH=718,renderChain=Promise.resolve();
+let sources=[]; /* {name,fp,bytes,doc,aspect} */
+function docFor(sec){const i=+(sec.dataset.src||0);return sources[i]?sources[i].doc:pdfDoc;}
 const pgprog=document.getElementById('pgprog');
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 function fitScale(page){
@@ -1119,9 +1145,10 @@ function hiScale(page){
 }
 function queueRender(job){renderChain=renderChain.then(job).catch(e=>console.warn('render',e));return renderChain;}
 async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder + print quality */
-  if(sec.querySelector('img.pdfimg')||!pdfDoc)return;
+  if(sec.querySelector('img.pdfimg'))return;
+  const D=docFor(sec);if(!D)return;
   const p=+sec.dataset.pdfpage;
-  const page=await pdfDoc.getPage(p);
+  const page=await D.getPage(p);
   const v0=page.getViewport({scale:1});sec.dataset.ar=(v0.width/v0.height).toFixed(5);
   const vp=page.getViewport({scale:fitScale(page)*2});
   const cv=document.createElement('canvas');
@@ -1136,9 +1163,9 @@ async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder +
   sec.prepend(img);
 }
 async function ensureHi(sec){ /* full-resolution live canvas for nearby pages */
-  if(!pdfDoc)return;
+  const D=docFor(sec);if(!D)return;
   const p=+sec.dataset.pdfpage;
-  const page=await pdfDoc.getPage(p);
+  const page=await D.getPage(p);
   const needed=hiScale(page);
   const existing=sec.querySelector('canvas.pdfhi');
   if(existing){
@@ -1199,32 +1226,63 @@ async function renderAllForPrint(){
   pgprog.style.display='none';
 }
 document.getElementById('pdfBtn').onclick=()=>document.getElementById('pdfFile').click();
+function buildPdfSection(si,p){
+  const src=sources[si];
+  const sec=document.createElement('section');
+  sec.className='slide pdfpage';
+  sec.dataset.inkkey='pdf-'+src.fp+'-'+p;
+  sec.dataset.pdfpage=p;
+  sec.dataset.src=si;
+  sec.dataset.toc=src.name.replace(/\.pdf$/i,'')+' · p.'+p;
+  sec.style.padding='0';
+  sec.innerHTML='<div style="margin:auto;color:#8a8f99;font-size:15px">page '+p+' …</div>';
+  return sec;
+}
+async function addSource(name,buf){
+  const bytes=buf.slice(0);
+  const doc=await pdfjsLib.getDocument({data:buf}).promise;
+  const fp=(doc.fingerprints&&doc.fingerprints[0])||doc.fingerprint||('f'+bytes.byteLength);
+  let aspect=null;
+  try{const p1=await doc.getPage(1);const v1=p1.getViewport({scale:1});aspect=v1.width/v1.height;}catch(_){}
+  sources.push({name:name,fp:fp,bytes:bytes,doc:doc,aspect:aspect});
+  idbSaveDoc(name,bytes,fp,doc.numPages).then(refreshRecents).catch(()=>{});
+  return sources.length-1;
+}
+function saveComp(){
+  try{
+    const pages=slides.filter(sl=>!sl.classList.contains('cover')).map(sl=>{
+      if(sl.classList.contains('pdfpage'))return {k:'p',fp:sources[+sl.dataset.src].fp,p:+sl.dataset.pdfpage};
+      return {k:'b',id:sl.dataset.inkkey,label:sl.dataset.toc||''};
+    });
+    localStorage.setItem('inkpadComp',JSON.stringify({srcs:sources.map(x=>({fp:x.fp,name:x.name})),pages:pages,ts:Date.now()}));
+  }catch(e){}
+}
+async function appendPdfBytes(name,buf){
+  pgprog.style.display='flex';pgprog.textContent='Appending '+name+'…';
+  try{
+    const si=await addSource(name,buf);
+    const anchor=null; /* append at very end */
+    for(let p=1;p<=sources[si].doc.numPages;p++)deck.appendChild(buildPdfSection(si,p));
+    if(!pdfDoc){pdfDoc=sources[si].doc;pdfAspect=sources[si].aspect;currentFP=sources[si].fp;pdfBytes=sources[si].bytes;pdfName=name.replace(/\.pdf$/i,'');}
+    refreshSlides();updatePdfWindow();queueThumbSweep();saveComp();
+    pgprog.style.display='none';
+  }catch(err){pgprog.style.display='none';alert('Could not append that PDF: '+err.message);}
+}
 async function loadPdfBytes(name,buf){
   if(!window.pdfjsLib){alert('PDF library failed to load — check your internet connection and reload.');return;}
   pgprog.style.display='flex';pgprog.textContent='Opening '+name+'…';
   try{
-    pdfBytes=buf.slice(0);
-    pdfName=name.replace(/\.pdf$/i,'');
-    pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
-    currentFP=(pdfDoc.fingerprints&&pdfDoc.fingerprints[0])||pdfDoc.fingerprint||('f'+buf.byteLength);
-    try{const p1=await pdfDoc.getPage(1);const v1=p1.getViewport({scale:1});pdfAspect=v1.width/v1.height;}catch(_){pdfAspect=null;}
+    sources=[];
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
+    const si=await addSource(name,buf);
+    pdfBytes=sources[si].bytes;pdfName=name.replace(/\.pdf$/i,'');
+    pdfDoc=sources[si].doc;currentFP=sources[si].fp;pdfAspect=sources[si].aspect;
     const anchor=deck.querySelector('section.whiteboard');
-    for(let p=1;p<=pdfDoc.numPages;p++){
-      const sec=document.createElement('section');
-      sec.className='slide pdfpage';
-      sec.dataset.inkkey='pdf-'+currentFP+'-'+p;
-      sec.dataset.pdfpage=p;
-      sec.dataset.toc=pdfName+' · p.'+p;
-      sec.style.padding='0';
-      sec.innerHTML='<div style="margin:auto;color:#8a8f99;font-size:15px">page '+p+' …</div>';
-      deck.insertBefore(sec,anchor);
-    }
+    for(let p=1;p<=pdfDoc.numPages;p++)deck.insertBefore(buildPdfSection(si,p),anchor);
     refreshSlides();
     pgprog.style.display='none';
     show(1);
-    idbSaveDoc(name,pdfBytes,currentFP,pdfDoc.numPages).then(refreshRecents).catch(()=>{});
-    queueThumbSweep();
+    queueThumbSweep();saveComp();
   }catch(err){
     pgprog.style.display='none';
     alert('Could not open that PDF: '+err.message);
@@ -1287,12 +1345,11 @@ async function refreshRecents(){
 }
 /* ===== page thumbnails for the menu ===== */
 function queueThumbSweep(){
-  if(!pdfDoc)return;
-  const myDoc=pdfDoc;
   slides.filter(sl=>sl.classList.contains('pdfpage')).forEach(sl=>{
     queueRender(async()=>{
-      if(pdfDoc!==myDoc||sl.dataset.thumb)return;
-      const page=await myDoc.getPage(+sl.dataset.pdfpage);
+      if(!sl.isConnected||sl.dataset.thumb)return;
+      const D=docFor(sl);if(!D)return;
+      const page=await D.getPage(+sl.dataset.pdfpage);
       let vp=page.getViewport({scale:1});
       vp=page.getViewport({scale:120/vp.width});
       const cv=document.createElement('canvas');
@@ -1314,43 +1371,37 @@ function queueThumbSweep(){
   });
 }
 /* ===== text search ===== */
-let textCache=null,textCacheFP=null;
-async function ensureTextIndex(){
-  if(!pdfDoc)return null;
-  if(textCache&&textCacheFP===currentFP)return textCache;
-  textCache=[];textCacheFP=currentFP;
-  for(let p=1;p<=pdfDoc.numPages;p++){
-    try{
-      const tc=await (await pdfDoc.getPage(p)).getTextContent();
-      textCache.push(tc.items.map(it=>it.str).join(' '));
-    }catch(e){textCache.push('');}
-  }
-  return textCache;
+const textCacheMap={};
+async function pageText(sec){
+  const key=(sources[+(sec.dataset.src||0)]||{}).fp+'-'+sec.dataset.pdfpage;
+  if(textCacheMap[key]!=null)return textCacheMap[key];
+  try{
+    const D=docFor(sec);
+    const tc=await (await D.getPage(+sec.dataset.pdfpage)).getTextContent();
+    textCacheMap[key]=tc.items.map(it=>it.str).join(' ');
+  }catch(e){textCacheMap[key]='';}
+  return textCacheMap[key];
 }
 async function runSearch(q){
   const out=document.getElementById('searchResults');
   if(!out)return;
   q=q.trim().toLowerCase();
   if(!q){out.innerHTML='';return;}
-  if(!pdfDoc){out.innerHTML='<li style="cursor:default">Open a PDF first.</li>';return;}
+  const secs=slides.filter(sl=>sl.classList.contains('pdfpage'));
+  if(!secs.length){out.innerHTML='<li style="cursor:default">Open a PDF first.</li>';return;}
   out.innerHTML='<li style="cursor:default">Searching…</li>';
-  const idxText=await ensureTextIndex();
-  out.innerHTML='';
-  let hits=0;
-  idxText.forEach((txt,i)=>{
+  let hits=0;out.innerHTML='';
+  for(const sec of secs){
+    const txt=await pageText(sec);
     const pos=txt.toLowerCase().indexOf(q);
-    if(pos<0)return;
+    if(pos<0)continue;
     hits++;
     const li=document.createElement('li');
     const snip=txt.slice(Math.max(0,pos-30),pos+q.length+40).replace(/</g,'&lt;');
-    li.innerHTML='<b>p.'+(i+1)+'</b> <span style="color:#bbb">…'+snip+'…</span>';
-    li.onclick=()=>{
-      const sec=slides.find(sl=>+sl.dataset.pdfpage===i+1);
-      if(sec)show(slides.indexOf(sec));
-      toc.classList.remove('open');
-    };
+    li.innerHTML='<b>'+(sec.dataset.toc||'page')+'</b> <span style="color:#bbb">…'+snip+'…</span>';
+    li.onclick=()=>{show(slides.indexOf(sec));toc.classList.remove('open');};
     out.appendChild(li);
-  });
+  }
   if(!hits)out.innerHTML='<li style="cursor:default">No matches.</li>';
 }
 /* ===== vector PDF export ===== */
@@ -1376,11 +1427,10 @@ async function exportVectorPdf(){
   if(!window.PDFLib){alert('PDF export library failed to load — check your connection and reload.');return;}
   pgprog.style.display='flex';pgprog.textContent='Building annotated PDF…';
   try{
-    let doc,font;
+    const out=await PDFLib.PDFDocument.create();
+    const font=await out.embedFont(PDFLib.StandardFonts.Helvetica);
     const RC=PDFLib.LineCapStyle?PDFLib.LineCapStyle.Round:1;
-    if(pdfBytes){doc=await PDFLib.PDFDocument.load(pdfBytes,{ignoreEncryption:true});}
-    else{doc=await PDFLib.PDFDocument.create();}
-    font=await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const libDocs={};
     const drawItems=(page,items,mapPt,scl)=>{
       const H=page.getHeight();
       items.forEach(it=>{
@@ -1410,43 +1460,49 @@ async function exportVectorPdf(){
           const angS=Math.atan2(b[1]-a[1],b[0]-a[0]),hlS=Math.max(9,w*4);
           const se=[b[0]-hlS*0.72*Math.cos(angS),b[1]-hlS*0.72*Math.sin(angS)];
           page.drawLine({start:{x:a[0],y:H-a[1]},end:{x:se[0],y:H-se[1]},thickness:w,color:col,opacity:op,lineCap:RC});
-          const ang=angS,hl=hlS;
-          const h1=[b[0]-hl*Math.cos(ang-0.46),b[1]-hl*Math.sin(ang-0.46)];
-          const h2=[b[0]-hl*Math.cos(ang+0.46),b[1]-hl*Math.sin(ang+0.46)];
+          const h1=[b[0]-hlS*Math.cos(angS-0.46),b[1]-hlS*Math.sin(angS-0.46)];
+          const h2=[b[0]-hlS*Math.cos(angS+0.46),b[1]-hlS*Math.sin(angS+0.46)];
           page.drawSvgPath('M '+b[0].toFixed(1)+' '+b[1].toFixed(1)+' L '+h1[0].toFixed(1)+' '+h1[1].toFixed(1)+' L '+h2[0].toFixed(1)+' '+h2[1].toFixed(1)+' Z',{x:0,y:H,color:col,opacity:op});
         }
       });
     };
-    if(pdfBytes){
-      const pages=doc.getPages();
-      let rotWarn=false;
-      slides.filter(sl=>sl.classList.contains('pdfpage')).forEach(sl=>{
-        const p=+sl.dataset.pdfpage;
-        const items=inkStore[inkKey(slides.indexOf(sl))];
-        if(!items||!items.length||p>pages.length)return;
-        const page=pages[p-1];
-        if(page.getRotation&&page.getRotation().angle){rotWarn=true;return;}
+    let rotWarn=false,exported=0;
+    for(const sec of slides){
+      if(sec.classList.contains('cover')||sec.classList.contains('noprint'))continue;
+      const items=inkStore[inkKey(slides.indexOf(sec))]||[];
+      if(sec.classList.contains('pdfpage')){
+        const si=+(sec.dataset.src||0);
+        if(!sources[si])continue;
+        if(!libDocs[si]){
+          pgprog.textContent='Loading '+sources[si].name+'…';
+          libDocs[si]=await PDFLib.PDFDocument.load(sources[si].bytes,{ignoreEncryption:true});
+        }
+        const p=+sec.dataset.pdfpage;
+        const copied=await out.copyPages(libDocs[si],[p-1]);
+        const page=copied[0];
+        out.addPage(page);exported++;
+        if(!items.length)continue;
+        if(page.getRotation&&page.getRotation().angle){rotWarn=true;continue;}
         const pw=page.getWidth(),ph=page.getHeight(),ar=pw/ph;
         const dh=Math.min(720,1280/ar),dw=dh*ar;
         const ox=(1280-dw)/2,oy=(720-dh)/2;
         const scl=pw/dw;
         drawItems(page,items,q=>[(q[0]-ox)*scl,(q[1]-oy)*scl],scl);
-      });
-      if(rotWarn)alert('Note: this PDF has rotated pages — annotations on those pages were skipped in the vector export (use Save/Print instead).');
+      }else if(sec.classList.contains('whiteboard')){
+        if(!items.length)continue;
+        const page=out.addPage([792,445.5]);exported++;
+        const scl=792/1280;
+        drawItems(page,items,q=>[q[0]*scl,q[1]*scl],scl);
+      }
     }
-    /* used whiteboard pages appended */
-    const wbs=slides.filter(sl=>sl.classList.contains('whiteboard')&&(inkStore[inkKey(slides.indexOf(sl))]||[]).length);
-    for(const sl of wbs){
-      const page=doc.addPage([792,445.5]);
-      const scl=792/1280;
-      drawItems(page,inkStore[inkKey(slides.indexOf(sl))],q=>[q[0]*scl,q[1]*scl],scl);
-    }
-    if(!pdfBytes&&!wbs.length){pgprog.style.display='none';alert('Nothing to export yet — draw something first!');return;}
-    const bytes=await doc.save();
+    if(!exported){pgprog.style.display='none';alert('Nothing to export yet — open a PDF or draw on a blank page first.');return;}
+    if(rotWarn)alert('Note: rotated pages — annotations on those pages were skipped in the vector export.');
+    pgprog.textContent='Saving…';
+    const bytes=await out.save();
     const blob=new Blob([bytes],{type:'application/pdf'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download=(pdfBytes?pdfName:'inkpad-notes')+'-annotated.pdf';
+    a.download=(sources.length?sources[0].name.replace(/\.pdf$/i,''):'inkpad-notes')+'-annotated.pdf';
     a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     pgprog.style.display='none';
@@ -1455,11 +1511,115 @@ async function exportVectorPdf(){
     alert('Vector export failed ('+err.message+') — the Save/Print button still works.');
   }
 }
+/* ===== page organizer ===== */
+function createBlank(afterSec){
+  wbCount++;
+  const sec=document.createElement('section');
+  sec.className='slide whiteboard';
+  sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount+'-'+Date.now()%100000;
+  sec.dataset.toc='Blank page';
+  sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
+  if(afterSec&&afterSec.nextSibling)deck.insertBefore(sec,afterSec.nextSibling);
+  else deck.appendChild(sec);
+  refreshSlides();saveComp();
+  return sec;
+}
+function movePage(sec,dir){
+  const sib=dir<0?sec.previousElementSibling:sec.nextElementSibling;
+  if(!sib||!sib.classList||!sib.classList.contains('slide')||sib.classList.contains('cover'))return;
+  if(dir<0)deck.insertBefore(sec,sib);
+  else deck.insertBefore(sib,sec);
+  refreshSlides();saveComp();buildOrganizer();
+}
+function deletePage(sec){
+  const label=sec.dataset.toc||'this page';
+  if(!confirm('Remove "'+label+'" from the document? (Its annotations are kept and return if the page comes back.)'))return;
+  const idx=slides.indexOf(sec);
+  sec.remove();
+  refreshSlides();
+  show(Math.min(Math.max(0,idx-1),slides.length-1));
+  saveComp();buildOrganizer();
+}
+function buildOrganizer(){
+  const g=document.getElementById('orgGrid');if(!g)return;
+  g.innerHTML='';
+  slides.forEach((sec,i)=>{
+    if(sec.classList.contains('cover'))return;
+    const card=document.createElement('div');card.className='orgpg';
+    if(sec.dataset.thumb)card.innerHTML='<img src="'+sec.dataset.thumb+'" alt="">';
+    else card.innerHTML='<div class="ph">'+(sec.classList.contains('whiteboard')?'blank':'p.'+(sec.dataset.pdfpage||'?'))+'</div>';
+    const cap=document.createElement('div');cap.className='cap';cap.textContent=(i+1)+'. '+(sec.dataset.toc||'page');
+    card.appendChild(cap);
+    const ops=document.createElement('div');ops.className='ops';
+    [['◀','Move earlier',()=>movePage(sec,-1)],
+     ['▶','Move later',()=>movePage(sec,1)],
+     ['⬒','Insert blank page after',()=>{createBlank(sec);buildOrganizer();}],
+     ['✕','Remove page',()=>deletePage(sec)],
+     ['👁','Go to page',()=>{show(slides.indexOf(sec));document.getElementById('org').classList.remove('open');}]
+    ].forEach(x=>{
+      const b=document.createElement('button');b.textContent=x[0];b.title=x[1];b.setAttribute('aria-label',x[1]);
+      b.onclick=x[2];ops.appendChild(b);
+    });
+    card.appendChild(ops);
+    g.appendChild(card);
+  });
+}
+document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
+document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
+document.getElementById('orgAddBlank').onclick=()=>{createBlank(null);buildOrganizer();};
+document.getElementById('orgAddPdf').onclick=()=>document.getElementById('pdfFile2').click();
+document.getElementById('pdfFile2').addEventListener('change',async e=>{
+  const file=e.target.files[0];if(!file)return;
+  await appendPdfBytes(file.name,await file.arrayBuffer());
+  buildOrganizer();
+  e.target.value='';
+});
+/* ===== resume last session ===== */
+async function resumeSession(){
+  let comp=null;
+  try{comp=JSON.parse(localStorage.getItem('inkpadComp'));}catch(e){}
+  if(!comp||!comp.pages||!comp.pages.length)return alert('No previous session found.');
+  pgprog.style.display='flex';pgprog.textContent='Restoring session…';
+  try{
+    sources=[];
+    document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
+    document.querySelectorAll('section.whiteboard').forEach(x=>x.remove());
+    const fpIdx={};
+    let missing=0;
+    for(const sMeta of comp.srcs){
+      const docs=await idbAll();
+      const rec=docs.find(dd=>dd.fp===sMeta.fp);
+      if(!rec){missing++;fpIdx[sMeta.fp]=-1;continue;}
+      fpIdx[sMeta.fp]=await addSource(rec.name,rec.bytes.slice(0));
+    }
+    for(const pg of comp.pages){
+      if(pg.k==='p'){
+        const si=fpIdx[pg.fp];
+        if(si==null||si<0)continue;
+        deck.appendChild(buildPdfSection(si,pg.p));
+      }else{
+        wbCount++;
+        const sec=document.createElement('section');
+        sec.className='slide whiteboard';
+        sec.dataset.inkkey=pg.id;
+        sec.dataset.toc=pg.label||'Blank page';
+        sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
+        deck.appendChild(sec);
+      }
+    }
+    if(sources.length){pdfDoc=sources[0].doc;pdfAspect=sources[0].aspect;currentFP=sources[0].fp;pdfBytes=sources[0].bytes;pdfName=sources[0].name.replace(/\.pdf$/i,'');}
+    refreshSlides();show(slides.length>1?1:0);
+    updatePdfWindow();queueThumbSweep();
+    pgprog.style.display='none';
+    if(missing)alert(missing+' source PDF(s) were no longer cached — those pages were skipped.');
+  }catch(err){pgprog.style.display='none';alert('Could not restore: '+err.message);}
+}
 /* boot: cover + 6 blank pages */
 for(let i=0;i<6;i++)addPage();
 refreshSlides();
 show(0);fit();
 if(window.indexedDB)refreshRecents();
+(function(){try{const c=JSON.parse(localStorage.getItem('inkpadComp'));if(c&&c.pages&&c.pages.length){const b=document.getElementById('resumeBtn');b.style.display='inline-block';b.onclick=resumeSession;}}catch(e){}})();
 setTimeout(function(){redrawInk();},400);
 /* ===== laptop zoom & pan ===== */
 function updZ(){const el=document.getElementById('zPct');if(el)el.textContent=Math.round((viewZ||1)*100)+'%';}
