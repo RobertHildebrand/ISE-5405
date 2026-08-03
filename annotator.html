@@ -158,6 +158,9 @@ body.handout #quickExp{display:none}
 .orgpg.dragging{opacity:.35;outline:2px dashed #33658a}
 .orgghost{position:fixed;z-index:700;pointer-events:none;width:150px;opacity:.92;transform:rotate(2.5deg) scale(1.04);box-shadow:0 12px 34px rgba(0,0,0,.45);border-radius:10px;background:#fff;padding:8px;text-align:center}
 .orgghost img{width:100%;border-radius:5px}
+.orgpg img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+.pdfimg{-webkit-user-drag:none;user-drag:none}
+.orgpg .ph{pointer-events:none}
 </style>
 </head>
 <body>
@@ -582,7 +585,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b743';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b744';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1162,7 +1165,7 @@ async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder +
   cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
   await page.render({canvasContext:cx,viewport:vp}).promise;
   const img=document.createElement('img');
-  img.className='pdfimg';img.alt='PDF page '+p;
+  img.className='pdfimg';img.alt='PDF page '+p;img.draggable=false;
   img.src=cv.toDataURL('image/jpeg',0.9);
   cv.width=0;cv.height=0;
   sec.prepend(img);
@@ -1553,7 +1556,7 @@ function buildOrganizer(){
     const card=document.createElement('div');card.className='orgpg';
     card._sec=sec;
     card.addEventListener('pointerdown',e=>orgDragStart(e,card));
-    if(sec.dataset.thumb)card.innerHTML='<img src="'+sec.dataset.thumb+'" alt="">';
+    if(sec.dataset.thumb)card.innerHTML='<img draggable="false" src="'+sec.dataset.thumb+'" alt="">';
     else card.innerHTML='<div class="ph">'+(sec.classList.contains('whiteboard')?'blank':'p.'+(sec.dataset.pdfpage||'?'))+'</div>';
     const cap=document.createElement('div');cap.className='cap';cap.textContent=(i+1)+'. '+(sec.dataset.toc||'page');
     card.appendChild(cap);
@@ -1629,7 +1632,7 @@ function orgLift(st,e){
   const gh=document.createElement('div');
   gh.className='orgghost';
   const img=st.card.querySelector('img');
-  gh.innerHTML=(img?'<img src="'+img.src+'">':'<div class="ph" style="height:90px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b">page</div>')+
+  gh.innerHTML=(img?'<img draggable="false" src="'+img.src+'">':'<div class="ph" style="height:90px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b">page</div>')+
     '<div style="font-size:11px;color:#555;margin-top:4px">'+(st.card._sec.dataset.toc||'page')+'</div>';
   gh.style.left=(e.clientX-75)+'px';gh.style.top=(e.clientY-40)+'px';
   document.body.appendChild(gh);
@@ -1643,6 +1646,8 @@ function orgCommit(st){
   if(typeof updatePdfWindow==='function')updatePdfWindow();
   buildOrganizer();
 }
+document.getElementById('org').addEventListener('dragstart',e=>e.preventDefault());
+document.addEventListener('dragstart',e=>{if(e.target&&(e.target.classList&&(e.target.classList.contains('pdfimg')||e.target.closest&&e.target.closest('.orgpg'))))e.preventDefault();});
 document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
 document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
 document.getElementById('orgAddBlank').onclick=()=>{createBlank(null);buildOrganizer();};
