@@ -154,6 +154,10 @@ body.handout #quickExp{display:none}
 .orgpg .ops{display:flex;gap:4px;justify-content:center}
 .orgpg .ops button{border:none;background:#e8e2da;border-radius:6px;width:30px;height:28px;cursor:pointer;font-size:13px}
 .orgpg .ops button:hover{background:#d8d0c6}
+.orgpg{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.orgpg.dragging{opacity:.35;outline:2px dashed #33658a}
+.orgghost{position:fixed;z-index:700;pointer-events:none;width:150px;opacity:.92;transform:rotate(2.5deg) scale(1.04);box-shadow:0 12px 34px rgba(0,0,0,.45);border-radius:10px;background:#fff;padding:8px;text-align:center}
+.orgghost img{width:100%;border-radius:5px}
 </style>
 </head>
 <body>
@@ -212,6 +216,7 @@ body.handout #quickExp{display:none}
     <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
     <button class="btn sec" id="orgAddBlank">&#65291; Blank page</button>
     <button class="btn" id="orgClose">Done</button>
+    <span class="tiny" style="width:100%;color:#6d6d6d">Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons.</span>
   </div>
   <div id="orgGrid"></div>
 </div></div>
@@ -577,7 +582,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b742';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b743';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1546,6 +1551,8 @@ function buildOrganizer(){
   slides.forEach((sec,i)=>{
     if(sec.classList.contains('cover'))return;
     const card=document.createElement('div');card.className='orgpg';
+    card._sec=sec;
+    card.addEventListener('pointerdown',e=>orgDragStart(e,card));
     if(sec.dataset.thumb)card.innerHTML='<img src="'+sec.dataset.thumb+'" alt="">';
     else card.innerHTML='<div class="ph">'+(sec.classList.contains('whiteboard')?'blank':'p.'+(sec.dataset.pdfpage||'?'))+'</div>';
     const cap=document.createElement('div');cap.className='cap';cap.textContent=(i+1)+'. '+(sec.dataset.toc||'page');
@@ -1563,6 +1570,78 @@ function buildOrganizer(){
     card.appendChild(ops);
     g.appendChild(card);
   });
+}
+/* drag & drop reordering: mouse drags immediately; touch/pencil press-and-hold to lift */
+let orgDrag=null;
+function orgDragStart(e,card){
+  if(e.target.closest('button'))return;
+  const isTouch=e.pointerType==='touch'||e.pointerType==='pen';
+  const st={card:card,ghost:null,active:false,sx:e.clientX,sy:e.clientY,timer:null};
+  orgDrag=st;
+  if(isTouch){
+    st.timer=setTimeout(()=>{if(orgDrag===st)orgLift(st,e);},330);
+  }
+  const move=ev=>{
+    if(orgDrag!==st)return;
+    if(!st.active){
+      const d=Math.hypot(ev.clientX-st.sx,ev.clientY-st.sy);
+      if(isTouch){if(d>12){clearTimeout(st.timer);cleanup();}return;}  /* touch: moved too soon = scroll */
+      if(d>8)orgLift(st,ev);
+      else return;
+    }
+    ev.preventDefault();
+    st.ghost.style.left=(ev.clientX-75)+'px';
+    st.ghost.style.top=(ev.clientY-40)+'px';
+    const g=document.getElementById('orgGrid');
+    const others=[...g.querySelectorAll('.orgpg:not(.dragging)')];
+    let ref=null,best=1e18;
+    others.forEach(o=>{
+      const r=o.getBoundingClientRect();
+      const cx=r.left+r.width/2,cy=r.top+r.height/2;
+      const dd=(ev.clientX-cx)*(ev.clientX-cx)+(ev.clientY-cy)*(ev.clientY-cy);
+      if(dd<best){best=dd;ref={el:o,before:ev.clientX<cx};}
+    });
+    if(ref){
+      if(ref.before)g.insertBefore(st.card,ref.el);
+      else g.insertBefore(st.card,ref.el.nextSibling);
+    }
+  };
+  const up=ev=>{
+    clearTimeout(st.timer);
+    if(orgDrag===st&&st.active)orgCommit(st);
+    cleanup();
+  };
+  function cleanup(){
+    if(st.ghost)st.ghost.remove();
+    st.card.classList.remove('dragging');
+    removeEventListener('pointermove',move);
+    removeEventListener('pointerup',up);
+    removeEventListener('pointercancel',up);
+    if(orgDrag===st)orgDrag=null;
+  }
+  addEventListener('pointermove',move,{passive:false});
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+}
+function orgLift(st,e){
+  st.active=true;
+  st.card.classList.add('dragging');
+  const gh=document.createElement('div');
+  gh.className='orgghost';
+  const img=st.card.querySelector('img');
+  gh.innerHTML=(img?'<img src="'+img.src+'">':'<div class="ph" style="height:90px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b">page</div>')+
+    '<div style="font-size:11px;color:#555;margin-top:4px">'+(st.card._sec.dataset.toc||'page')+'</div>';
+  gh.style.left=(e.clientX-75)+'px';gh.style.top=(e.clientY-40)+'px';
+  document.body.appendChild(gh);
+  st.ghost=gh;
+  if(navigator.vibrate)try{navigator.vibrate(12);}catch(_){}
+}
+function orgCommit(st){
+  const g=document.getElementById('orgGrid');
+  [...g.querySelectorAll('.orgpg')].forEach(c=>{if(c._sec)deck.appendChild(c._sec);});
+  refreshSlides();saveComp();
+  if(typeof updatePdfWindow==='function')updatePdfWindow();
+  buildOrganizer();
 }
 document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
 document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
