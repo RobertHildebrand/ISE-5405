@@ -128,7 +128,6 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 #plotdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
 #plotdlg.open{display:flex}
 #plotdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:520px;width:92vw}
-body.present #plotBtn{display:none!important}
 #paperMenu{display:none;position:absolute;z-index:660;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
 #paperMenu.open{display:flex}
 #paperMenu button{border:1px solid #ddd;background:#fff;border-radius:8px;width:74px;padding:5px 4px;cursor:pointer;font-size:11.5px;color:#444}
@@ -276,7 +275,7 @@ body.present #tbHide{display:flex!important}
     <div class="tutsec"><b class="h">Pages</b>
       &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
     <div class="tutsec"><b class="h">Math &amp; graphs</b>
-      The <b>&#9995; Move</b> tool (<span class="kbd">V</span>) grabs any text box, equation, shape, or stroke and drags it — the lasso still handles multi-select, resize, and recolor. The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · <b>&#128200; Plot</b> stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page &#9662;</b> in the organizer picks the paper: blank, lined, grid, or dots (the ruling exports with the PDF).</div>
+      The <b>&#9995; Move</b> tool (<span class="kbd">V</span>) grabs any text box, equation, shape, or stroke and drags it — the lasso still handles multi-select, resize, and recolor. The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · the pen toolbar&rsquo;s <b>&#8767; Plot</b> button stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page &#9662;</b> in the organizer picks the paper: blank, lined, grid, or dots (the ruling exports with the PDF).</div>
     <div class="tutsec"><b class="h">View &amp; find</b>
       Two-finger pinch or <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom (Ctrl+scroll on laptop) · drag or scroll to pan when zoomed · <span class="kbd">M</span> opens the page menu with thumbnails and <b>text search</b>.</div>
     <div class="tutsec"><b class="h">Present</b>
@@ -321,7 +320,6 @@ body.present #tbHide{display:flex!important}
 <div id="sidectl" role="group" aria-label="Document actions">
   <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
   <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
-  <button id="plotBtn" title="Plot a function f(x) onto this page as ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M6.5 15.5c2.5-6.5 4.5-8.5 6-4.5s3.5 4 5-1.5"/></svg><span class="sclbl">Plot</span></button>
   <button id="tbShow" title="Show / hide the pen toolbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="14.5" width="18" height="6.5" rx="2.5"/><path d="M7 17.8h.01M12 17.8h.01M17 17.8h.01"/><path d="M14.5 4a2 2 0 012.8 2.8L11 13l-3.4.6L8.2 10z"/></svg><span class="sclbl">Tools</span></button>
 </div>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
@@ -347,6 +345,7 @@ body.present #tbHide{display:flex!important}
   <button id="prect" title="Rectangle" style="background:#fff;border:2px solid #999">&#9645;</button>
   <button id="pellipse" title="Ellipse" style="background:#fff;border:2px solid #999">&#9675;</button>
   <button id="parrow" title="Arrow" style="background:#fff;border:2px solid #999">&#8599;</button>
+  <button id="pplot" title="Plot a function f(x) onto this page as ink" style="background:#fff;border:2px solid #999">&#8767;</button>
   <button id="pcustom" title="Custom pen color" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></button>
   <input type="color" id="pcustomInput" style="position:absolute;width:1px;height:1px;opacity:0" aria-label="Custom pen color value">
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
@@ -727,7 +726,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b758';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b759';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1381,7 +1380,8 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
     '<span class="tbdiv" aria-hidden="true"></span>'+
     TB('tbHelp','help','Help','Tutorial & shortcuts')+TB('tbHide','hide','Hide','Hide toolbar (T)');
   document.body.appendChild(tb);
-  if(coarse)tb.style.display='flex';
+  let tbPref=true;try{tbPref=localStorage.getItem('inkpadTbHide')!=='1';}catch(e){}
+  if(coarse||tbPref)tb.style.display='flex';
   document.getElementById('tbPen').onclick=togglePen;
   document.getElementById('tbMove').onclick=()=>setTool(toolMode==='hand'?'pen':'hand');
   document.getElementById('tbUndo').onclick=doUndo;
@@ -2150,7 +2150,7 @@ function stampPlot(){
   document.getElementById('plotdlg').classList.remove('open');
   if(!curveRuns)alert('Axes stamped, but the curve never enters this window — adjust the y range and plot again.');
 }
-document.getElementById('plotBtn').onclick=()=>{
+document.getElementById('pplot').onclick=()=>{
   if(cur===0&&slides.length>1)show(1);
   document.getElementById('plotdlg').classList.add('open');
   setTimeout(()=>document.getElementById('plotFx').focus(),30);
@@ -2274,8 +2274,8 @@ function togglePresent(){
     document.body.classList.remove('idlehide');
     tbHidden=false;tbTab.style.display='none';
     const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
-    const manual=document.getElementById('tbShow');
-    if(tb)tb.style.display=(coarse||(manual&&manual.classList.contains('on')))?'flex':'none';
+    let tbPref=true;try{tbPref=localStorage.getItem('inkpadTbHide')!=='1';}catch(e){}
+    if(tb)tb.style.display=(coarse||tbPref)?'flex':'none';
     try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
     clearTimeout(idleT);
     if(presentFrom===0)show(0); /* entered from the start page → return there */
@@ -2297,6 +2297,7 @@ document.getElementById('tbShow').onclick=()=>{
   const tbx=document.getElementById('touchbar');if(!tbx)return;
   const vis=getComputedStyle(tbx).display!=='none';
   tbx.style.display=vis?'none':'flex';
+  try{localStorage.setItem('inkpadTbHide',vis?'1':'0');}catch(e){}
   document.getElementById('tbShow').classList.toggle('on',!vis);
 };
 (function(){const tbx=document.getElementById('touchbar'),b=document.getElementById('tbShow');
