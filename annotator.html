@@ -424,6 +424,7 @@ body.present #tbHide{display:flex!important}
   <button id="pplot" title="Plot a function f(x) onto this page as ink" style="background:#fff;border:2px solid #999">&#8767;</button>
   <button id="psig" title="Signature: draw once, place anywhere" style="background:#fff;border:2px solid #999">&#9997;</button>
   <button id="pnote" title="Sticky-note comment: exports as a real PDF comment (Adobe-compatible)" style="background:#FFD60A;border:2px solid #b3900a">&#9998;</button>
+  <button id="pdate" title="Stamp today's date — then drag it into place" style="background:#fff;border:2px solid #999">&#128197;</button>
   <button id="pcustom" title="Custom pen color" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></button>
   <input type="color" id="pcustomInput" style="position:absolute;width:1px;height:1px;opacity:0" aria-label="Custom pen color value">
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
@@ -817,7 +818,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b772';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b773';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2609,19 +2610,21 @@ document.getElementById('signSign').onclick=()=>document.getElementById('psig').
 document.getElementById('signPrev').onclick=()=>prev();
 document.getElementById('signNext').onclick=()=>next();
 document.getElementById('signDone').onclick=()=>exportVectorPdf();
-document.getElementById('signDate').onclick=()=>{
+function stampDate(){
   if(cur===0&&slides.length>1)show(1);
   const key=inkKey();
   const before=(inkStore[key]||[]).slice().map(cloneItem);
   const d=new Date();
   const txt=String(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
-  const it={type:'text',x:600,y:340,size:26,c:'#1a1a1a',a:1,tl:1,text:txt};
+  const it={type:'text',x:600,y:340,size:26,c:penColor==='HL'?'#1a1a1a':penColor,a:1,tl:1,text:txt};
   (inkStore[key]=inkStore[key]||[]).push(it);
   pushOp({key:key,before:before,after:(inkStore[key]||[]).slice().map(cloneItem)});
   setTool('lasso');
   sel={key:key,items:[it],before:(inkStore[key]||[]).slice().map(cloneItem)};
   saveInkSoon();redrawInk();
-};
+}
+document.getElementById('signDate').onclick=stampDate;
+document.getElementById('pdate').onclick=stampDate;
 try{if(new URLSearchParams(location.search).get('sign')==='1')setSignMode(true);}catch(e){}
 /* ===== resume last session ===== */
 async function resumeSession(){
