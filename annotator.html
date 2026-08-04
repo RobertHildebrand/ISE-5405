@@ -43,7 +43,7 @@ body.signmode #mstart,body.present #mstart,body.handout #mstart{display:none!imp
 #mstart #msSign{background:#E5751F;color:#fff}
 #mstart .mnote{color:#8a837b;font-size:12.5px;margin-top:8px;text-align:center}
 body.signmode #touchbar,body.signmode #sidectl,body.signmode #zoomctl,body.signmode #pentools,body.signmode #tbTab,body.signmode #progress{display:none!important}
-#signbar{position:fixed;left:0;right:0;bottom:0;z-index:530;display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(28,30,36,.97)}
+#signbar{position:fixed;left:0;right:0;bottom:0;z-index:530;display:none;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(28,30,36,.97)}
 body.signmode #signbar{display:grid}
 body.handout #signbar,body.present #signbar{display:none!important}
 @media print{#signbar{display:none!important}}
@@ -396,7 +396,9 @@ body.present #tbHide{display:flex!important}
 <div id="signbar" role="toolbar" aria-label="Signing">
   <button id="signOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 3v6h7"/></svg>Open</button>
   <button id="signSign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>Sign</button>
+  <button id="signIni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V5"/><path d="M5 12c4-7 7 3 10-2"/><path d="M19 19v-9"/></svg>Initials</button>
   <button id="signDate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Date</button>
+  <button id="signMove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 00-4 0"/><path d="M14 10V4a2 2 0 00-4 0v6"/><path d="M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 114 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 012.83-2.82L7 15"/></svg>Move</button>
   <button id="signPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 5 7.5 12 14.5 19"/></svg>Back</button>
   <button id="signNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg>Next</button>
   <button id="signDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Done</button>
@@ -840,7 +842,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b774';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b775';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1060,7 +1062,16 @@ function pointInPoly(x,y,P){
 function cloneItem(it){return JSON.parse(JSON.stringify(it));}
 function finishLasso(){
   const P=lassoPts;lassoPts=null;
-  if(!P||P.length<5){redrawInk();return;}
+  if(!P){redrawInk();return;}
+  let span=0;
+  for(const q of P)span=Math.max(span,Math.hypot(q[0]-P[0][0],q[1]-P[0][1]));
+  if(span<12){ /* a tap: select whatever is under it, with drag + resize handles */
+    const key=inkKey(),arr=inkStore[key]||[];
+    const hit=hitItemAt(P[0],arr);
+    if(hit){const grp=hit.g?arr.filter(it=>it.g===hit.g):[hit];sel={key:key,items:grp,before:arr.slice().map(cloneItem)};}
+    redrawInk();return;
+  }
+  if(P.length<5){redrawInk();return;}
   const key=inkKey();
   const items=(inkStore[key]||[]).filter(it=>{
     if(it.p){
@@ -2513,7 +2524,8 @@ document.getElementById('plotGo').onclick=stampPlot;
   const dlg=document.getElementById('sigdlg'),cv=document.getElementById('sigCv');
   if(!dlg||!cv)return;
   const sctx=cv.getContext('2d');
-  let sigStrokes=[],curS=null,sigDown=false,sigColor='#1a1a1a';
+  let sigStrokes=[],curS=null,sigDown=false,sigColor='#1a1a1a',sigMode='sig';
+  const SKEY=()=>sigMode==='ini'?'inkSigIni':'inkSigs';
   document.querySelectorAll('.sigcol').forEach(b=>{
     b.onclick=()=>{sigColor=b.dataset.c;document.querySelectorAll('.sigcol').forEach(x=>x.classList.toggle('on',x===b));sigRedraw();};
   });
@@ -2541,14 +2553,14 @@ document.getElementById('plotGo').onclick=stampPlot;
   cv.addEventListener('pointerup',sigUp);
   cv.addEventListener('pointercancel',sigUp);
   function sigBBox(sts){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const st of sts)for(const q of st){x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1]);}return [x0,y0,x1,y1];}
-  function loadSigs(){try{return JSON.parse(localStorage.getItem('inkSigs'))||[];}catch(e){return [];}}
+  function loadSigs(){try{return JSON.parse(localStorage.getItem(SKEY()))||[];}catch(e){return [];}}
   function saveSig(sts){
     try{
       const norm=sts.map(st=>st.map(q=>[Math.round(q[0]),Math.round(q[1])]));
       const j=JSON.stringify(norm);
       const all=loadSigs().filter(s=>JSON.stringify(s)!==j);
       all.unshift(norm);
-      localStorage.setItem('inkSigs',JSON.stringify(all.slice(0,3)));
+      localStorage.setItem(SKEY(),JSON.stringify(all.slice(0,3)));
     }catch(e){}
   }
   function renderSaved(){
@@ -2564,7 +2576,7 @@ document.getElementById('plotGo').onclick=stampPlot;
       b.appendChild(th);
       b.onclick=()=>placeSig(sts,true);
       const del=document.createElement('button');del.className='sigdel';del.textContent='\u00d7';del.title='Forget this signature';del.setAttribute('aria-label','Forget this saved signature');
-      del.onclick=e=>{e.stopPropagation();try{const all=loadSigs();all.splice(idx,1);localStorage.setItem('inkSigs',JSON.stringify(all));}catch(_){ }renderSaved();};
+      del.onclick=e=>{e.stopPropagation();try{const all=loadSigs();all.splice(idx,1);localStorage.setItem(SKEY(),JSON.stringify(all));}catch(_){ }renderSaved();};
       wrap.appendChild(b);wrap.appendChild(del);
       row.appendChild(wrap);
     });
@@ -2583,7 +2595,7 @@ document.getElementById('plotGo').onclick=stampPlot;
     if(!sts.length){alert('Draw a signature first.');return;}
     if(cur===0&&slides.length>1)show(1);
     const bb=sigBBox(sts);
-    const wSig=Math.max(1,bb[2]-bb[0]),targetW=300,f=targetW/wSig;
+    const wSig=Math.max(1,bb[2]-bb[0]),targetW=sigMode==='ini'?130:300,f=targetW/wSig;
     const ox=640-targetW/2,oy=400-(bb[3]-bb[1])*f/2;
     const key=inkKey();
     const before=(inkStore[key]||[]).slice().map(cloneItem);
@@ -2598,7 +2610,13 @@ document.getElementById('plotGo').onclick=stampPlot;
     sel={key:key,items:items,before:arr.slice().map(cloneItem)};
     saveInkSoon();redrawInk();
   }
-  document.getElementById('psig').onclick=()=>{dlg.classList.add('open');sigStrokes=[];curS=null;renderSaved();sigRedraw();};
+  function openPad(mode){
+    sigMode=mode||'sig';
+    const hd=dlg.querySelector('h3');if(hd)hd.textContent=sigMode==='ini'?'Initials':'Signature';
+    dlg.classList.add('open');sigStrokes=[];curS=null;renderSaved();sigRedraw();
+  }
+  window.sigPad={open:openPad,place:(sts,mode)=>{sigMode=mode||'sig';placeSig(sts,true);},saved:mode=>{try{return JSON.parse(localStorage.getItem(mode==='ini'?'inkSigIni':'inkSigs'))||[];}catch(e){return [];}}};
+  document.getElementById('psig').onclick=()=>openPad('sig');
   document.getElementById('sigClose').onclick=()=>dlg.classList.remove('open');
   document.getElementById('sigClear').onclick=()=>{sigStrokes=[];curS=null;sigRedraw();};
   document.getElementById('sigPlace').onclick=()=>placeSig(sigStrokes);
@@ -2642,25 +2660,31 @@ document.getElementById('msTut').onclick=()=>document.getElementById('tut').clas
 })();
 document.getElementById('signExit').onclick=()=>setSignMode(false);
 document.getElementById('signOpen').onclick=()=>document.getElementById('pdfFile').click();
-document.getElementById('signSign').onclick=()=>document.getElementById('psig').onclick();
+document.getElementById('signSign').onclick=()=>window.sigPad.open('sig');
+document.getElementById('signIni').onclick=()=>{
+  const saved=window.sigPad.saved('ini');
+  if(saved.length)window.sigPad.place(saved[0],'ini'); /* stamp: one tap, lands selected for dragging */
+  else window.sigPad.open('ini');
+};
+document.getElementById('signMove').onclick=()=>{setTool('lasso');}; /* tap anything to grab it — handles let you drag or resize */
 document.getElementById('signPrev').onclick=()=>prev();
 document.getElementById('signNext').onclick=()=>next();
 document.getElementById('signDone').onclick=()=>exportVectorPdf();
-function stampDate(){
+function stampDate(col){
   if(cur===0&&slides.length>1)show(1);
   const key=inkKey();
   const before=(inkStore[key]||[]).slice().map(cloneItem);
   const d=new Date();
   const txt=String(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
-  const it={type:'text',x:600,y:340,size:26,c:penColor==='HL'?'#1a1a1a':penColor,a:1,tl:1,text:txt};
+  const it={type:'text',x:600,y:340,size:26,c:col||(penColor==='HL'?'#1a1a1a':penColor),a:1,tl:1,text:txt};
   (inkStore[key]=inkStore[key]||[]).push(it);
   pushOp({key:key,before:before,after:(inkStore[key]||[]).slice().map(cloneItem)});
   setTool('lasso');
   sel={key:key,items:[it],before:(inkStore[key]||[]).slice().map(cloneItem)};
   saveInkSoon();redrawInk();
 }
-document.getElementById('signDate').onclick=stampDate;
-document.getElementById('pdate').onclick=stampDate;
+document.getElementById('signDate').onclick=()=>stampDate('#1a1a1a'); /* signing dates are always black */
+document.getElementById('pdate').onclick=()=>stampDate();
 try{if(new URLSearchParams(location.search).get('sign')==='1')setSignMode(true);}catch(e){}
 /* ===== resume last session ===== */
 async function resumeSession(){
