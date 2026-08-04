@@ -168,9 +168,14 @@ body.handout #zoomctl{display:none}
 #tedPrev{display:none;background:rgba(255,255,255,.96);border:1px dashed #999;border-radius:6px;margin-top:4px;padding:6px 10px;min-height:22px;max-width:480px;overflow-x:auto}
 #tedPrev.on{display:block}
 #tedPrev svg{vertical-align:middle}
-#quickExp{position:fixed;top:12px;left:14px;z-index:515}
-body.handout #quickExp{display:none}
-@media print{#quickExp{display:none!important}}
+#sidectl{position:fixed;right:14px;bottom:260px;z-index:520;display:flex;flex-direction:column;gap:5px;align-items:center;background:rgba(38,40,46,.88);padding:8px;border-radius:12px}
+#sidectl button{width:46px;height:46px;border:none;border-radius:10px;background:transparent;color:#eef1f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:0}
+#sidectl button svg{width:19px;height:19px;flex:0 0 auto}
+#sidectl .sclbl{font-size:8.5px;font-weight:600;letter-spacing:.3px;line-height:1;opacity:.85}
+#sidectl button:hover{background:#3a3d45}
+#sidectl button.on{background:#E5751F;color:#fff}
+body.handout #sidectl{display:none!important}
+@media print{#sidectl{display:none!important}}
 #org{position:fixed;inset:0;background:rgba(20,22,26,.88);z-index:640;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 3vw}
 #org.open{display:flex}
 #org .orgcard{background:#f5f2ee;border-radius:16px;padding:20px 24px;max-width:1100px;width:100%}
@@ -195,7 +200,7 @@ body.handout #quickExp{display:none}
 .pdfimg{-webkit-user-drag:none;user-drag:none}
 .orgpg .ph{pointer-events:none}
 /* presentation mode */
-body.present #quickExp,body.present #pagesBtn,body.present #zoomctl,body.present #brand,body.present #progress{display:none!important}
+body.present #sidectl,body.present #zoomctl,body.present #brand,body.present #progress{display:none!important}
 body.present #counter{opacity:.45}
 #touchbar{transition:opacity .4s}
 body.present.idlehide{cursor:none}
@@ -301,8 +306,6 @@ body.present #tbHide{display:flex!important}
   <div class="tbar"><button class="btn sec" id="tedSmall" title="Smaller text">A&#8722;</button><span id="tedSize" style="color:#fff;background:#26282e;border-radius:6px;padding:4px 8px;font-size:13px">22</span><button class="btn sec" id="tedBig" title="Larger text">A+</button><button class="btn sec" id="tedTex" title="LaTeX math (renders when placed)">&radic;x&#772; TeX</button><button class="btn" id="tedOk">Place</button><button class="btn sec" id="tedCancel">Cancel</button></div>
   <div id="tedPrev" aria-live="polite"></div>
 </div>
-<button class="btn sec" id="pagesBtn" title="Page organizer: reorder, delete, insert, append" style="position:fixed;top:12px;left:190px;z-index:515">&#9776; Organize pages</button>
-<button class="btn sec" id="plotBtn" title="Plot a function f(x) onto this page as ink" style="position:fixed;top:12px;left:352px;z-index:515">&#128200; Plot</button>
 <div id="plotdlg" role="dialog" aria-modal="true" aria-label="Plot a function"><div class="pcard">
   <div style="display:flex;align-items:center;margin-bottom:10px"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:21px">Plot a function</h3><button class="btn sec" id="plotClose" style="margin-left:auto">Cancel</button></div>
   <label style="font-size:13.5px;color:#444">f(x) =&nbsp;<input id="plotFx" type="text" value="sin(x) + x/3" spellcheck="false" style="font:15px ui-monospace,Menlo,monospace;width:280px;padding:5px 8px;border:1.5px solid #ccc;border-radius:7px"></label>
@@ -315,7 +318,12 @@ body.present #tbHide{display:flex!important}
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
 </div></div>
-<button class="btn" id="quickExp" title="Download annotated PDF (vector — keeps selectable text)">&#10515; Export PDF</button>
+<div id="sidectl" role="group" aria-label="Document actions">
+  <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
+  <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
+  <button id="plotBtn" title="Plot a function f(x) onto this page as ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M6.5 15.5c2.5-6.5 4.5-8.5 6-4.5s3.5 4 5-1.5"/></svg><span class="sclbl">Plot</span></button>
+  <button id="tbShow" title="Show / hide the pen toolbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="14.5" width="18" height="6.5" rx="2.5"/><path d="M7 17.8h.01M12 17.8h.01M17 17.8h.01"/><path d="M14.5 4a2 2 0 012.8 2.8L11 13l-3.4.6L8.2 10z"/></svg><span class="sclbl">Tools</span></button>
+</div>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
   <button class="btn sec" id="zIn" title="Zoom in (+ key)">+</button>
   <div id="zPct" aria-live="polite">100%</div>
@@ -692,7 +700,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b752';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b753';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2209,7 +2217,8 @@ function togglePresent(){
     document.body.classList.remove('idlehide');
     tbHidden=false;tbTab.style.display='none';
     const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
-    if(tb)tb.style.display=coarse?'flex':'none';
+    const manual=document.getElementById('tbShow');
+    if(tb)tb.style.display=(coarse||(manual&&manual.classList.contains('on')))?'flex':'none';
     try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
     clearTimeout(idleT);
     if(presentFrom===0)show(0); /* entered from the start page → return there */
@@ -2227,6 +2236,14 @@ addEventListener('pointermove',()=>{if(presentOn)armIdle();});
 addEventListener('pointerdown',()=>{if(presentOn)armIdle();});
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presentOn)togglePresent();});
 document.getElementById('presentBtn').onclick=()=>{if(slides.length>1)show(1);}; /* start page → first blank page, normal mode */
+document.getElementById('tbShow').onclick=()=>{
+  const tbx=document.getElementById('touchbar');if(!tbx)return;
+  const vis=getComputedStyle(tbx).display!=='none';
+  tbx.style.display=vis?'none':'flex';
+  document.getElementById('tbShow').classList.toggle('on',!vis);
+};
+(function(){const tbx=document.getElementById('touchbar'),b=document.getElementById('tbShow');
+  if(tbx&&b&&getComputedStyle(tbx).display!=='none')b.classList.add('on');})();
 document.getElementById('tutBtn').onclick=()=>document.getElementById('tut').classList.add('open');
 document.getElementById('tutClose').onclick=()=>document.getElementById('tut').classList.remove('open');
 document.getElementById('eraseAllBtn').onclick=async()=>{
