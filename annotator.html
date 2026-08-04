@@ -171,6 +171,13 @@ body.present.idlehide #touchbar{opacity:0;pointer-events:none}
 body.present #tbHide{display:inline-block}
 #tbTab{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:521;display:none;background:rgba(38,40,46,.55);color:#fff;border-radius:10px;padding:2px 22px;font-size:15px;cursor:pointer;user-select:none}
 #tbTab:hover{background:rgba(38,40,46,.9)}
+#tut{position:fixed;inset:0;background:rgba(20,22,26,.88);z-index:645;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:28px 3vw}
+#tut.open{display:flex}
+#tut .tutcard{background:#f5f2ee;border-radius:16px;padding:22px 28px;max-width:980px;width:100%}
+#tut h3{font-family:"Fraunces",Georgia,serif;color:#861F41;margin:0 0 4px;font-size:24px}
+#tutGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}
+.tutsec{background:#fff;border-radius:12px;padding:12px 16px;font-size:14.5px;line-height:1.75}
+.tutsec b.h{color:#861F41;font-size:15.5px;display:block;margin-bottom:3px}
 </style>
 </head>
 <body>
@@ -186,16 +193,12 @@ body.present #tbHide{display:inline-block}
   <div class="drop">
     <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
     <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
-    <div style="margin-top:14px"><button class="btn sec" id="presentBtn">&#9974; Present</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
+    <div style="margin-top:14px"><button class="btn sec" id="presentBtn">&#9974; Present</button> <button class="btn sec" id="tutBtn">? Tutorial</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
   <div id="recents" style="display:none;max-width:520px;margin:18px auto 0;text-align:left"></div>
   <div class="tiny" style="color:#707070;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
     Annotations save in this browser and <b>reattach automatically</b> when you open the same PDF again.</div>
   </div>
-  <div style="margin-top:26px" class="tiny">
-    <span class="kbd">&rarr;</span>/<span class="kbd">&larr;</span> pages &middot; <span class="kbd">P</span> pen &middot; <span class="kbd">E</span> eraser &middot;
-    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">F</span> present (<span class="kbd">T</span> hides the toolbar) &middot; <span class="kbd">L</span> laser &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed<br>
-  <span class="kbd">Ctrl/Cmd+Z</span> undo &middot; lasso &#11034; to move/resize/recolor/delete &middot; <b>T</b> text boxes &middot; shapes &#9645;&#9675;&#8599; &middot; custom colors &middot; &#10515; downloads a real annotated PDF (text stays selectable) &middot; recent PDFs reopen with one tap
-  </div>
+  <div class="tiny" style="margin-top:24px;color:#707070">Press <span class="kbd">?</span> anytime for the full guide.</div>
 </section>
 
 </div></div>
@@ -223,6 +226,25 @@ body.present #tbHide{display:inline-block}
   <button class="btn sec" id="hbExit">Exit handout</button>
 </div>
 <div id="pgprog">Rendering&hellip;</div>
+<div id="tut" role="dialog" aria-modal="true" aria-label="Tutorial"><div class="tutcard">
+  <div style="display:flex;align-items:center"><h3>How to use Ink Pad</h3><button class="btn" id="tutClose" style="margin-left:auto">Done</button></div>
+  <div id="tutGrid">
+    <div class="tutsec"><b class="h">Get started</b>
+      <b>Open a PDF</b> — it stays on your device, nothing uploads. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
+    <div class="tutsec"><b class="h">Pen &amp; ink</b>
+      <span class="kbd">P</span> pen · colors + 4 highlighters + custom color wheel · &#9679; cycles thickness · <span class="kbd">E</span> cycles erasers (whole-stroke &#9676; / precision &#9986;) · <span class="kbd">C</span> clears the page · <span class="kbd">Ctrl/Cmd+Z</span> undo anything. Rest your palm freely — only the Pencil draws. Highlighters auto-straighten; hold <span class="kbd">Shift</span> for straight lines.</div>
+    <div class="tutsec"><b class="h">Tools</b>
+      Lasso &#11034; circles ink to <b>move, resize, recolor, or delete</b> it · <b>T</b>ext boxes (A&#8722;/A+ sizes, click existing text to edit) · shapes &#9645; &#9675; &#8599;.</div>
+    <div class="tutsec"><b class="h">Pages</b>
+      &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
+    <div class="tutsec"><b class="h">View &amp; find</b>
+      Two-finger pinch or <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom (Ctrl+scroll on laptop) · drag or scroll to pan when zoomed · <span class="kbd">M</span> opens the page menu with thumbnails and <b>text search</b>.</div>
+    <div class="tutsec"><b class="h">Present</b>
+      <span class="kbd">F</span> goes fullscreen with auto-hiding controls · <span class="kbd">L</span> laser pointer · <span class="kbd">T</span> hides/shows the toolbar · all pens stay available while presenting.</div>
+    <div class="tutsec"><b class="h">Save &amp; export</b>
+      <b>&#10515; Annotated PDF</b> is the best export — your ink becomes part of a real PDF with selectable text and perfect quality. <span class="kbd">H</span> print-style handout as backup. Annotations auto-save every stroke; &darr;/&uarr; in the pen toolbar back them up to a file.</div>
+  </div>
+</div></div>
 <div id="org" role="dialog" aria-modal="true" aria-label="Page organizer"><div class="orgcard">
   <div class="orghead"><b>Pages</b>
     <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
@@ -403,8 +425,8 @@ addEventListener('keydown',e=>{
     case 'w':case 'W':toggleWhiteboard();break;
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
-    case '?':document.getElementById('help').classList.toggle('open');break;
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');break;
+    case '?':document.getElementById('tut').classList.toggle('open');break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -597,7 +619,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b746';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b747';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1101,7 +1123,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbHide').onclick=()=>setTbHidden(true);
   document.getElementById('tbLaser').onclick=toggleLaser;
   document.getElementById('tbPresent').onclick=togglePresent;
-  document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
+  document.getElementById('tbHelp').onclick=()=>document.getElementById('tut').classList.toggle('open');
 })();
 document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;penIsHL=!!b.dataset.hl;toolMode='pen';setEraser(null);updateToolUI2();});
 updateToolUI();
@@ -1805,6 +1827,8 @@ addEventListener('pointermove',()=>{if(presentOn)armIdle();});
 addEventListener('pointerdown',()=>{if(presentOn)armIdle();});
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presentOn)togglePresent();});
 document.getElementById('presentBtn').onclick=togglePresent;
+document.getElementById('tutBtn').onclick=()=>document.getElementById('tut').classList.add('open');
+document.getElementById('tutClose').onclick=()=>document.getElementById('tut').classList.remove('open');
 window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit,togglePresent};
 
 /* ===== accessibility bootstrap (purely additive) ===== */
