@@ -725,7 +725,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b754';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b755';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -960,7 +960,7 @@ function finishLasso(){
 }
 function translateItem(it,dx,dy){
   if(it.p){it.p.forEach(q=>{q[0]+=dx;q[1]+=dy;});}
-  else if(it.type==='text'){it.x+=dx;it.y+=dy;}
+  else if(it.type==='text'||it.type==='math'){it.x+=dx;it.y+=dy;}
   else{it.x1+=dx;it.y1+=dy;it.x2+=dx;it.y2+=dy;}
 }
 function scaleItem(it,cx,cy,f){
