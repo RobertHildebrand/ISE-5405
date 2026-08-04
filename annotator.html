@@ -32,6 +32,16 @@ table.nice th{background:#861F41;color:#fff}
 #progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
 #counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#757575;cursor:pointer;z-index:50}
 button,.btn,.pcol,input,select,textarea{touch-action:manipulation}
+#mstart{display:none;position:fixed;inset:0;z-index:506;background:#f5f2ee;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px calc(20px + env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px))}
+@media (max-width:740px){body.oncover #mstart{display:flex}}
+body.signmode #mstart,body.present #mstart,body.handout #mstart{display:none!important}
+@media print{#mstart{display:none!important}}
+#mstart h1{font-family:"Fraunces",Georgia,serif;color:#861F41;margin:6px 0 0;font-size:34px}
+#mstart .msub{color:#666;font-size:15px;margin-bottom:10px;text-align:center}
+#mstart button{width:100%;max-width:420px;height:60px;border:none;border-radius:16px;font-size:19px;font-weight:600;cursor:pointer;background:#fff;color:#333;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+#mstart #msOpen{background:#861F41;color:#fff}
+#mstart #msSign{background:#E5751F;color:#fff}
+#mstart .mnote{color:#8a837b;font-size:12.5px;margin-top:8px;text-align:center}
 body.signmode #touchbar,body.signmode #sidectl,body.signmode #zoomctl,body.signmode #pentools,body.signmode #tbTab,body.signmode #progress{display:none!important}
 #signbar{position:fixed;left:0;right:0;bottom:0;z-index:530;display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(28,30,36,.97)}
 body.signmode #signbar{display:grid}
@@ -372,6 +382,17 @@ body.present #tbHide{display:flex!important}
   </div>
   <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Signatures are remembered only if you say so, stay in this browser, and the &#215; forgets one instantly.</div>
 </div></div>
+<div id="mstart" aria-label="Start">
+  <svg width="72" height="82" viewBox="0 0 170 192" aria-hidden="true"><text x="42" y="132" font-family="Georgia,serif" font-size="88" font-weight="500" fill="#861F41">&#305;P</text><path d="M61 86 C55 77 52 69 53 62 C54 56 57 52 61 50 C65 52 68 56 69 62 C70 69 67 77 61 86 Z" fill="#E5751F"/><rect x="32" y="162" width="34" height="9" rx="2" fill="#c07a90"/><rect x="66" y="154" width="36" height="17" rx="2" fill="#861F41"/><rect x="102" y="165" width="34" height="6" rx="2" fill="#c07a90"/></svg>
+  <h1>Ink Pad</h1>
+  <div class="msub">Annotate, sign &amp; share PDFs — nothing leaves your phone</div>
+  <button id="msOpen">&#128196; Open a PDF</button>
+  <button id="msSign">&#9997; Sign a document</button>
+  <button id="msResume" style="display:none">&#10227; Resume last session</button>
+  <button id="msBoard">&#9998; New whiteboard</button>
+  <button id="msTut">? How it works</button>
+  <div class="mnote">Tip: Share &#8594; Add to Home Screen makes this a full-screen app.</div>
+</div>
 <div id="signbar" role="toolbar" aria-label="Signing">
   <button id="signOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 3v6h7"/></svg>Open</button>
   <button id="signSign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>Sign</button>
@@ -461,6 +482,7 @@ function show(i){
   if(typeof presentOn!=='undefined'&&presentOn&&i===0&&slides.length>1)i=1;
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   cur=i;update();
+  document.body.classList.toggle('oncover',i===0);
   if(typeof updatePdfWindow==='function')updatePdfWindow();
 }
 function next(){show(cur+1);}
@@ -818,7 +840,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b773';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b774';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2604,6 +2626,20 @@ function setSignMode(on){
   fit();
 }
 document.getElementById('signModeBtn').onclick=()=>{setSignMode(true);if(!sources.length)document.getElementById('pdfFile').click();};
+document.getElementById('msOpen').onclick=()=>document.getElementById('pdfFile').click();
+document.getElementById('msSign').onclick=()=>{setSignMode(true);if(!sources.length)document.getElementById('pdfFile').click();};
+document.getElementById('msBoard').onclick=()=>{if(slides.length>1)show(1);};
+document.getElementById('msTut').onclick=()=>document.getElementById('tut').classList.add('open');
+(function(){
+  try{
+    const c=JSON.parse(localStorage.getItem('inkpadComp'));
+    if(c&&c.pages&&c.pages.length){
+      const b=document.getElementById('msResume');
+      b.style.display='block';
+      b.onclick=resumeSession;
+    }
+  }catch(e){}
+})();
 document.getElementById('signExit').onclick=()=>setSignMode(false);
 document.getElementById('signOpen').onclick=()=>document.getElementById('pdfFile').click();
 document.getElementById('signSign').onclick=()=>document.getElementById('psig').onclick();
