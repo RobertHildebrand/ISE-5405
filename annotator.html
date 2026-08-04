@@ -128,6 +128,12 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 #plotdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
 #plotdlg.open{display:flex}
 #plotdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:520px;width:92vw}
+#sigdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
+#sigdlg.open{display:flex}
+#sigdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:780px;width:94vw}
+#sigCv{width:100%;background:#fff;border:1.5px dashed #b9b2a8;border-radius:10px;touch-action:none;display:block}
+#sigSavedRow button{background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:3px 6px;cursor:pointer}
+#sigSavedRow canvas{display:block}
 #paperMenu{display:none;position:fixed;z-index:700;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
 #paperMenu.open{display:flex}
 #paperMenu button{border:1px solid #ddd;background:#fff;border-radius:8px;width:74px;padding:5px 4px;cursor:pointer;font-size:11.5px;color:#444}
@@ -271,7 +277,7 @@ body.present #tbHide{display:flex!important}
     <div class="tutsec"><b class="h">Pen &amp; ink</b>
       <span class="kbd">P</span> pen · colors + 4 highlighters + custom color wheel · &#9679; cycles thickness · <span class="kbd">E</span> cycles erasers (whole-stroke &#9676; / precision &#9986;) · <span class="kbd">C</span> clears the page · <span class="kbd">Ctrl/Cmd+Z</span> undo anything. Rest your palm freely — only the Pencil draws. Highlighters auto-straighten; hold <span class="kbd">Shift</span> for straight lines.</div>
     <div class="tutsec"><b class="h">Tools</b>
-      Lasso &#11034; circles ink to <b>move, resize, recolor, or delete</b> it · <b>T</b>ext boxes (A&#8722;/A+ sizes, click existing text to edit) · shapes &#9645; &#9675; &#8599;.</div>
+      Lasso &#11034; circles ink to <b>move, resize, recolor, or delete</b> it · &#9997; <b>Signature</b>: draw it big once (even on your phone — save/load via file), place it anywhere, reuse with one tap · <b>T</b>ext boxes (A&#8722;/A+ sizes, click existing text to edit) · shapes &#9645; &#9675; &#8599;.</div>
     <div class="tutsec"><b class="h">Pages</b>
       &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
     <div class="tutsec"><b class="h">Math &amp; graphs</b>
@@ -311,6 +317,19 @@ body.present #tbHide{display:flex!important}
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
 </div></div>
+<div id="sigdlg" role="dialog" aria-modal="true" aria-label="Draw your signature"><div class="pcard">
+  <div style="display:flex;align-items:center;margin-bottom:10px"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:21px">Signature</h3><button class="btn sec" id="sigClose" style="margin-left:auto">Cancel</button></div>
+  <canvas id="sigCv" width="1400" height="440" aria-label="Signature drawing area"></canvas>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+    <button class="btn" id="sigPlace">Place on page</button>
+    <button class="btn sec" id="sigClear">Clear</button>
+    <button class="btn sec" id="sigSave" title="Save this signature to a file — AirDrop it to another device">&#8595; Save file</button>
+    <button class="btn sec" id="sigLoad" title="Load a signature file">&#8593; Load file</button>
+    <input type="file" id="sigFile" accept="application/json,.json" style="display:none" aria-label="Signature file">
+    <span id="sigSavedRow" style="display:flex;gap:8px;margin-left:auto"></span>
+  </div>
+  <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Recent signatures stay on this device for one-tap reuse.</div>
+</div></div>
 <div id="sidectl" role="group" aria-label="Document actions">
   <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
   <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
@@ -346,6 +365,7 @@ body.present #tbHide{display:flex!important}
   <button id="pellipse" title="Ellipse" style="background:#fff;border:2px solid #999">&#9675;</button>
   <button id="parrow" title="Arrow" style="background:#fff;border:2px solid #999">&#8599;</button>
   <button id="pplot" title="Plot a function f(x) onto this page as ink" style="background:#fff;border:2px solid #999">&#8767;</button>
+  <button id="psig" title="Signature: draw once, place anywhere" style="background:#fff;border:2px solid #999">&#9997;</button>
   <button id="pcustom" title="Custom pen color" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></button>
   <input type="color" id="pcustomInput" style="position:absolute;width:1px;height:1px;opacity:0" aria-label="Custom pen color value">
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
@@ -495,7 +515,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':document.getElementById('tut').classList.toggle('open');break;
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -725,7 +745,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b761';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b762';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2173,6 +2193,100 @@ document.getElementById('pplot').onclick=()=>{
 };
 document.getElementById('plotClose').onclick=()=>document.getElementById('plotdlg').classList.remove('open');
 document.getElementById('plotGo').onclick=stampPlot;
+/* ===== signature ===== */
+(function(){
+  const dlg=document.getElementById('sigdlg'),cv=document.getElementById('sigCv');
+  if(!dlg||!cv)return;
+  const sctx=cv.getContext('2d');
+  let sigStrokes=[],curS=null,sigDown=false;
+  function sigRedraw(){
+    sctx.clearRect(0,0,cv.width,cv.height);
+    sctx.strokeStyle='#e3ddd3';sctx.lineWidth=2;
+    sctx.beginPath();sctx.moveTo(50,cv.height*0.74);sctx.lineTo(cv.width-50,cv.height*0.74);sctx.stroke();
+    sctx.strokeStyle='#26282e';sctx.lineJoin=sctx.lineCap='round';sctx.lineWidth=6;
+    for(const st of (curS?sigStrokes.concat([curS]):sigStrokes)){
+      if(st.length<2)continue;
+      sctx.beginPath();sctx.moveTo(st[0][0],st[0][1]);
+      for(let i=1;i<st.length-1;i++)sctx.quadraticCurveTo(st[i][0],st[i][1],(st[i][0]+st[i+1][0])/2,(st[i][1]+st[i+1][1])/2);
+      sctx.lineTo(st[st.length-1][0],st[st.length-1][1]);sctx.stroke();
+    }
+  }
+  function spt(e){const r=cv.getBoundingClientRect();return [(e.clientX-r.left)/Math.max(1,r.width)*cv.width,(e.clientY-r.top)/Math.max(1,r.height)*cv.height];}
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();if(!allowDraw(e))return;sigDown=true;curS=[spt(e)];try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+  cv.addEventListener('pointermove',e=>{
+    if(!sigDown||!curS)return;e.preventDefault();
+    const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+    for(const ev of evs)curS.push(spt(ev));
+    sigRedraw();
+  });
+  const sigUp=()=>{if(curS&&curS.length>1)sigStrokes.push(curS);curS=null;sigDown=false;sigRedraw();};
+  cv.addEventListener('pointerup',sigUp);
+  cv.addEventListener('pointercancel',sigUp);
+  function sigBBox(sts){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const st of sts)for(const q of st){x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1]);}return [x0,y0,x1,y1];}
+  function loadSigs(){try{return JSON.parse(localStorage.getItem('inkSigs'))||[];}catch(e){return [];}}
+  function saveSig(sts){
+    try{
+      const norm=sts.map(st=>st.map(q=>[Math.round(q[0]),Math.round(q[1])]));
+      const j=JSON.stringify(norm);
+      const all=loadSigs().filter(s=>JSON.stringify(s)!==j);
+      all.unshift(norm);
+      localStorage.setItem('inkSigs',JSON.stringify(all.slice(0,3)));
+    }catch(e){}
+  }
+  function renderSaved(){
+    const row=document.getElementById('sigSavedRow');row.innerHTML='';
+    loadSigs().forEach(sts=>{
+      const b=document.createElement('button');b.title='Place this saved signature';
+      const th=document.createElement('canvas');th.width=110;th.height=36;
+      const t2=th.getContext('2d');
+      const bb=sigBBox(sts),f=Math.min(100/Math.max(1,bb[2]-bb[0]),28/Math.max(1,bb[3]-bb[1]));
+      t2.strokeStyle='#26282e';t2.lineWidth=1.6;t2.lineJoin=t2.lineCap='round';
+      sts.forEach(st=>{t2.beginPath();st.forEach((q,i)=>{const x=5+(q[0]-bb[0])*f,y=4+(q[1]-bb[1])*f;i?t2.lineTo(x,y):t2.moveTo(x,y);});t2.stroke();});
+      b.appendChild(th);
+      b.onclick=()=>placeSig(sts);
+      row.appendChild(b);
+    });
+  }
+  function placeSig(sts){
+    if(!sts.length){alert('Draw a signature first.');return;}
+    if(cur===0&&slides.length>1)show(1);
+    const bb=sigBBox(sts);
+    const wSig=Math.max(1,bb[2]-bb[0]),targetW=300,f=targetW/wSig;
+    const ox=640-targetW/2,oy=400-(bb[3]-bb[1])*f/2;
+    const key=inkKey();
+    const before=(inkStore[key]||[]).slice().map(cloneItem);
+    const arr=(inkStore[key]=inkStore[key]||[]);
+    const col=(penColor==='HL')?'#26282e':penColor;
+    const items=sts.map(st=>({c:col,w:3,a:1,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
+    items.forEach(it=>arr.push(it));
+    pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
+    saveSig(sts);
+    dlg.classList.remove('open');
+    setTool('lasso');
+    sel={key:key,items:items,before:arr.slice().map(cloneItem)};
+    saveInkSoon();redrawInk();
+  }
+  document.getElementById('psig').onclick=()=>{dlg.classList.add('open');sigStrokes=[];curS=null;renderSaved();sigRedraw();};
+  document.getElementById('sigClose').onclick=()=>dlg.classList.remove('open');
+  document.getElementById('sigClear').onclick=()=>{sigStrokes=[];curS=null;sigRedraw();};
+  document.getElementById('sigPlace').onclick=()=>placeSig(sigStrokes);
+  document.getElementById('sigSave').onclick=()=>{
+    if(!sigStrokes.length){alert('Draw a signature first.');return;}
+    const blob=new Blob([JSON.stringify({inkpodiumSignature:1,strokes:sigStrokes.map(st=>st.map(q=>[Math.round(q[0]),Math.round(q[1])]))})],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='signature.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  };
+  document.getElementById('sigLoad').onclick=()=>document.getElementById('sigFile').click();
+  document.getElementById('sigFile').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const d=JSON.parse(await file.text());
+      if(!d||!d.inkpodiumSignature||!Array.isArray(d.strokes))throw new Error('not a signature file');
+      sigStrokes=d.strokes;curS=null;sigRedraw();
+    }catch(err){alert('Could not read that file: '+err.message);}
+    e.target.value='';
+  });
+})();
 /* ===== resume last session ===== */
 async function resumeSession(){
   let comp=null;
