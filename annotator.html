@@ -156,6 +156,9 @@ body.handout #quickExp{display:none}
 .orgpg .ops button:hover{background:#d8d0c6}
 .orgpg{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .orgpg.dragging{opacity:.35;outline:2px dashed #33658a}
+.orgpg{position:relative}
+.orgpg.sel{outline:3px solid #E5751F;outline-offset:1px}
+.orgpg.sel::before{content:'\2713';position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:#E5751F;color:#fff;font-size:14px;line-height:22px;text-align:center;z-index:2}
 .orgghost{position:fixed;z-index:700;pointer-events:none;width:150px;opacity:.92;transform:rotate(2.5deg) scale(1.04);box-shadow:0 12px 34px rgba(0,0,0,.45);border-radius:10px;background:#fff;padding:8px;text-align:center}
 .orgghost img{width:100%;border-radius:5px}
 .orgpg img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
@@ -252,7 +255,7 @@ body.present #tbHide{display:inline-block}
     <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
     <button class="btn sec" id="orgAddBlank">&#65291; Blank page</button>
     <button class="btn" id="orgClose">Done</button>
-    <span class="tiny" style="width:100%;color:#6d6d6d">Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons.</span>
+    <span class="tiny" style="width:100%;color:#6d6d6d"><b id="orgSelInfo" style="color:#861F41"></b>Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons. To move several pages at once: click the first, then the last — the whole run between selects — then drag any selected card. Click a selected page to clear.</span>
   </div>
   <div id="orgGrid"></div>
 </div></div>
@@ -620,7 +623,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b749';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b750';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1571,6 +1574,13 @@ function createBlank(afterSec){
   return sec;
 }
 function movePage(sec,dir){
+  if(orgSelSet&&orgSelSet.size>1&&orgSelSet.has(sec)){ /* selected run moves together */
+    const run=slides.filter(s=>orgSelSet.has(s));
+    const first=run[0],last=run[run.length-1];
+    if(dir<0){const sb=first.previousElementSibling;if(!sb||!sb.classList||!sb.classList.contains('slide')||sb.classList.contains('cover'))return;deck.insertBefore(sb,last.nextSibling);}
+    else{const sb=last.nextElementSibling;if(!sb||!sb.classList||!sb.classList.contains('slide'))return;deck.insertBefore(sb,first);}
+    refreshSlides();saveComp();buildOrganizer();return;
+  }
   const sib=dir<0?sec.previousElementSibling:sec.nextElementSibling;
   if(!sib||!sib.classList||!sib.classList.contains('slide')||sib.classList.contains('cover'))return;
   if(dir<0)deck.insertBefore(sec,sib);
@@ -1586,9 +1596,25 @@ function deletePage(sec){
   show(Math.min(Math.max(0,idx-1),slides.length-1));
   saveComp();buildOrganizer();
 }
+let orgSelA=null,orgSelSet=new Set();
+function orgSelInfo(){const el=document.getElementById('orgSelInfo');if(el)el.textContent=orgSelSet.size?orgSelSet.size+' page'+(orgSelSet.size>1?'s':'')+' selected — drag any selected card to move the group.  ':'';}
+function orgMarkSel(){const g=document.getElementById('orgGrid');if(g)[...g.querySelectorAll('.orgpg')].forEach(c=>c.classList.toggle('sel',orgSelSet.has(c._sec)));orgSelInfo();}
+function orgClickSel(card){
+  const sec=card._sec;
+  if(orgSelSet.has(sec)){orgSelSet.clear();orgSelA=null;}
+  else if(!orgSelA||!orgSelSet.size){orgSelA=sec;orgSelSet=new Set([sec]);}
+  else{
+    const a=slides.indexOf(orgSelA),b=slides.indexOf(sec);
+    if(a<0){orgSelA=sec;orgSelSet=new Set([sec]);}
+    else orgSelSet=new Set(slides.slice(Math.min(a,b),Math.max(a,b)+1).filter(s=>!s.classList.contains('cover')));
+  }
+  orgMarkSel();
+}
 function buildOrganizer(){
   const g=document.getElementById('orgGrid');if(!g)return;
   g.innerHTML='';
+  orgSelSet=new Set([...orgSelSet].filter(s=>slides.includes(s)));
+  if(orgSelA&&!slides.includes(orgSelA))orgSelA=null;
   slides.forEach((sec,i)=>{
     if(sec.classList.contains('cover'))return;
     const card=document.createElement('div');card.className='orgpg';
@@ -1611,6 +1637,7 @@ function buildOrganizer(){
     card.appendChild(ops);
     g.appendChild(card);
   });
+  orgMarkSel();
 }
 /* drag & drop reordering: mouse drags immediately; touch/pencil press-and-hold to lift */
 let orgDrag=null;
@@ -1650,6 +1677,7 @@ function orgDragStart(e,card){
   const up=ev=>{
     clearTimeout(st.timer);
     if(orgDrag===st&&st.active)orgCommit(st);
+    else if(orgDrag===st&&Math.hypot(ev.clientX-st.sx,ev.clientY-st.sy)<8)orgClickSel(st.card); /* plain click/tap = select */
     cleanup();
   };
   function cleanup(){
@@ -1666,12 +1694,17 @@ function orgDragStart(e,card){
 }
 function orgLift(st,e){
   st.active=true;
+  if(orgSelSet.size>1&&orgSelSet.has(st.card._sec)){
+    st.group=slides.filter(s=>orgSelSet.has(s)); /* the whole selected run rides along, in deck order */
+    const gg=document.getElementById('orgGrid');
+    [...gg.querySelectorAll('.orgpg')].forEach(c=>{if(c!==st.card&&orgSelSet.has(c._sec))c.remove();});
+  }
   st.card.classList.add('dragging');
   const gh=document.createElement('div');
   gh.className='orgghost';
   const img=st.card.querySelector('img');
   gh.innerHTML=(img?'<img draggable="false" src="'+img.src+'">':'<div class="ph" style="height:90px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b">page</div>')+
-    '<div style="font-size:11px;color:#555;margin-top:4px">'+String(st.card._sec.dataset.toc||'page').replace(/</g,'&lt;')+'</div>';
+    '<div style="font-size:11px;color:#555;margin-top:4px">'+(st.group?('<b>'+st.group.length+' pages</b>'):String(st.card._sec.dataset.toc||'page').replace(/</g,'&lt;'))+'</div>';
   gh.style.left=(e.clientX-75)+'px';gh.style.top=(e.clientY-40)+'px';
   document.body.appendChild(gh);
   st.ghost=gh;
@@ -1679,7 +1712,11 @@ function orgLift(st,e){
 }
 function orgCommit(st){
   const g=document.getElementById('orgGrid');
-  [...g.querySelectorAll('.orgpg')].forEach(c=>{if(c._sec)deck.appendChild(c._sec);});
+  [...g.querySelectorAll('.orgpg')].forEach(c=>{
+    if(!c._sec)return;
+    if(st&&st.group&&c===st.card)st.group.forEach(s=>deck.appendChild(s));
+    else deck.appendChild(c._sec);
+  });
   refreshSlides();saveComp();
   if(typeof updatePdfWindow==='function')updatePdfWindow();
   buildOrganizer();
