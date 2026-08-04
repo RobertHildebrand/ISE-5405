@@ -132,6 +132,8 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 #sigdlg.open{display:flex}
 #sigdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:780px;width:94vw}
 #sigCv{width:100%;background:#fff;border:1.5px dashed #b9b2a8;border-radius:10px;touch-action:none;display:block}
+.sigcol{width:30px;height:30px;border-radius:50%;border:2.5px solid #fff;outline:2px solid #ccc;cursor:pointer;padding:0}
+.sigcol.on{outline:3px solid #E5751F}
 #sigSavedRow .sigth{position:relative;display:inline-block}
 #sigSavedRow .sigth>button{background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:3px 6px;cursor:pointer}
 #sigSavedRow canvas{display:block}
@@ -328,6 +330,11 @@ body.present #tbHide{display:flex!important}
 <div id="sigdlg" role="dialog" aria-modal="true" aria-label="Draw your signature"><div class="pcard">
   <div style="display:flex;align-items:center;margin-bottom:10px"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:21px">Signature</h3><button class="btn sec" id="sigClose" style="margin-left:auto">Cancel</button></div>
   <canvas id="sigCv" width="1400" height="440" aria-label="Signature drawing area"></canvas>
+  <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><span class="tiny" style="color:#666">Ink:</span>
+    <button class="sigcol on" data-c="#1a1a1a" title="Black" style="background:#1a1a1a"></button>
+    <button class="sigcol" data-c="#1d4f91" title="Blue" style="background:#1d4f91"></button>
+    <button class="sigcol" data-c="#c8102e" title="Red" style="background:#c8102e"></button>
+  </div>
   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
     <button class="btn" id="sigPlace">Place on page</button>
     <button class="btn sec" id="sigClear">Clear</button>
@@ -357,6 +364,7 @@ body.present #tbHide{display:flex!important}
   <button data-ps="dots"><div class="sw dots"></div>Dots</button>
 </div>
 <div id="pentools">
+  <button class="pcol" data-c="#1a1a1a" title="Black pen" style="background:#1a1a1a"></button>
   <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
   <button class="pcol" data-c="#1d4f91" style="background:#1d4f91"></button>
   <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
@@ -754,7 +762,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b764';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b765';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1160,7 +1168,11 @@ ink.addEventListener('pointerdown',e=>{
   if(toolMode==='hand'){
     const key=inkKey(),arr=inkStore[key]||[];
     const hit=hitItemAt(dp,arr);
-    if(hit){handDrag={item:hit,last:dp,key:key,before:arr.slice().map(cloneItem)};ink.style.cursor='grabbing';}
+    if(hit){
+      const grp=hit.g?arr.filter(it=>it.g===hit.g):[hit];
+      handDrag={item:hit,group:grp,last:dp,key:key,before:arr.slice().map(cloneItem)};
+      ink.style.cursor='grabbing';
+    }
     else{drawing=false;handDrag=null;}
     return;
   }
@@ -1205,7 +1217,8 @@ ink.addEventListener('pointermove',e=>{
     e.preventDefault();
     if(handDrag){
       const dp2=toDeck(e);
-      translateItem(handDrag.item,dp2[0]-handDrag.last[0],dp2[1]-handDrag.last[1]);
+      const dx=dp2[0]-handDrag.last[0],dy=dp2[1]-handDrag.last[1];
+      (handDrag.group||[handDrag.item]).forEach(it=>translateItem(it,dx,dy));
       handDrag.last=dp2;
       redrawInk();
     }
@@ -2207,12 +2220,15 @@ document.getElementById('plotGo').onclick=stampPlot;
   const dlg=document.getElementById('sigdlg'),cv=document.getElementById('sigCv');
   if(!dlg||!cv)return;
   const sctx=cv.getContext('2d');
-  let sigStrokes=[],curS=null,sigDown=false;
+  let sigStrokes=[],curS=null,sigDown=false,sigColor='#1a1a1a';
+  document.querySelectorAll('.sigcol').forEach(b=>{
+    b.onclick=()=>{sigColor=b.dataset.c;document.querySelectorAll('.sigcol').forEach(x=>x.classList.toggle('on',x===b));sigRedraw();};
+  });
   function sigRedraw(){
     sctx.clearRect(0,0,cv.width,cv.height);
     sctx.strokeStyle='#e3ddd3';sctx.lineWidth=2;
     sctx.beginPath();sctx.moveTo(50,cv.height*0.74);sctx.lineTo(cv.width-50,cv.height*0.74);sctx.stroke();
-    sctx.strokeStyle='#26282e';sctx.lineJoin=sctx.lineCap='round';sctx.lineWidth=6;
+    sctx.strokeStyle=sigColor;sctx.lineJoin=sctx.lineCap='round';sctx.lineWidth=6;
     for(const st of (curS?sigStrokes.concat([curS]):sigStrokes)){
       if(st.length<2)continue;
       sctx.beginPath();sctx.moveTo(st[0][0],st[0][1]);
@@ -2279,8 +2295,8 @@ document.getElementById('plotGo').onclick=stampPlot;
     const key=inkKey();
     const before=(inkStore[key]||[]).slice().map(cloneItem);
     const arr=(inkStore[key]=inkStore[key]||[]);
-    const col=(penColor==='HL')?'#26282e':penColor;
-    const items=sts.map(st=>({c:col,w:3,a:1,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
+    const gid='sg'+(Date.now()%1e8);
+    const items=sts.map(st=>({c:sigColor,w:3,a:1,g:gid,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
     items.forEach(it=>arr.push(it));
     pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
     dlg.classList.remove('open');
