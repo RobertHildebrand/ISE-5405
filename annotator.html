@@ -167,6 +167,10 @@ body.present #counter{opacity:.45}
 #touchbar{transition:opacity .4s}
 body.present.idlehide{cursor:none}
 body.present.idlehide #touchbar{opacity:0;pointer-events:none}
+#tbHide{display:none}
+body.present #tbHide{display:inline-block}
+#tbTab{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:521;display:none;background:rgba(38,40,46,.55);color:#fff;border-radius:10px;padding:2px 22px;font-size:15px;cursor:pointer;user-select:none}
+#tbTab:hover{background:rgba(38,40,46,.9)}
 </style>
 </head>
 <body>
@@ -189,7 +193,7 @@ body.present.idlehide #touchbar{opacity:0;pointer-events:none}
   </div>
   <div style="margin-top:26px" class="tiny">
     <span class="kbd">&rarr;</span>/<span class="kbd">&larr;</span> pages &middot; <span class="kbd">P</span> pen &middot; <span class="kbd">E</span> eraser &middot;
-    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">F</span> present &middot; <span class="kbd">L</span> laser &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed<br>
+    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">F</span> present (<span class="kbd">T</span> hides the toolbar) &middot; <span class="kbd">L</span> laser &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed<br>
   <span class="kbd">Ctrl/Cmd+Z</span> undo &middot; lasso &#11034; to move/resize/recolor/delete &middot; <b>T</b> text boxes &middot; shapes &#9645;&#9675;&#8599; &middot; custom colors &middot; &#10515; downloads a real annotated PDF (text stays selectable) &middot; recent PDFs reopen with one tap
   </div>
 </section>
@@ -290,6 +294,7 @@ function update(){
 }
 function show(i){
   i=Math.max(0,Math.min(slides.length-1,i));
+  if(typeof presentOn!=='undefined'&&presentOn&&i===0&&slides.length>1)i=1;
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   cur=i;update();
   if(typeof updatePdfWindow==='function')updatePdfWindow();
@@ -390,6 +395,7 @@ addEventListener('keydown',e=>{
     case 'Home':show(0);break;
     case 'End':show(slides.length-1);break;
     case 'f':case 'F':togglePresent();break;
+    case 't':case 'T':if(presentOn)setTbHidden(!tbHidden);break;
     case 'p':case 'P':togglePen();break;
     case 'e':case 'E':cycleEraser();break;
     case 'l':case 'L':toggleLaser();break;
@@ -591,7 +597,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b745';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b746';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1080,7 +1086,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
 (function(){
   const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
   const tb=document.createElement('div');tb.id='touchbar';
-  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbUndo" title="Undo">&#8630;</button><button id="tbRedo" title="Redo">&#8631;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbLaser" title="Laser pointer">&#9673;</button><button id="tbPresent" title="Presentation mode">&#9974;</button><button id="tbHelp">?</button>';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbUndo" title="Undo">&#8630;</button><button id="tbRedo" title="Redo">&#8631;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbLaser" title="Laser pointer">&#9673;</button><button id="tbPresent" title="Presentation mode">&#9974;</button><button id="tbHelp">?</button><button id="tbHide" title="Hide toolbar (T)">&#8964;</button>';
   document.body.appendChild(tb);
   if(coarse)tb.style.display='flex';
   document.getElementById('tbPen').onclick=togglePen;
@@ -1092,6 +1098,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbNext').onclick=next;
   document.getElementById('tbWb').onclick=toggleWhiteboard;
   document.getElementById('tbHand').onclick=toggleHandout;
+  document.getElementById('tbHide').onclick=()=>setTbHidden(true);
   document.getElementById('tbLaser').onclick=toggleLaser;
   document.getElementById('tbPresent').onclick=togglePresent;
   document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
@@ -1755,17 +1762,31 @@ addEventListener('pointermove',e=>{
 });
 addEventListener('pointerup',()=>panSt=null);
 /* ===== presentation mode ===== */
-let presentOn=false,idleT=null;
+var presentOn=false,idleT=null,tbHidden=false;
+const tbTab=document.createElement('div');
+tbTab.id='tbTab';tbTab.innerHTML='&#8963;';tbTab.title='Show toolbar (T)';
+tbTab.setAttribute('role','button');tbTab.setAttribute('aria-label','Show toolbar');
+document.body.appendChild(tbTab);
+tbTab.onclick=()=>setTbHidden(false);
+function setTbHidden(h){
+  tbHidden=h;
+  const tb=document.getElementById('touchbar');
+  if(tb)tb.style.display=h?'none':'flex';
+  tbTab.style.display=(h&&presentOn)?'block':'none';
+}
 function togglePresent(){
   presentOn=!presentOn;
   document.body.classList.toggle('present',presentOn);
   const tb=document.getElementById('touchbar');
   if(presentOn){
+    setTbHidden(false);
     if(tb)tb.style.display='flex';
+    if(cur===0&&slides.length>1)show(1);
     try{if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}
     armIdle();
   }else{
     document.body.classList.remove('idlehide');
+    tbHidden=false;tbTab.style.display='none';
     const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
     if(tb)tb.style.display=coarse?'flex':'none';
     try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
