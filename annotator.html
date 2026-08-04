@@ -253,7 +253,7 @@ body.present #tbHide{display:flex!important}
   <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
   <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
 
-  <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; blank whiteboard pages, and back (pen auto-on)<br>
+  <b>H</b> &mdash; handout view (then Ctrl/Cmd+P &rarr; PDF) &nbsp;&middot;&nbsp; <b>L</b> &mdash; laser pointer<br>  <b>W</b> &mdash; new blank page after this one (pen auto-on)<br>
 
   <b>?</b> &mdash; toggle this help &nbsp;&middot;&nbsp; <b>Esc</b> &mdash; close overlays<br>
   <span style="font-size:14px;color:#6d6d6d">iPad / touch: an on-screen toolbar appears (pen, clear, arrows, handout, help). Annotations save automatically per slide and are included when you print / save a PDF. Pen toolbar: &darr; exports an annotations backup file, &uarr; re-imports one (works across devices), &empty; erases everything.</span>
@@ -456,9 +456,11 @@ const laser=document.createElement('div');laser.id='laser';document.body.appendC
 let laserOn=false;
 function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';const b=document.getElementById('tbLaser');if(b)b.classList.toggle('on',laserOn);}
 addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
-function toggleWhiteboard(){
-  const wbIdx=slides.findIndex(sl=>sl.classList.contains('whiteboard'));
-  if(wbIdx>=0){show(wbIdx);if(!penOn)togglePen();}
+function toggleWhiteboard(){ /* Board: insert a fresh blank page right after the current one and go there */
+  const cs=slides[cur];
+  const sec=createBlank(cs||null,null);
+  show(slides.indexOf(sec));
+  if(!penOn)togglePen();
 }
 let wbCount=0;
 let lastPaperStyle='lined';
@@ -725,7 +727,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b756';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b757';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1375,7 +1377,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
     '<span class="tbdiv" aria-hidden="true"></span>'+
     TB('tbPrev','prev','Back','Previous page')+TB('tbNext','next','Next','Next page')+
     '<span class="tbdiv" aria-hidden="true"></span>'+
-    TB('tbWb','board','Board','Blank whiteboard pages (W)')+TB('tbHand','hand','Handout','Handout view (H)')+TB('tbLaser','laser','Laser','Laser pointer (L)')+TB('tbPresent','present','Present','Presentation mode (F)')+
+    TB('tbWb','board','Board','New blank page right after this one (W)')+TB('tbHand','hand','Handout','Handout view (H)')+TB('tbLaser','laser','Laser','Laser pointer (L)')+TB('tbPresent','present','Present','Presentation mode (F)')+
     '<span class="tbdiv" aria-hidden="true"></span>'+
     TB('tbHelp','help','Help','Tutorial & shortcuts')+TB('tbHide','hide','Hide','Hide toolbar (T)');
   document.body.appendChild(tb);
@@ -2364,7 +2366,7 @@ window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit,togglePresen
   const smap={pvSlider:'Profit line value',gT:'Objective line value t',sbPA:'Profit of product A',sbPB:'Profit of product B',sbL:'Labor hours available',sbM:'Material available',hpB:'Right-hand side b',stSlider:'Number of terms n',cexSlider:'Value of n',bfSlider:'Number of people n'};
   Object.keys(smap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',smap[id]);});
   $('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.getAttribute('title'));});
-  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'Go to whiteboard pages',tbHand:'Handout view',tbHelp:'Keyboard help',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
+  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'New blank page after this one',tbHand:'Handout view',tbHelp:'Keyboard help',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
   Object.keys(tmap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',tmap[id]);});
   $('#pentools .pcol').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.dataset.c==='HL'?'Highlighter':'Pen color '+b.dataset.c);});
   ['quizFb','trainFb','cpFb','ipOut','hpOut','gStatus','sbOut','cexStatus','mxOut','bcOut','ttOut','fb','vout','pvMsg','bfVerdict','hullOut','pbOut','epOut','cvxOut'].forEach(id=>{
