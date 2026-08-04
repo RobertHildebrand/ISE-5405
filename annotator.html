@@ -217,6 +217,8 @@ body.handout #sidectl{display:none!important}
 .orgpg.dragging{opacity:.35;outline:2px dashed #33658a}
 .orgpg{position:relative}
 .orgpg.sel{outline:3px solid #E5751F;outline-offset:1px}
+.orgpg .rotbtn{position:absolute;top:4px;left:4px;width:26px;height:26px;border:none;border-radius:8px;background:rgba(38,40,46,.75);color:#fff;font-size:15px;cursor:pointer;z-index:2;padding:0}
+.orgpg .rotbtn:hover{background:rgba(28,30,36,.95)}
 .orgpg.sel::before{content:'\2713';position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:#E5751F;color:#fff;font-size:14px;line-height:22px;text-align:center;z-index:2}
 .orgghost{position:fixed;z-index:700;pointer-events:none;width:150px;opacity:.92;transform:rotate(2.5deg) scale(1.04);box-shadow:0 12px 34px rgba(0,0,0,.45);border-radius:10px;background:#fff;padding:8px;text-align:center}
 .orgghost img{width:100%;border-radius:5px}
@@ -298,7 +300,7 @@ body.present #tbHide{display:flex!important}
     <div class="tutsec"><b class="h">Tools</b>
       Lasso &#11034; circles ink to <b>move, resize, recolor, or delete</b> it · &#9997; <b>Signature</b>: draw it big once (even on your phone — save/load via file), place it anywhere, reuse with one tap · the yellow <b>sticky-note</b> tool leaves comments that Adobe &amp; Preview show in their comment panes; comments that arrive with a PDF appear as yellow markers — tap to read · <b>T</b>ext boxes (A&#8722;/A+ sizes, click existing text to edit) · shapes &#9645; &#9675; &#8599;.</div>
     <div class="tutsec"><b class="h">Pages</b>
-      &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
+      &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages, and <b>&#10227; rotate</b> any page (or all) in 90&#176; steps — your ink rotates along. Annotations follow their pages.</div>
     <div class="tutsec"><b class="h">Math &amp; graphs</b>
       The <b>&#9995; Move</b> tool (<span class="kbd">V</span>) grabs any text box, equation, shape, or stroke and drags it — the lasso still handles multi-select, resize, and recolor. The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · the pen toolbar&rsquo;s <b>&#8767; Plot</b> button stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page</b> adds one instantly (last-used paper); its <b>&#9662;</b> — or <b>press &amp; hold Board</b> — picks blank, lined, grid, or dot paper (the ruling exports with the PDF).</div>
     <div class="tutsec"><b class="h">View &amp; find</b>
@@ -316,6 +318,7 @@ body.present #tbHide{display:flex!important}
     <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
     <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
     <span style="display:inline-flex"><button class="btn sec" id="orgAddBlank" style="border-radius:10px 0 0 10px">&#65291; Blank page</button><button class="btn sec" id="orgAddBlankStyle" title="Choose paper style" style="border-radius:0 10px 10px 0;border-left:1.5px solid rgba(0,0,0,.18);padding-left:10px;padding-right:10px">&#9662;</button></span>
+    <button class="btn sec" id="orgRotAll" title="Rotate every PDF page 90&#176;">&#10227; Rotate all</button>
     <button class="btn" id="orgClose">Done</button>
     <span class="tiny" style="width:100%;color:#6d6d6d"><b id="orgSelInfo" style="color:#861F41"></b>Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons. To move several pages at once: click the first, then the last — the whole run between selects — then drag any selected card. Click a selected page to clear.</span>
   </div>
@@ -790,7 +793,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b766';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b767';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1582,13 +1585,15 @@ let sources=[]; /* {name,fp,bytes,doc,aspect} */
 function docFor(sec){const i=+(sec.dataset.src||0);return sources[i]?sources[i].doc:pdfDoc;}
 const pgprog=document.getElementById('pgprog');
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-function fitScale(page){
-  const vp=page.getViewport({scale:1});
+function userRot(sec){return ((+(sec.dataset.rot||0))%360+360)%360;}
+function totalRot(page,sec){return (((page.rotate||0)+userRot(sec))%360+360)%360;}
+function fitScale(page,sec){
+  const vp=page.getViewport({scale:1,rotation:sec?totalRot(page,sec):(page.rotate||0)});
   return Math.min(1280/vp.width,720/vp.height);
 }
-function hiScale(page){
-  const vp=page.getViewport({scale:1});
-  const fs=fitScale(page);
+function hiScale(page,sec){
+  const vp=page.getViewport({scale:1,rotation:sec?totalRot(page,sec):(page.rotate||0)});
+  const fs=fitScale(page,sec);
   const zx=Math.min(2,Math.max(1,(typeof viewZ==='number'?viewZ:1)));
   const want=Math.min(3*zx,Math.max(2,(window.devicePixelRatio||1)*1.5*zx));
   const cap=3500/Math.max(vp.width*fs,vp.height*fs);
@@ -1600,8 +1605,9 @@ async function ensureImg(sec){ /* medium-res JPEG backing: instant placeholder +
   const D=docFor(sec);if(!D)return;
   const p=+sec.dataset.pdfpage;
   const page=await D.getPage(p);
-  const v0=page.getViewport({scale:1});sec.dataset.ar=(v0.width/v0.height).toFixed(5);
-  const vp=page.getViewport({scale:fitScale(page)*2});
+  const rt=totalRot(page,sec);
+  const v0=page.getViewport({scale:1,rotation:rt});sec.dataset.ar=(v0.width/v0.height).toFixed(5);
+  const vp=page.getViewport({scale:fitScale(page,sec)*2,rotation:rt});
   const cv=document.createElement('canvas');
   cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
   const cx=cv.getContext('2d');
@@ -1617,13 +1623,13 @@ async function ensureHi(sec){ /* full-resolution live canvas for nearby pages */
   const D=docFor(sec);if(!D)return;
   const p=+sec.dataset.pdfpage;
   const page=await D.getPage(p);
-  const needed=hiScale(page);
+  const needed=hiScale(page,sec);
   const existing=sec.querySelector('canvas.pdfhi');
   if(existing){
     if(+existing.dataset.rs>=needed*0.85)return;
     existing.width=0;existing.height=0;existing.remove();
   }
-  const vp=page.getViewport({scale:fitScale(page)*needed});
+  const vp=page.getViewport({scale:fitScale(page,sec)*needed,rotation:totalRot(page,sec)});
   const cv=document.createElement('canvas');
   cv.className='pdfhi pdfimg';
   cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
@@ -1640,17 +1646,26 @@ async function ensureAnnots(sec){ /* comment markers for annotations that came w
   const D=docFor(sec);if(!D)return;
   try{
     const page=await D.getPage(+sec.dataset.pdfpage);
-    const v0=page.getViewport({scale:1});
+    const rt=totalRot(page,sec);
+    const v00=page.getViewport({scale:1,rotation:0});
     const anns=await page.getAnnotations();
-    const W=v0.width,H=v0.height,ar=W/H;
-    const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2,scl=W/dw;
+    const W=v00.width,H=v00.height;
+    const Wv=(rt%180)?H:W,Hv=(rt%180)?W:H,ar=Wv/Hv;
+    const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2,scl=Wv/dw;
+    const toView=(x,y)=>{
+      if(rt===90)return [y,x];
+      if(rt===180)return [W-x,y];
+      if(rt===270)return [H-y,W-x];
+      return [x,H-y];
+    };
     anns.forEach(a=>{
       if(a.subtype==='Popup'||a.subtype==='Link')return;
       const txt=((a.contentsObj&&a.contentsObj.str)||a.contents||'').trim();
       if(!txt)return;
       const auth=((a.titleObj&&a.titleObj.str)||a.title||'').trim();
       const r=a.rect||[0,0,20,20];
-      const x=ox+Math.min(r[0],r[2])/scl, y=oy+(H-Math.max(r[1],r[3]))/scl;
+      const vv=toView((r[0]+r[2])/2,(r[1]+r[3])/2);
+      const x=ox+vv[0]/scl-13, y=oy+vv[1]/scl-13;
       const m=document.createElement('button');
       m.className='cmtmark';m.type='button';m.textContent='✎';
       m.title=(auth?auth+': ':'')+txt.slice(0,120);
@@ -1750,7 +1765,7 @@ async function addSource(name,buf){
 function saveComp(){
   try{
     const pages=slides.filter(sl=>!sl.classList.contains('cover')).map(sl=>{
-      if(sl.classList.contains('pdfpage'))return {k:'p',fp:sources[+sl.dataset.src].fp,p:+sl.dataset.pdfpage};
+      if(sl.classList.contains('pdfpage'))return {k:'p',fp:sources[+sl.dataset.src].fp,p:+sl.dataset.pdfpage,r:+(sl.dataset.rot||0)};
       return {k:'b',id:sl.dataset.inkkey,label:sl.dataset.toc||'',ps:sl.dataset.pstyle||''};
     });
     localStorage.setItem('inkpadComp',JSON.stringify({srcs:sources.map(x=>({fp:x.fp,name:x.name})),pages:pages,ts:Date.now()}));
@@ -1849,8 +1864,8 @@ function queueThumbSweep(){
       if(!sl.isConnected||sl.dataset.thumb)return;
       const D=docFor(sl);if(!D)return;
       const page=await D.getPage(+sl.dataset.pdfpage);
-      let vp=page.getViewport({scale:1});
-      vp=page.getViewport({scale:120/vp.width});
+      let vp=page.getViewport({scale:1,rotation:totalRot(page,sl)});
+      vp=page.getViewport({scale:120/vp.width,rotation:totalRot(page,sl)});
       const cv=document.createElement('canvas');
       cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);
       const cx=cv.getContext('2d');
@@ -2006,7 +2021,7 @@ async function exportVectorPdf(){
         }
       }
     }
-    let rotWarn=false,exported=0;
+    let exported=0;
     for(const sec of slides){
       if(sec.classList.contains('cover')||sec.classList.contains('noprint'))continue;
       const items=inkStore[inkKey(slides.indexOf(sec))]||[];
@@ -2021,13 +2036,24 @@ async function exportVectorPdf(){
         const copied=await out.copyPages(libDocs[si],[p-1]);
         const page=copied[0];
         out.addPage(page);exported++;
+        const rU=+(sec.dataset.rot||0);
+        let baseR=0;try{baseR=((page.getRotation().angle%360)+360)%360;}catch(_){}
+        const total=(baseR+rU)%360;
+        try{if(total!==baseR)page.setRotation(PDFLib.degrees(total));}catch(_){}
         if(!items.length)continue;
-        if(page.getRotation&&page.getRotation().angle){rotWarn=true;continue;}
-        const pw=page.getWidth(),ph=page.getHeight(),ar=pw/ph;
+        const W=page.getWidth(),Hh=page.getHeight();
+        const Wv=(total%180)?Hh:W,Hv=(total%180)?W:Hh,ar=Wv/Hv;
         const dh=Math.min(720,1280/ar),dw=dh*ar;
         const ox=(1280-dw)/2,oy=(720-dh)/2;
-        const scl=pw/dw;
-        drawItems(page,items,q=>[(q[0]-ox)*scl,(q[1]-oy)*scl],scl);
+        const scl=Wv/dw;
+        const mapPt=q=>{
+          const vx=(q[0]-ox)*scl,vy=(q[1]-oy)*scl;
+          if(total===90)return [vy,Hh-vx];
+          if(total===180)return [W-vx,Hh-vy];
+          if(total===270)return [W-vy,vx];
+          return [vx,vy];
+        };
+        drawItems(page,items,mapPt,scl);
       }else if(sec.classList.contains('whiteboard')){
         if(!items.length)continue;
         const page=out.addPage([792,445.5]);exported++;
@@ -2037,7 +2063,6 @@ async function exportVectorPdf(){
       }
     }
     if(!exported){pgprog.style.display='none';alert('Nothing to export yet — open a PDF or draw on a blank page first.');return;}
-    if(rotWarn)alert('Note: rotated pages — annotations on those pages were skipped in the vector export.');
     pgprog.textContent='Saving…';
     const bytes=await out.save();
     const blob=new Blob([bytes],{type:'application/pdf'});
@@ -2051,6 +2076,33 @@ async function exportVectorPdf(){
     pgprog.style.display='none';
     alert('Vector export failed ('+err.message+') — the Save/Print button still works.');
   }
+}
+/* ===== page rotation ===== */
+function rotateInkCW(key,arOld){
+  const items=inkStore[key];if(!items||!items.length)return;
+  const dh0=Math.min(720,1280/arOld),dw0=dh0*arOld,ox0=(1280-dw0)/2,oy0=(720-dh0)/2;
+  const arN=1/arOld,dh1=Math.min(720,1280/arN),dw1=dh1*arN,ox1=(1280-dw1)/2,oy1=(720-dh1)/2;
+  const T=(x,y)=>{const u=(x-ox0)/dw0,v=(y-oy0)/dh0;return [ox1+(1-v)*dw1,oy1+u*dh1];};
+  items.forEach(it=>{
+    if(it.p)it.p.forEach(q=>{const m=T(q[0],q[1]);q[0]=m[0];q[1]=m[1];});
+    else if(it.type==='text'||it.type==='math'||it.type==='note'){const m=T(it.x,it.y);it.x=m[0];it.y=m[1];}
+    else{const a2=T(it.x1,it.y1),b2=T(it.x2,it.y2);it.x1=a2[0];it.y1=a2[1];it.x2=b2[0];it.y2=b2[1];}
+  });
+  saveInkSoon();
+}
+function rotatePage(sec){
+  if(!sec.classList.contains('pdfpage'))return;
+  const arOld=parseFloat(sec.dataset.ar)||pdfAspect||(1280/720);
+  sec.dataset.rot=String(((+(sec.dataset.rot||0))+90)%360);
+  sec.dataset.ar=(1/arOld).toFixed(5);
+  rotateInkCW(sec.dataset.inkkey||String(slides.indexOf(sec)),arOld);
+  const im=sec.querySelector('img.pdfimg:not(canvas)');if(im)im.remove();
+  const hi=sec.querySelector('canvas.pdfhi');if(hi){hi.width=0;hi.height=0;hi.remove();}
+  sec.querySelectorAll('img.pdfimg').forEach(x=>x.remove());
+  sec.querySelectorAll('.cmtmark').forEach(m=>m.remove());
+  sec._cmtsDone=false;
+  delete sec.dataset.thumb;
+  saveComp();updatePdfWindow();queueThumbSweep();redrawInk();
 }
 /* ===== page organizer ===== */
 function createBlank(afterSec,style){
@@ -2126,6 +2178,11 @@ function buildOrganizer(){
       const b=document.createElement('button');b.textContent=x[0];b.title=x[1];b.setAttribute('aria-label',x[1]);
       b.onclick=x[2];ops.appendChild(b);
     });
+    if(sec.classList.contains('pdfpage')){
+      const rb=document.createElement('button');rb.className='rotbtn';rb.type='button';rb.textContent='\u27f3';rb.title='Rotate this page 90\u00b0';
+      rb.onclick=e=>{e.stopPropagation();rotatePage(sec);buildOrganizer();};
+      card.appendChild(rb);
+    }
     card.appendChild(ops);
     g.appendChild(card);
   });
@@ -2217,6 +2274,7 @@ document.getElementById('org').addEventListener('dragstart',e=>e.preventDefault(
 document.addEventListener('dragstart',e=>{if(e.target&&(e.target.classList&&(e.target.classList.contains('pdfimg')||e.target.closest&&e.target.closest('.orgpg'))))e.preventDefault();});
 document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
 document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
+document.getElementById('orgRotAll').onclick=()=>{slides.filter(s=>s.classList.contains('pdfpage')).forEach(rotatePage);buildOrganizer();};
 let pmPick=null;
 function openPaperMenu(anchor,cb){
   const pm=document.getElementById('paperMenu');
@@ -2492,7 +2550,7 @@ async function resumeSession(){
       if(pg.k==='p'){
         const si=fpIdx[pg.fp];
         if(si==null||si<0)continue;
-        deck.appendChild(buildPdfSection(si,pg.p));
+        const psec=buildPdfSection(si,pg.p);if(pg.r)psec.dataset.rot=String(pg.r);deck.appendChild(psec);
       }else{
         wbCount++;
         const sec=document.createElement('section');
