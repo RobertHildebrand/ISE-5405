@@ -31,6 +31,7 @@ table.nice th,table.nice td{border-bottom:1px solid #ccc;padding:5px 14px;text-a
 table.nice th{background:#861F41;color:#fff}
 #progress{position:absolute;top:0;left:0;height:5px;background:#E5751F;width:0;z-index:50;transition:width .2s}
 #counter{position:absolute;bottom:10px;right:16px;font-size:14px;color:#757575;cursor:pointer;z-index:50}
+button,.btn,.pcol,input,select,textarea{touch-action:manipulation}
 #brand{position:absolute;bottom:10px;left:16px;font-size:13px;color:#b9b2a9;z-index:50;cursor:pointer}
 #toc{position:fixed;top:0;left:0;bottom:0;width:360px;background:#26282e;color:#eee;transform:translateX(-100%);transition:.25s;z-index:400;overflow-y:auto;padding:18px}
 #toc.open{transform:none}
@@ -776,7 +777,7 @@ function sizeInk(){
 /* keep floating controls inside the visible (pinch-zoomed) viewport */
 function pinUI(){
   const v=vvState();
-  const zoomed=v.s>1.02||v.ox>1||v.oy>1;
+  const zoomed=v.s>1.06||v.ox>2||v.oy>2;
   [['pentools','right','top'],['handoutbar','right','top'],['touchbar','center','bottom']].forEach(cfg=>{
     const el=document.getElementById(cfg[0]);if(!el)return;
     if(!zoomed){el.style.transform='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';return;}
@@ -795,7 +796,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b770';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b771';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
