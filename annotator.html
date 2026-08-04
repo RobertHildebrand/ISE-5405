@@ -482,6 +482,7 @@ function update(){
 function show(i){
   i=Math.max(0,Math.min(slides.length-1,i));
   if(typeof presentOn!=='undefined'&&presentOn&&i===0&&slides.length>1)i=1;
+  if(document.body.classList.contains('signmode')&&i===0&&slides.length>1)i=1; /* signing: the deck cover is never shown */
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   cur=i;update();
   document.body.classList.toggle('oncover',i===0);
@@ -842,7 +843,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b775';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b776';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2640,7 +2641,10 @@ document.getElementById('plotGo').onclick=stampPlot;
 /* ===== signing mode — big buttons, tiny surface area ===== */
 function setSignMode(on){
   document.body.classList.toggle('signmode',!!on);
-  if(on){setTool('hand');}
+  if(on){
+    setTool('hand');
+    if(cur===0&&slides.length>1)show(1);
+  }
   fit();
 }
 document.getElementById('signModeBtn').onclick=()=>{setSignMode(true);if(!sources.length)document.getElementById('pdfFile').click();};
