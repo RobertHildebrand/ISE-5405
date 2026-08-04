@@ -132,8 +132,15 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 #sigdlg.open{display:flex}
 #sigdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:780px;width:94vw}
 #sigCv{width:100%;background:#fff;border:1.5px dashed #b9b2a8;border-radius:10px;touch-action:none;display:block}
-#sigSavedRow button{background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:3px 6px;cursor:pointer}
+#sigSavedRow .sigth{position:relative;display:inline-block}
+#sigSavedRow .sigth>button{background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:3px 6px;cursor:pointer}
 #sigSavedRow canvas{display:block}
+#sigSavedRow .sigdel{position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;background:#b3261e;color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;padding:0}
+#sigToast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;z-index:712;display:none;align-items:center;gap:12px;background:rgba(28,30,36,.96);color:#eef1f5;padding:12px 18px;border-radius:14px;font-size:15px;max-width:92vw}
+#sigToast.open{display:flex}
+#sigToast button{border:none;border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer}
+#sigToast #sigYes{background:#E5751F;color:#fff}
+#sigToast #sigNo{background:transparent;color:#eef1f5;border:1px solid rgba(255,255,255,.35)}
 #paperMenu{display:none;position:fixed;z-index:700;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
 #paperMenu.open{display:flex}
 #paperMenu button{border:1px solid #ddd;background:#fff;border-radius:8px;width:74px;padding:5px 4px;cursor:pointer;font-size:11.5px;color:#444}
@@ -288,6 +295,7 @@ body.present #tbHide{display:flex!important}
       <span class="kbd">F</span> goes fullscreen with auto-hiding controls · <span class="kbd">Esc</span> or <span class="kbd">F</span> exits · <span class="kbd">L</span> laser pointer · <span class="kbd">T</span> hides/shows the toolbar · all pens stay available while presenting.</div>
     <div class="tutsec"><b class="h">Save &amp; export</b>
       <b>&#10515; Export PDF</b> is the best export — your ink becomes part of a real PDF with selectable text and perfect quality. <span class="kbd">H</span> print-style handout as backup. Annotations auto-save every stroke; &darr;/&uarr; in the pen toolbar back them up to a file.
+      <div style="margin-top:8px;font-size:13.5px;color:#666"><b>What this app stores on your device:</b> annotations, cached PDFs (for Recents &amp; Resume), signatures you chose to remember, and preferences — all in this browser only, nothing online. Remove everything with the button below, or in your browser&rsquo;s settings under site data for this site.</div>
       <div style="margin-top:8px"><button class="btn sec" id="eraseAllBtn" style="font-size:13px">Erase ALL my data on this device</button></div></div>
   </div>
 </div></div>
@@ -328,8 +336,9 @@ body.present #tbHide{display:flex!important}
     <input type="file" id="sigFile" accept="application/json,.json" style="display:none" aria-label="Signature file">
     <span id="sigSavedRow" style="display:flex;gap:8px;margin-left:auto"></span>
   </div>
-  <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Recent signatures stay on this device for one-tap reuse.</div>
+  <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Signatures are remembered only if you say so, stay in this browser, and the &#215; forgets one instantly.</div>
 </div></div>
+<div id="sigToast" role="alertdialog" aria-label="Remember signature?"><span>Remember this signature on this device for one-tap reuse?</span><button id="sigYes">Remember</button><button id="sigNo">Not now</button></div>
 <div id="sidectl" role="group" aria-label="Document actions">
   <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
   <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
@@ -745,7 +754,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b762';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b763';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2235,7 +2244,8 @@ document.getElementById('plotGo').onclick=stampPlot;
   }
   function renderSaved(){
     const row=document.getElementById('sigSavedRow');row.innerHTML='';
-    loadSigs().forEach(sts=>{
+    loadSigs().forEach((sts,idx)=>{
+      const wrap=document.createElement('span');wrap.className='sigth';
       const b=document.createElement('button');b.title='Place this saved signature';
       const th=document.createElement('canvas');th.width=110;th.height=36;
       const t2=th.getContext('2d');
@@ -2243,11 +2253,24 @@ document.getElementById('plotGo').onclick=stampPlot;
       t2.strokeStyle='#26282e';t2.lineWidth=1.6;t2.lineJoin=t2.lineCap='round';
       sts.forEach(st=>{t2.beginPath();st.forEach((q,i)=>{const x=5+(q[0]-bb[0])*f,y=4+(q[1]-bb[1])*f;i?t2.lineTo(x,y):t2.moveTo(x,y);});t2.stroke();});
       b.appendChild(th);
-      b.onclick=()=>placeSig(sts);
-      row.appendChild(b);
+      b.onclick=()=>placeSig(sts,true);
+      const del=document.createElement('button');del.className='sigdel';del.textContent='\u00d7';del.title='Forget this signature';del.setAttribute('aria-label','Forget this saved signature');
+      del.onclick=e=>{e.stopPropagation();try{const all=loadSigs();all.splice(idx,1);localStorage.setItem('inkSigs',JSON.stringify(all));}catch(_){ }renderSaved();};
+      wrap.appendChild(b);wrap.appendChild(del);
+      row.appendChild(wrap);
     });
   }
-  function placeSig(sts){
+  let toastT=null;
+  function askRemember(sts){
+    const t=document.getElementById('sigToast');if(!t)return;
+    t.classList.add('open');
+    clearTimeout(toastT);
+    const close=()=>{t.classList.remove('open');clearTimeout(toastT);};
+    document.getElementById('sigYes').onclick=()=>{saveSig(sts);close();};
+    document.getElementById('sigNo').onclick=close;
+    toastT=setTimeout(close,12000);
+  }
+  function placeSig(sts,fromSaved){
     if(!sts.length){alert('Draw a signature first.');return;}
     if(cur===0&&slides.length>1)show(1);
     const bb=sigBBox(sts);
@@ -2260,8 +2283,8 @@ document.getElementById('plotGo').onclick=stampPlot;
     const items=sts.map(st=>({c:col,w:3,a:1,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
     items.forEach(it=>arr.push(it));
     pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
-    saveSig(sts);
     dlg.classList.remove('open');
+    if(!fromSaved)askRemember(sts);
     setTool('lasso');
     sel={key:key,items:items,before:arr.slice().map(cloneItem)};
     saveInkSoon();redrawInk();
