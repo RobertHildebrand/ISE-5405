@@ -294,7 +294,7 @@ body.present #tbHide{display:flex!important}
   <div style="display:flex;align-items:center"><h3>How to use Ink Pad</h3><button class="btn" id="tutClose" style="margin-left:auto">Done</button></div>
   <div id="tutGrid">
     <div class="tutsec"><b class="h">Get started</b>
-      <b>Open a PDF</b> — it stays on your device, nothing uploads. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
+      <b>Open a PDF</b> — it stays on your device, nothing uploads. Share a document by link: add <span class="kbd">?pdf=https://&hellip;</span> to this site&rsquo;s address and the PDF opens right here for whoever taps it. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
     <div class="tutsec"><b class="h">Pen &amp; ink</b>
       <span class="kbd">P</span> pen · colors + 4 highlighters + custom color wheel · &#9679; cycles thickness · <span class="kbd">E</span> cycles erasers (whole-stroke &#9676; / precision &#9986;) · <span class="kbd">C</span> clears the page · <span class="kbd">Ctrl/Cmd+Z</span> undo anything. Rest your palm freely — only the Pencil draws. Highlighters auto-straighten; hold <span class="kbd">Shift</span> for straight lines.</div>
     <div class="tutsec"><b class="h">Tools</b>
@@ -793,7 +793,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b767';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b768';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2065,10 +2065,22 @@ async function exportVectorPdf(){
     if(!exported){pgprog.style.display='none';alert('Nothing to export yet — open a PDF or draw on a blank page first.');return;}
     pgprog.textContent='Saving…';
     const bytes=await out.save();
+    const fname=(sources.length?sources[0].name.replace(/\.pdf$/i,''):'inkpad-notes')+'-annotated.pdf';
+    const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
+    if(coarse&&navigator.canShare&&window.File){
+      try{
+        const file=new File([bytes],fname,{type:'application/pdf'});
+        if(navigator.canShare({files:[file]})){
+          await navigator.share({files:[file],title:fname}); /* share sheet: Messages, Mail, AirDrop, Save to Files */
+          pgprog.style.display='none';
+          return;
+        }
+      }catch(e){/* cancelled or unsupported → regular download below */}
+    }
     const blob=new Blob([bytes],{type:'application/pdf'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download=(sources.length?sources[0].name.replace(/\.pdf$/i,''):'inkpad-notes')+'-annotated.pdf';
+    a.download=fname;
     a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     pgprog.style.display='none';
@@ -2572,6 +2584,24 @@ async function resumeSession(){
 for(let i=0;i<6;i++)addPage();
 refreshSlides();
 show(0);fit();
+(async function(){ /* ?pdf=URL — open a shared link straight into the document */
+  let u=null;
+  try{u=new URLSearchParams(location.search).get('pdf');}catch(e){}
+  if(!u)return;
+  try{u=decodeURIComponent(u);}catch(e){}
+  if(!/^https:\/\//i.test(u)){alert('Shared PDF links must start with https://');return;}
+  pgprog.style.display='flex';pgprog.textContent='Fetching shared PDF\u2026';
+  try{
+    const r=await fetch(u);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const buf=await r.arrayBuffer();
+    const name=(u.split('/').pop()||'shared.pdf').split('?')[0]||'shared.pdf';
+    await loadPdfBytes(name,buf);
+  }catch(err){
+    pgprog.style.display='none';
+    alert('Could not fetch the shared PDF ('+err.message+').\nThe site hosting it may not allow cross-site access \u2014 ask the sender to send the file directly, then use \u201cOpen a PDF\u201d.');
+  }
+})();
 if(window.indexedDB)refreshRecents();
 (function(){try{const c=JSON.parse(localStorage.getItem('inkpadComp'));if(c&&c.pages&&c.pages.length){const b=document.getElementById('resumeBtn');b.style.display='inline-block';b.onclick=resumeSession;}}catch(e){}})();
 setTimeout(function(){redrawInk();},400);
