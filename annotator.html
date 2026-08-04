@@ -472,7 +472,6 @@ function addPage(style){
   sec.dataset.pstyle=style||lastPaperStyle;
   sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount;
   sec.dataset.toc='Blank page '+wbCount;
-  sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page '+wbCount+'</span></div>';
   deck.appendChild(sec);
   refreshSlides();
   return slides.length-1;
@@ -726,7 +725,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b759';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b760';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1868,7 +1867,6 @@ function createBlank(afterSec,style){
   sec.dataset.pstyle=style||lastPaperStyle;
   sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount+'-'+Date.now()%100000;
   sec.dataset.toc='Blank page';
-  sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
   if(afterSec&&afterSec.nextSibling)deck.insertBefore(sec,afterSec.nextSibling);
   else deck.appendChild(sec);
   refreshSlides();saveComp();
@@ -2187,7 +2185,6 @@ async function resumeSession(){
         sec.dataset.inkkey=pg.id;
         if(pg.ps)sec.dataset.pstyle=pg.ps;
         sec.dataset.toc=pg.label||'Blank page';
-        sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
         deck.appendChild(sec);
       }
     }
