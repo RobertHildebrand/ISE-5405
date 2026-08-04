@@ -216,6 +216,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #zPct{color:#fff;font-size:12px;min-height:14px}
 body.handout #zoomctl{display:none}
 #pentools{flex-wrap:wrap;max-width:460px;justify-content:flex-end}
+body.pmini #pentools{display:none!important}
+#pchip{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));z-index:516;display:none;width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;padding:0;font-size:20px;color:#fff;align-items:center;justify-content:center;font-weight:700}
+body.pmini.penmode #pchip{display:flex}
+body.signmode #pchip,body.present #pchip,body.handout #pchip,body.oncover #pchip{display:none!important}
+@media print{#pchip{display:none!important}}
 #selbar{position:fixed;display:none;gap:6px;z-index:540;background:rgba(38,40,46,.9);padding:6px 8px;border-radius:10px}
 #selbar button{width:40px;height:36px;padding:0;font-size:16px}
 #texted{position:fixed;display:none;z-index:545;background:transparent}
@@ -425,6 +430,7 @@ body.present #tbHide{display:flex!important}
   <button class="btn sec" id="zOut" title="Zoom out (− key)">−</button>
   <button class="btn sec" id="zFit" title="Fit to window (0 key)">⤡</button>
 </div>
+<button id="pchip" title="Show pen tools" aria-label="Show pen tools"></button>
 <div id="cmtpop" role="dialog" aria-label="Comment"></div>
 <div id="noteed" role="dialog" aria-label="Sticky note"><textarea aria-label="Comment text" placeholder="Type your comment"></textarea>
   <div class="nbar"><button class="btn" id="noteOk" style="font-size:14px">Save</button><button class="btn sec" id="noteDel" style="font-size:14px;display:none">Delete</button><button class="btn sec" id="noteCancel" style="font-size:14px;margin-left:auto">Cancel</button></div>
@@ -852,7 +858,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b778';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b779';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -872,6 +878,7 @@ function togglePen(){
   document.body.classList.toggle('penmode',penOn);
   try{const sel=window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges();}catch(e){}
   const tb=document.getElementById('tbPen');if(tb)tb.classList.toggle('on',penOn);
+  if(typeof updateChip==='function')updateChip();
   if(typeof pinUI==='function')pinUI();
 }
 function saveInk(){try{localStorage.setItem('ink2:'+location.pathname,JSON.stringify(inkStore));}catch(e){}}
@@ -1024,6 +1031,7 @@ function updateToolUI2(){
   [['phand','hand'],['tbMove','hand'],['pnote','note'],['plasso','lasso'],['ptext','text'],['prect','rect'],['pellipse','ellipse'],['parrow','arrow']].forEach(x=>{
     const el=document.getElementById(x[0]);if(el)el.classList.toggle('on',toolMode===x[1]&&!erasing);
   });
+  if(typeof updateChip==='function')updateChip();
   updateToolUI();
 }
 function clearSel(){
@@ -1255,6 +1263,28 @@ function commitText(){
   textEditing=null;ed.style.display='none';
   saveInkSoon();redrawInk();
 }
+/* --- collapsible palette on small screens --- */
+function isNarrow(){return (window.matchMedia&&matchMedia('(max-width:740px)').matches)||innerWidth<=740;}
+function updateChip(){
+  const c=document.getElementById('pchip');if(!c)return;
+  const glyphs={hand:'\u270b',lasso:'\u2b1a',text:'T',rect:'\u25ad',ellipse:'\u25cb',arrow:'\u2197',note:'\u270e'};
+  if(erasing){c.style.background='#5a5e66';c.textContent='\u25cc';}
+  else if(toolMode!=='pen'){c.style.background='#5a5e66';c.textContent=glyphs[toolMode]||'\u270e';}
+  else{c.style.background=(penColor==='HL')?'#FFD60A':penColor;c.textContent='';}
+}
+function setPMini(on){
+  document.body.classList.toggle('pmini',!!on&&isNarrow());
+  updateChip();
+}
+document.getElementById('pchip').onclick=()=>setPMini(false);
+(function(){
+  const pt=document.getElementById('pentools');
+  if(pt)pt.addEventListener('click',e=>{
+    const b=e.target.closest('button');
+    if(!b||b.id==='pclose'||b.id==='pundo'||b.id==='predo')return;
+    if(isNarrow())setTimeout(()=>setPMini(true),350); /* picked a color or tool → tuck the palette away */
+  });
+})();
 /* --- sticky-note editor --- */
 let noteEditing=null;
 function getAuthor(){
@@ -1333,6 +1363,7 @@ ink.addEventListener('pointerdown',e=>{
   syncZoom();
   if(e.pointerType==='touch'&&(multiTouch||gTouches.size>=2))return; /* pinch in progress — never draw */
   downWasTouch=(e.pointerType==='touch');
+  if(isNarrow()&&!document.body.classList.contains('pmini'))setPMini(true);
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
   if(!allowDraw(e))return;
   drawing=true;
