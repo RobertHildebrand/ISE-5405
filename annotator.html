@@ -52,13 +52,14 @@ body.signmode #mstart,body.present #mstart,body.handout #mstart{display:none!imp
 #mstart #msSign{background:#E5751F;color:#fff}
 #mstart .mnote{color:#8a837b;font-size:12.5px;margin-top:8px;text-align:center}
 body.signmode #touchbar,body.signmode #sidectl,body.signmode #zoomctl,body.signmode #pentools,body.signmode #tbTab,body.signmode #progress{display:none!important}
-#signbar{position:fixed;left:0;right:0;bottom:0;z-index:530;display:none;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(28,30,36,.97)}
+#signbar{position:fixed;left:0;right:0;bottom:0;z-index:530;display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(28,30,36,.97)}
 body.signmode #signbar{display:grid}
 body.handout #signbar,body.present #signbar{display:none!important}
 @media print{#signbar{display:none!important}}
 #signbar button{border:none;border-radius:14px;background:#3a3d45;color:#eef1f5;font-size:18px;font-weight:600;padding:0;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
 #signbar button svg{width:24px;height:24px}
 #signbar #signSign{background:#861F41}
+#signbar button.on{background:#E5751F}
 #signbar #signDone{background:#E5751F;color:#fff}
 #signExit{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:8px;z-index:531;display:none;background:rgba(28,30,36,.8);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:14px;cursor:pointer}
 body.signmode #signExit{display:block}
@@ -71,7 +72,7 @@ body.signmode #deck{margin-bottom:150px}
 #toc li{padding:7px 10px;cursor:pointer;border-radius:6px;font-size:15px}
 #toc li:hover{background:#3a3d45}
 #ink{position:fixed;inset:0;z-index:300;pointer-events:none}
-#pentools{position:fixed;top:12px;right:14px;z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
+#pentools{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
 #pentools button{width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;font-size:13px}
 #pentools .pcol{border:2px solid #fff}
 .widget{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
@@ -140,6 +141,7 @@ body.handout #ink{display:none}
 #touchbar #tbPresent.on{background:#E5751F}
 body.present #touchbar{background:rgba(22,24,29,.96);transform:translateX(-50%) scale(1.05);transform-origin:bottom center}
 @media (max-width:980px){#touchbar button{width:48px;height:52px}#touchbar .tblbl{font-size:8.5px}#touchbar button svg{width:20px;height:20px}}
+@media (max-width:740px){#touchbar{flex-wrap:wrap;justify-content:center;row-gap:4px;max-width:96vw}}
 @media (max-width:700px){#touchbar{gap:2px;padding:6px 8px}#touchbar button{width:40px;height:42px;gap:0}#touchbar .tblbl{display:none}}
 canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
 .axbtn{float:right;padding:1px 10px;font-size:12.5px;margin-left:8px}
@@ -215,7 +217,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #zoomctl button{width:44px;height:40px;font-size:20px;padding:0}
 #zPct{color:#fff;font-size:12px;min-height:14px}
 body.handout #zoomctl{display:none}
-#pentools{flex-wrap:wrap;max-width:460px;justify-content:flex-end}
+#pentools{flex-wrap:wrap;max-width:min(460px,92vw);justify-content:flex-end}
 body.pmini #pentools{display:none!important}
 #pchip{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));z-index:516;display:none;width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;padding:0;font-size:20px;color:#fff;align-items:center;justify-content:center;font-weight:700}
 body.pmini.penmode #pchip{display:flex}
@@ -237,6 +239,7 @@ body.signmode #pchip,body.present #pchip,body.handout #pchip,body.oncover #pchip
 #sidectl button:hover{background:#3a3d45}
 #sidectl button.on{background:#E5751F;color:#fff}
 body.handout #sidectl{display:none!important}
+@media (max-height:540px){#sidectl{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px));right:auto;left:calc(10px + env(safe-area-inset-left,0px))}}
 @media print{#sidectl{display:none!important}}
 #org{position:fixed;inset:0;background:rgba(20,22,26,.88);z-index:640;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 3vw}
 #org.open{display:flex}
@@ -413,6 +416,7 @@ body.present #tbHide{display:flex!important}
   <button id="signIni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V5"/><path d="M5 12c4-7 7 3 10-2"/><path d="M19 19v-9"/></svg>Initials</button>
   <button id="signDate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Date</button>
   <button id="signMove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 00-4 0"/><path d="M14 10V4a2 2 0 00-4 0v6"/><path d="M10 10.5V6a2 2 0 00-4 0v8"/><path d="M18 8a2 2 0 114 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 012.83-2.82L7 15"/></svg>Move</button>
+  <button id="signHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</button>
   <button id="signPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 5 7.5 12 14.5 19"/></svg>Back</button>
   <button id="signNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg>Next</button>
   <button id="signDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Done</button>
@@ -643,6 +647,7 @@ addEventListener('touchend',e=>{
 const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
 let drawing=false,penColor='#c8102e',penIsHL=false,penWidth=3.5,curStroke=null,inkStore={},inkDirty=false,toolMode='pen',eraseChanged=false,eraseBefore=null,strokeBefore=null,lassoPts=null,sel=null,selDrag=null,draft=null,textEditing=null,handDrag=null;
 try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
+if(inkStore['cover']){delete inkStore['cover'];try{saveInk();}catch(e){}} /* the start page never keeps ink */
 Object.keys(inkStore).forEach(k=>(inkStore[k]||[]).forEach(it=>{
   if(it.type==='text'&&!it.tl){it.y-=(it.size||22)*0.85;it.tl=1;}
 }));
@@ -655,6 +660,7 @@ function allowDraw(e){
 }
 function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
 function deckRect(){return deck.getBoundingClientRect();}
+function kDeck(){const r=deckRect();return 1280/Math.max(1,r.width);} /* deck units per screen pixel */
 function toDeck(e){const r=deckRect();return [Math.round((e.clientX-r.left)/r.width*12800)/10,Math.round((e.clientY-r.top)/r.height*7200)/10];}
 function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
 /* smoothed, pressure-aware stroke renderer (quadratic midpoint splines) */
@@ -725,7 +731,7 @@ function hitItemAt(dp,arr){
   for(let i=arr.length-1;i>=0;i--){
     const it=arr[i];
     if(it.p){
-      const tol=Math.max(12,(it.w||3.5)*1.6+6);
+      const tol=Math.max(12,(it.w||3.5)*1.6+6,14*kDeck());
       if(it.p.length<=10){
         for(let k=0;k<it.p.length-1;k++)if(segDist(dp,it.p[k],it.p[k+1])<tol)return it;
         if(it.p.length===1&&Math.hypot(dp[0]-it.p[0][0],dp[1]-it.p[0][1])<tol)return it;
@@ -734,7 +740,8 @@ function hitItemAt(dp,arr){
       }
     }else{
       const bb=itemBBox(it);
-      if(dp[0]>bb[0]-6&&dp[0]<bb[2]+6&&dp[1]>bb[1]-6&&dp[1]<bb[3]+6)return it;
+      const pd=Math.max(6,10*kDeck());
+      if(dp[0]>bb[0]-pd&&dp[0]<bb[2]+pd&&dp[1]>bb[1]-pd&&dp[1]<bb[3]+pd)return it;
     }
   }
   return null;
@@ -858,7 +865,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b779';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b780';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1028,7 +1035,7 @@ function setTool(m){
   redrawInk();
 }
 function updateToolUI2(){
-  [['phand','hand'],['tbMove','hand'],['pnote','note'],['plasso','lasso'],['ptext','text'],['prect','rect'],['pellipse','ellipse'],['parrow','arrow']].forEach(x=>{
+  [['phand','hand'],['tbMove','hand'],['pnote','note'],['signMove','lasso'],['plasso','lasso'],['ptext','text'],['prect','rect'],['pellipse','ellipse'],['parrow','arrow']].forEach(x=>{
     const el=document.getElementById(x[0]);if(el)el.classList.toggle('on',toolMode===x[1]&&!erasing);
   });
   if(typeof updateChip==='function')updateChip();
@@ -1055,7 +1062,7 @@ function drawSelOverlay(map,ws){
   ictx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);
   ictx.setLineDash([]);
   ictx.fillStyle='#33658a';
-  ictx.fillRect(b[0]-7,b[1]-7,14,14);
+  ictx.fillRect(b[0]-9,b[1]-9,18,18);
   positionSelbar(b);
 }
 function positionSelbar(bpt){
@@ -1083,7 +1090,7 @@ function finishLasso(){
   if(!P){redrawInk();return;}
   let span=0;
   for(const q of P)span=Math.max(span,Math.hypot(q[0]-P[0][0],q[1]-P[0][1]));
-  if(span<12){ /* a tap: select whatever is under it, with drag + resize handles */
+  if(span<Math.max(12,10*kDeck())){ /* a tap: select whatever is under it, with drag + resize handles */
     const key=inkKey(),arr=inkStore[key]||[];
     const hit=hitItemAt(P[0],arr);
     if(hit){const grp=hit.g?arr.filter(it=>it.g===hit.g):[hit];sel={key:key,items:grp,before:arr.slice().map(cloneItem)};}
@@ -1362,6 +1369,7 @@ ink.addEventListener('pointerdown',e=>{
   e.preventDefault();
   syncZoom();
   if(e.pointerType==='touch'&&(multiTouch||gTouches.size>=2))return; /* pinch in progress — never draw */
+  if(slides[cur]&&slides[cur].classList.contains('cover'))return; /* no ink on the start page */
   downWasTouch=(e.pointerType==='touch');
   if(isNarrow()&&!document.body.classList.contains('pmini'))setPMini(true);
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
@@ -1386,7 +1394,8 @@ ink.addEventListener('pointerdown',e=>{
     const hitN=arrN.slice().reverse().find(it=>{
       if(it.type!=='note')return false;
       const bb=itemBBox(it);
-      return dp[0]>bb[0]-6&&dp[0]<bb[2]+6&&dp[1]>bb[1]-6&&dp[1]<bb[3]+6;
+      const pdN=Math.max(6,10*kDeck());
+      return dp[0]>bb[0]-pdN&&dp[0]<bb[2]+pdN&&dp[1]>bb[1]-pdN&&dp[1]<bb[3]+pdN;
     });
     openNoteEditor(dp,hitN||null);
     return;
@@ -1394,10 +1403,12 @@ ink.addEventListener('pointerdown',e=>{
   if(toolMode==='lasso'){
     if(sel){
       const bb=selBBox();
-      if(Math.abs(dp[0]-(bb[2]+8))<14&&Math.abs(dp[1]-(bb[3]+8))<14){
+      const hg=Math.max(14,16*kDeck());
+      if(Math.abs(dp[0]-(bb[2]+8))<hg&&Math.abs(dp[1]-(bb[3]+8))<hg){
         selDrag={mode:'scale',cx:bb[0],cy:bb[1],d0:Math.hypot(dp[0]-bb[0],dp[1]-bb[1]),f:1};return;
       }
-      if(dp[0]>bb[0]-10&&dp[0]<bb[2]+10&&dp[1]>bb[1]-10&&dp[1]<bb[3]+10){
+      const mg=Math.max(10,12*kDeck());
+      if(dp[0]>bb[0]-mg&&dp[0]<bb[2]+mg&&dp[1]>bb[1]-mg&&dp[1]<bb[3]+mg){
         selDrag={mode:'move',last:dp};return;
       }
       clearSel();
@@ -1409,7 +1420,8 @@ ink.addEventListener('pointerdown',e=>{
     const hit=arr.slice().reverse().find(it=>{
       if(it.type!=='text'&&it.type!=='math')return false;
       const bb=itemBBox(it);
-      return dp[0]>bb[0]-6&&dp[0]<bb[2]+6&&dp[1]>bb[1]-6&&dp[1]<bb[3]+6;
+      const pdT=Math.max(6,10*kDeck());
+      return dp[0]>bb[0]-pdT&&dp[0]<bb[2]+pdT&&dp[1]>bb[1]-pdT&&dp[1]<bb[3]+pdT;
     });
     drawing=false;
     openTextEditor(dp,hit||null);return;
@@ -2705,11 +2717,19 @@ document.getElementById('msTut').onclick=()=>document.getElementById('tut').clas
 document.getElementById('signExit').onclick=()=>setSignMode(false);
 document.getElementById('signOpen').onclick=()=>document.getElementById('pdfFile').click();
 document.getElementById('signSign').onclick=()=>window.sigPad.open('sig');
-document.getElementById('signIni').onclick=()=>{
-  const saved=window.sigPad.saved('ini');
-  if(saved.length)window.sigPad.place(saved[0],'ini'); /* stamp: one tap, lands selected for dragging */
-  else window.sigPad.open('ini');
-};
+(function(){
+  const b=document.getElementById('signIni');let t=null,long=false;
+  b.title='Initials — press & hold to redraw them';
+  b.onclick=()=>{
+    if(long){long=false;return;}
+    const saved=window.sigPad.saved('ini');
+    if(saved.length)window.sigPad.place(saved[0],'ini'); /* stamp: one tap, lands selected for dragging */
+    else window.sigPad.open('ini');
+  };
+  b.addEventListener('pointerdown',()=>{long=false;t=setTimeout(()=>{long=true;window.sigPad.open('ini');},550);});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(t)));
+})();
+document.getElementById('signHome').onclick=()=>{setSignMode(false);show(0);};
 document.getElementById('signMove').onclick=()=>{setTool('lasso');}; /* tap anything to grab it — handles let you drag or resize */
 document.getElementById('signPrev').onclick=()=>prev();
 document.getElementById('signNext').onclick=()=>next();
