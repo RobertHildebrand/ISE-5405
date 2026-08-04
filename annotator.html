@@ -795,7 +795,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b769';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b770';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1234,9 +1234,39 @@ document.getElementById('noteOk').onclick=()=>commitNote(false);
 document.getElementById('noteDel').onclick=()=>commitNote(true);
 document.getElementById('noteCancel').onclick=()=>{noteEditing=null;document.getElementById('noteed').style.display='none';};
 /* --- pointer handlers --- */
+let gTouches=new Set(),multiTouch=false,downWasTouch=false;
+function abortTouchInput(){
+  const key=inkKey();
+  if(curStroke){
+    if(strokeBefore){if(strokeBefore.length)inkStore[key]=strokeBefore.slice();else delete inkStore[key];}
+    else{const arr=inkStore[key]||[];const i=arr.indexOf(curStroke);if(i>=0)arr.splice(i,1);if(arr.length===0)delete inkStore[key];}
+    curStroke=null;strokeBefore=null;
+  }
+  if(draft)draft=null;
+  if(erasing&&eraseBefore){if(eraseBefore.length)inkStore[key]=eraseBefore.slice();else delete inkStore[key];eraseBefore=null;eraseChanged=false;}
+  if(handDrag){ (handDrag.group||[handDrag.item]).forEach(()=>{});
+    if(handDrag.before){if(handDrag.before.length)inkStore[handDrag.key]=handDrag.before.map(cloneItem);else delete inkStore[handDrag.key];}
+    handDrag=null;
+  }
+  drawing=false;
+  redrawInk();
+}
+addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch')return;
+  gTouches.add(e.pointerId);
+  if(gTouches.size>=2){
+    multiTouch=true;
+    if(drawing&&downWasTouch)abortTouchInput(); /* the pinch's first finger had started a stroke — undo it */
+  }
+},true);
+const gUp=e=>{if(e.pointerType==='touch'){gTouches.delete(e.pointerId);if(gTouches.size===0)multiTouch=false;}};
+addEventListener('pointerup',gUp,true);
+addEventListener('pointercancel',gUp,true);
 ink.addEventListener('pointerdown',e=>{
   e.preventDefault();
   syncZoom();
+  if(e.pointerType==='touch'&&(multiTouch||gTouches.size>=2))return; /* pinch in progress — never draw */
+  downWasTouch=(e.pointerType==='touch');
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
   if(!allowDraw(e))return;
   drawing=true;
