@@ -242,7 +242,8 @@ body.present #tbHide{display:inline-block}
     <div class="tutsec"><b class="h">Present</b>
       <span class="kbd">F</span> goes fullscreen with auto-hiding controls · <span class="kbd">L</span> laser pointer · <span class="kbd">T</span> hides/shows the toolbar · all pens stay available while presenting.</div>
     <div class="tutsec"><b class="h">Save &amp; export</b>
-      <b>&#10515; Annotated PDF</b> is the best export — your ink becomes part of a real PDF with selectable text and perfect quality. <span class="kbd">H</span> print-style handout as backup. Annotations auto-save every stroke; &darr;/&uarr; in the pen toolbar back them up to a file.</div>
+      <b>&#10515; Annotated PDF</b> is the best export — your ink becomes part of a real PDF with selectable text and perfect quality. <span class="kbd">H</span> print-style handout as backup. Annotations auto-save every stroke; &darr;/&uarr; in the pen toolbar back them up to a file.
+      <div style="margin-top:8px"><button class="btn sec" id="eraseAllBtn" style="font-size:13px">Erase ALL my data on this device</button></div></div>
   </div>
 </div></div>
 <div id="org" role="dialog" aria-modal="true" aria-label="Page organizer"><div class="orgcard">
@@ -619,7 +620,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b747';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b748';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1285,7 +1286,7 @@ function buildPdfSection(si,p){
 }
 async function addSource(name,buf){
   const bytes=buf.slice(0);
-  const doc=await pdfjsLib.getDocument({data:buf}).promise;
+  const doc=await pdfjsLib.getDocument({data:buf,isEvalSupported:false}).promise;
   const fp=(doc.fingerprints&&doc.fingerprints[0])||doc.fingerprint||('f'+bytes.byteLength);
   let aspect=null;
   try{const p1=await doc.getPage(1);const v1=p1.getViewport({scale:1});aspect=v1.width/v1.height;}catch(_){}
@@ -1670,7 +1671,7 @@ function orgLift(st,e){
   gh.className='orgghost';
   const img=st.card.querySelector('img');
   gh.innerHTML=(img?'<img draggable="false" src="'+img.src+'">':'<div class="ph" style="height:90px;display:flex;align-items:center;justify-content:center;background:#f6f3ef;border-radius:5px;color:#8a837b">page</div>')+
-    '<div style="font-size:11px;color:#555;margin-top:4px">'+(st.card._sec.dataset.toc||'page')+'</div>';
+    '<div style="font-size:11px;color:#555;margin-top:4px">'+String(st.card._sec.dataset.toc||'page').replace(/</g,'&lt;')+'</div>';
   gh.style.left=(e.clientX-75)+'px';gh.style.top=(e.clientY-40)+'px';
   document.body.appendChild(gh);
   st.ghost=gh;
@@ -1829,6 +1830,12 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
 document.getElementById('presentBtn').onclick=togglePresent;
 document.getElementById('tutBtn').onclick=()=>document.getElementById('tut').classList.add('open');
 document.getElementById('tutClose').onclick=()=>document.getElementById('tut').classList.remove('open');
+document.getElementById('eraseAllBtn').onclick=async()=>{
+  if(!confirm('Erase everything this tool has stored on this device — all annotations, cached PDFs, and settings? This cannot be undone.'))return;
+  try{Object.keys(localStorage).forEach(k=>{if(/^(ink2:|inkpadComp|ise5405|deckpos:|pencilSeen)/.test(k)||k.startsWith('ink'))localStorage.removeItem(k);});}catch(e){}
+  try{indexedDB.deleteDatabase('inkpad');}catch(e){}
+  alert('All local data erased.');location.reload();
+};
 window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit,togglePresent};
 
 /* ===== accessibility bootstrap (purely additive) ===== */
