@@ -161,6 +161,12 @@ body.handout #quickExp{display:none}
 .orgpg img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 .pdfimg{-webkit-user-drag:none;user-drag:none}
 .orgpg .ph{pointer-events:none}
+/* presentation mode */
+body.present #quickExp,body.present #pagesBtn,body.present #zoomctl,body.present #brand,body.present #progress{display:none!important}
+body.present #counter{opacity:.45}
+#touchbar{transition:opacity .4s}
+body.present.idlehide{cursor:none}
+body.present.idlehide #touchbar{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -176,14 +182,14 @@ body.handout #quickExp{display:none}
   <div class="drop">
     <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
     <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
-    <div style="margin-top:14px"><button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
+    <div style="margin-top:14px"><button class="btn sec" id="presentBtn">&#9974; Present</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
   <div id="recents" style="display:none;max-width:520px;margin:18px auto 0;text-align:left"></div>
   <div class="tiny" style="color:#707070;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
     Annotations save in this browser and <b>reattach automatically</b> when you open the same PDF again.</div>
   </div>
   <div style="margin-top:26px" class="tiny">
     <span class="kbd">&rarr;</span>/<span class="kbd">&larr;</span> pages &middot; <span class="kbd">P</span> pen &middot; <span class="kbd">E</span> eraser &middot;
-    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed<br>
+    <span class="kbd">W</span> first blank page &middot; <span class="kbd">N</span> new page &middot; <span class="kbd">H</span> handout &rarr; save PDF &middot; <span class="kbd">F</span> present &middot; <span class="kbd">L</span> laser &middot; <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom &middot; <span class="kbd">?</span> help</div><div class="tiny" style="margin-top:8px;color:#707070">Highlighters in 4 colors auto-straighten over text &middot; hold <span class="kbd">Shift</span> while drawing for a straight line &middot; drag or scroll to pan when zoomed<br>
   <span class="kbd">Ctrl/Cmd+Z</span> undo &middot; lasso &#11034; to move/resize/recolor/delete &middot; <b>T</b> text boxes &middot; shapes &#9645;&#9675;&#8599; &middot; custom colors &middot; &#10515; downloads a real annotated PDF (text stays selectable) &middot; recent PDFs reopen with one tap
   </div>
 </section>
@@ -357,7 +363,7 @@ addEventListener('afterprint',()=>{document.body.classList.remove('handout');rem
 })();
 const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
 let laserOn=false;
-function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';}
+function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';const b=document.getElementById('tbLaser');if(b)b.classList.toggle('on',laserOn);}
 addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
 function toggleWhiteboard(){
   const wbIdx=slides.findIndex(sl=>sl.classList.contains('whiteboard'));
@@ -383,7 +389,7 @@ addEventListener('keydown',e=>{
     case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
     case 'Home':show(0);break;
     case 'End':show(slides.length-1);break;
-    case 'f':case 'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case 'f':case 'F':togglePresent();break;
     case 'p':case 'P':togglePen();break;
     case 'e':case 'E':cycleEraser();break;
     case 'l':case 'L':toggleLaser();break;
@@ -585,7 +591,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b744';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b745';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1074,7 +1080,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
 (function(){
   const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
   const tb=document.createElement('div');tb.id='touchbar';
-  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbUndo" title="Undo">&#8630;</button><button id="tbRedo" title="Redo">&#8631;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbHelp">?</button>';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbUndo" title="Undo">&#8630;</button><button id="tbRedo" title="Redo">&#8631;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbLaser" title="Laser pointer">&#9673;</button><button id="tbPresent" title="Presentation mode">&#9974;</button><button id="tbHelp">?</button>';
   document.body.appendChild(tb);
   if(coarse)tb.style.display='flex';
   document.getElementById('tbPen').onclick=togglePen;
@@ -1086,6 +1092,8 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbNext').onclick=next;
   document.getElementById('tbWb').onclick=toggleWhiteboard;
   document.getElementById('tbHand').onclick=toggleHandout;
+  document.getElementById('tbLaser').onclick=toggleLaser;
+  document.getElementById('tbPresent').onclick=togglePresent;
   document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
 })();
 document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;penIsHL=!!b.dataset.hl;toolMode='pen';setEraser(null);updateToolUI2();});
@@ -1746,7 +1754,37 @@ addEventListener('pointermove',e=>{
   setDeckView(panSt.r.left+(e.clientX-panSt.x),panSt.r.top+(e.clientY-panSt.y),panSt.r.width);
 });
 addEventListener('pointerup',()=>panSt=null);
-window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit};
+/* ===== presentation mode ===== */
+let presentOn=false,idleT=null;
+function togglePresent(){
+  presentOn=!presentOn;
+  document.body.classList.toggle('present',presentOn);
+  const tb=document.getElementById('touchbar');
+  if(presentOn){
+    if(tb)tb.style.display='flex';
+    try{if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}
+    armIdle();
+  }else{
+    document.body.classList.remove('idlehide');
+    const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
+    if(tb)tb.style.display=coarse?'flex':'none';
+    try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
+    clearTimeout(idleT);
+  }
+  const pb=document.getElementById('tbPresent');if(pb)pb.classList.toggle('on',presentOn);
+  fit();
+}
+function armIdle(){
+  if(!presentOn)return;
+  document.body.classList.remove('idlehide');
+  clearTimeout(idleT);
+  idleT=setTimeout(()=>{if(presentOn&&!penOn&&!laserOn)document.body.classList.add('idlehide');},2600);
+}
+addEventListener('pointermove',()=>{if(presentOn)armIdle();});
+addEventListener('pointerdown',()=>{if(presentOn)armIdle();});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presentOn)togglePresent();});
+document.getElementById('presentBtn').onclick=togglePresent;
+window.deckAPI={show,next,prev,addPage,refreshSlides,zoomBy,zoomFit,togglePresent};
 
 /* ===== accessibility bootstrap (purely additive) ===== */
 (function(){
