@@ -128,7 +128,7 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 #plotdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
 #plotdlg.open{display:flex}
 #plotdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:520px;width:92vw}
-#paperMenu{display:none;position:absolute;z-index:660;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
+#paperMenu{display:none;position:fixed;z-index:700;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
 #paperMenu.open{display:flex}
 #paperMenu button{border:1px solid #ddd;background:#fff;border-radius:8px;width:74px;padding:5px 4px;cursor:pointer;font-size:11.5px;color:#444}
 #paperMenu button:hover{border-color:#861F41}
@@ -275,7 +275,7 @@ body.present #tbHide{display:flex!important}
     <div class="tutsec"><b class="h">Pages</b>
       &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
     <div class="tutsec"><b class="h">Math &amp; graphs</b>
-      The <b>&#9995; Move</b> tool (<span class="kbd">V</span>) grabs any text box, equation, shape, or stroke and drags it — the lasso still handles multi-select, resize, and recolor. The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · the pen toolbar&rsquo;s <b>&#8767; Plot</b> button stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page &#9662;</b> in the organizer picks the paper: blank, lined, grid, or dots (the ruling exports with the PDF).</div>
+      The <b>&#9995; Move</b> tool (<span class="kbd">V</span>) grabs any text box, equation, shape, or stroke and drags it — the lasso still handles multi-select, resize, and recolor. The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · the pen toolbar&rsquo;s <b>&#8767; Plot</b> button stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page</b> adds one instantly (last-used paper); its <b>&#9662;</b> — or <b>press &amp; hold Board</b> — picks blank, lined, grid, or dot paper (the ruling exports with the PDF).</div>
     <div class="tutsec"><b class="h">View &amp; find</b>
       Two-finger pinch or <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom (Ctrl+scroll on laptop) · drag or scroll to pan when zoomed · <span class="kbd">M</span> opens the page menu with thumbnails and <b>text search</b>.</div>
     <div class="tutsec"><b class="h">Present</b>
@@ -289,13 +289,7 @@ body.present #tbHide{display:flex!important}
   <div class="orghead"><b>Pages</b>
     <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
     <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
-    <span style="position:relative"><button class="btn sec" id="orgAddBlank">&#65291; Blank page &#9662;</button>
-      <div id="paperMenu" role="menu" aria-label="Paper style">
-        <button data-ps="plain"><div class="sw"></div>Blank</button>
-        <button data-ps="lined"><div class="sw lined"></div>Lined</button>
-        <button data-ps="grid"><div class="sw grid"></div>Grid</button>
-        <button data-ps="dots"><div class="sw dots"></div>Dots</button>
-      </div></span>
+    <span style="display:inline-flex"><button class="btn sec" id="orgAddBlank" style="border-radius:10px 0 0 10px">&#65291; Blank page</button><button class="btn sec" id="orgAddBlankStyle" title="Choose paper style" style="border-radius:0 10px 10px 0;border-left:1.5px solid rgba(0,0,0,.18);padding-left:10px;padding-right:10px">&#9662;</button></span>
     <button class="btn" id="orgClose">Done</button>
     <span class="tiny" style="width:100%;color:#6d6d6d"><b id="orgSelInfo" style="color:#861F41"></b>Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons. To move several pages at once: click the first, then the last — the whole run between selects — then drag any selected card. Click a selected page to clear.</span>
   </div>
@@ -327,6 +321,12 @@ body.present #tbHide{display:flex!important}
   <div id="zPct" aria-live="polite">100%</div>
   <button class="btn sec" id="zOut" title="Zoom out (− key)">−</button>
   <button class="btn sec" id="zFit" title="Fit to window (0 key)">⤡</button>
+</div>
+<div id="paperMenu" role="menu" aria-label="Paper style">
+  <button data-ps="plain"><div class="sw"></div>Blank</button>
+  <button data-ps="lined"><div class="sw lined"></div>Lined</button>
+  <button data-ps="grid"><div class="sw grid"></div>Grid</button>
+  <button data-ps="dots"><div class="sw dots"></div>Dots</button>
 </div>
 <div id="pentools">
   <button class="pcol" data-c="#c8102e" style="background:#c8102e"></button>
@@ -725,7 +725,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b760';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b761';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1375,7 +1375,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
     '<span class="tbdiv" aria-hidden="true"></span>'+
     TB('tbPrev','prev','Back','Previous page')+TB('tbNext','next','Next','Next page')+
     '<span class="tbdiv" aria-hidden="true"></span>'+
-    TB('tbWb','board','Board','New blank page right after this one (W)')+TB('tbHand','hand','Handout','Handout view (H)')+TB('tbLaser','laser','Laser','Laser pointer (L)')+TB('tbPresent','present','Present','Presentation mode (F)')+
+    TB('tbWb','board','Board','New blank page after this one (W) — press &amp; hold to pick paper')+TB('tbHand','hand','Handout','Handout view (H)')+TB('tbLaser','laser','Laser','Laser pointer (L)')+TB('tbPresent','present','Present','Presentation mode (F)')+
     '<span class="tbdiv" aria-hidden="true"></span>'+
     TB('tbHelp','help','Help','Tutorial & shortcuts')+TB('tbHide','hide','Hide','Hide toolbar (T)');
   document.body.appendChild(tb);
@@ -1389,7 +1389,14 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbClear').onclick=clearInk;
   document.getElementById('tbPrev').onclick=prev;
   document.getElementById('tbNext').onclick=next;
-  document.getElementById('tbWb').onclick=toggleWhiteboard;
+  (function(){
+    const b=document.getElementById('tbWb');let t=null,long=false;
+    b.onclick=()=>{if(long){long=false;return;}toggleWhiteboard();};
+    b.addEventListener('pointerdown',()=>{long=false;t=setTimeout(()=>{long=true;openPaperMenu(b,ps=>{
+      const cs=slides[cur];const sec=createBlank(cs||null,ps);show(slides.indexOf(sec));if(!penOn)togglePen();
+    });},480);});
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(t)));
+  })();
   document.getElementById('tbHand').onclick=toggleHandout;
   document.getElementById('tbHide').onclick=()=>setTbHidden(true);
   document.getElementById('tbLaser').onclick=toggleLaser;
@@ -2024,17 +2031,28 @@ document.getElementById('org').addEventListener('dragstart',e=>e.preventDefault(
 document.addEventListener('dragstart',e=>{if(e.target&&(e.target.classList&&(e.target.classList.contains('pdfimg')||e.target.closest&&e.target.closest('.orgpg'))))e.preventDefault();});
 document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
 document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
-document.getElementById('orgAddBlank').onclick=e=>{e.stopPropagation();document.getElementById('paperMenu').classList.toggle('open');};
+let pmPick=null;
+function openPaperMenu(anchor,cb){
+  const pm=document.getElementById('paperMenu');
+  pmPick=cb;
+  pm.classList.add('open');
+  const r=anchor.getBoundingClientRect(),w=pm.offsetWidth||330,hh=pm.offsetHeight||110;
+  let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);
+  let y=r.top-hh-10;if(y<8)y=r.bottom+10;
+  pm.style.left=x+'px';pm.style.top=y+'px';
+}
+document.getElementById('orgAddBlank').onclick=()=>{createBlank(null,null);buildOrganizer();}; /* one tap, last-used paper */
+document.getElementById('orgAddBlankStyle').onclick=e=>{if(e&&e.stopPropagation)e.stopPropagation();openPaperMenu(document.getElementById('orgAddBlankStyle'),ps=>{createBlank(null,ps);buildOrganizer();});};
 document.querySelectorAll('#paperMenu button').forEach(b=>{
   b.onclick=e=>{
     e.stopPropagation();
     setPaperStyle(b.dataset.ps);
-    createBlank(null,b.dataset.ps);
+    const cb=pmPick;pmPick=null;
     document.getElementById('paperMenu').classList.remove('open');
-    buildOrganizer();
+    if(cb)cb(b.dataset.ps);
   };
 });
-document.addEventListener('pointerdown',e=>{const pm=document.getElementById('paperMenu');if(pm&&pm.classList.contains('open')&&!e.target.closest('#paperMenu,#orgAddBlank'))pm.classList.remove('open');});
+document.addEventListener('pointerdown',e=>{const pm=document.getElementById('paperMenu');if(pm&&pm.classList.contains('open')&&!e.target.closest('#paperMenu,#orgAddBlank,#orgAddBlankStyle,#tbWb'))pm.classList.remove('open');});
 document.getElementById('orgAddPdf').onclick=()=>document.getElementById('pdfFile2').click();
 document.getElementById('pdfFile2').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
