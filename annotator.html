@@ -843,7 +843,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b776';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b777';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2689,6 +2689,14 @@ function stampDate(col){
 }
 document.getElementById('signDate').onclick=()=>stampDate('#1a1a1a'); /* signing dates are always black */
 document.getElementById('pdate').onclick=()=>stampDate();
+function shareApp(e){
+  if(e&&e.preventDefault)e.preventDefault();
+  const url='https://roberthildebrand.github.io/inkpodium/';
+  if(navigator.share){navigator.share({title:'InkPodium',text:'Annotate, sign & present PDFs — free, in your browser, nothing leaves your device.',url:url}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>alert('Link copied — paste it anywhere.')).catch(()=>{});}
+}
+const sa1=document.getElementById('shareApp');if(sa1)sa1.onclick=shareApp;
+const sa2=document.getElementById('shareApp2');if(sa2)sa2.onclick=shareApp;
 try{if(new URLSearchParams(location.search).get('sign')==='1')setSignMode(true);}catch(e){}
 /* ===== resume last session ===== */
 async function resumeSession(){
