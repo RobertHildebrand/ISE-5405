@@ -111,6 +111,21 @@ canvas.inkprint{position:absolute;inset:0;width:100%;height:100%;pointer-events:
 .axflavor{font-size:14.5px;background:#fdf3ea;border-left:4px solid #E5751F;padding:7px 12px;border-radius:0 8px 8px 0;margin-top:4px}
 .axdata{font-size:14.5px;background:#eef3f7;border-left:4px solid #33658a;padding:7px 12px;border-radius:0 8px 8px 0;margin-top:8px}
 .slide.whiteboard{background:repeating-linear-gradient(to bottom,#fdfcfa 0 44px,#ebe7e1 44px 45px);padding:20px 40px}
+.slide.whiteboard[data-pstyle="plain"]{background:#fdfcfa}
+.slide.whiteboard[data-pstyle="grid"]{background-color:#fdfcfa;background-image:linear-gradient(to right,#e9e5de 0 1px,transparent 1px),linear-gradient(to bottom,#e9e5de 0 1px,transparent 1px);background-size:40px 40px}
+.slide.whiteboard[data-pstyle="dots"]{background-color:#fdfcfa;background-image:radial-gradient(#d5cfc6 1.5px,transparent 1.6px);background-size:32px 32px;background-position:16px 16px}
+#plotdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
+#plotdlg.open{display:flex}
+#plotdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:520px;width:92vw}
+body.present #plotBtn{display:none!important}
+#paperMenu{display:none;position:absolute;z-index:660;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:8px;gap:6px}
+#paperMenu.open{display:flex}
+#paperMenu button{border:1px solid #ddd;background:#fff;border-radius:8px;width:74px;padding:5px 4px;cursor:pointer;font-size:11.5px;color:#444}
+#paperMenu button:hover{border-color:#861F41}
+#paperMenu .sw{height:44px;border-radius:5px;margin-bottom:4px;background:#fdfcfa;border:1px solid #eee}
+#paperMenu .sw.lined{background:repeating-linear-gradient(to bottom,#fdfcfa 0 9px,#dcd6cd 9px 10px)}
+#paperMenu .sw.grid{background-image:linear-gradient(to right,#dcd6cd 0 1px,transparent 1px),linear-gradient(to bottom,#dcd6cd 0 1px,transparent 1px);background-size:10px 10px}
+#paperMenu .sw.dots{background-image:radial-gradient(#c9c2b8 1.2px,transparent 1.3px);background-size:9px 9px}
 .wbhead{display:flex;justify-content:space-between;align-items:center}
 body.handout .printskip{display:none!important}
 #pentools button.on,#touchbar button.on{outline:3px solid #E5751F}
@@ -138,6 +153,10 @@ body.handout #zoomctl{display:none}
 #texted{position:fixed;display:none;z-index:545;background:transparent}
 #texted textarea{font:600 22px "Public Sans",sans-serif;background:rgba(255,255,255,.92);border:2px dashed #33658a;border-radius:6px;padding:4px 8px;min-width:180px;min-height:40px;resize:both}
 #texted .tbar{display:flex;gap:6px;margin-top:4px}
+#texted #tedTex.on{background:#861F41;color:#fff}
+#tedPrev{display:none;background:rgba(255,255,255,.96);border:1px dashed #999;border-radius:6px;margin-top:4px;padding:6px 10px;min-height:22px;max-width:480px;overflow-x:auto}
+#tedPrev.on{display:block}
+#tedPrev svg{vertical-align:middle}
 #quickExp{position:fixed;top:12px;left:14px;z-index:515}
 body.handout #quickExp{display:none}
 @media print{#quickExp{display:none!important}}
@@ -240,6 +259,8 @@ body.present #tbHide{display:inline-block}
       Lasso &#11034; circles ink to <b>move, resize, recolor, or delete</b> it · <b>T</b>ext boxes (A&#8722;/A+ sizes, click existing text to edit) · shapes &#9645; &#9675; &#8599;.</div>
     <div class="tutsec"><b class="h">Pages</b>
       &#9776; <b>Pages</b> opens the organizer: <b>drag cards to reorder</b> (touch: press &amp; hold to lift), append more PDFs, insert blanks anywhere, remove pages. Annotations follow their pages.</div>
+    <div class="tutsec"><b class="h">Math &amp; graphs</b>
+      The text tool's <b>&radic;x&#772; TeX</b> button turns a text box into rendered LaTeX (live preview while you type) · <b>&#128200; Plot</b> stamps f(x) with axes onto the page as ordinary ink — undo, lasso, or erase it like any stroke · <b>&#65291; Blank page &#9662;</b> in the organizer picks the paper: blank, lined, grid, or dots (the ruling exports with the PDF).</div>
     <div class="tutsec"><b class="h">View &amp; find</b>
       Two-finger pinch or <span class="kbd">+</span>/<span class="kbd">&minus;</span>/<span class="kbd">0</span> zoom (Ctrl+scroll on laptop) · drag or scroll to pan when zoomed · <span class="kbd">M</span> opens the page menu with thumbnails and <b>text search</b>.</div>
     <div class="tutsec"><b class="h">Present</b>
@@ -253,16 +274,36 @@ body.present #tbHide{display:inline-block}
   <div class="orghead"><b>Pages</b>
     <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
     <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
-    <button class="btn sec" id="orgAddBlank">&#65291; Blank page</button>
+    <span style="position:relative"><button class="btn sec" id="orgAddBlank">&#65291; Blank page &#9662;</button>
+      <div id="paperMenu" role="menu" aria-label="Paper style">
+        <button data-ps="plain"><div class="sw"></div>Blank</button>
+        <button data-ps="lined"><div class="sw lined"></div>Lined</button>
+        <button data-ps="grid"><div class="sw grid"></div>Grid</button>
+        <button data-ps="dots"><div class="sw dots"></div>Dots</button>
+      </div></span>
     <button class="btn" id="orgClose">Done</button>
     <span class="tiny" style="width:100%;color:#6d6d6d"><b id="orgSelInfo" style="color:#861F41"></b>Drag cards to reorder (touch: press &amp; hold to lift) — or use the &#9664;&#9654; buttons. To move several pages at once: click the first, then the last — the whole run between selects — then drag any selected card. Click a selected page to clear.</span>
   </div>
   <div id="orgGrid"></div>
 </div></div>
 <div id="texted"><textarea aria-label="Text annotation"></textarea>
-  <div class="tbar"><button class="btn sec" id="tedSmall" title="Smaller text">A&#8722;</button><span id="tedSize" style="color:#fff;background:#26282e;border-radius:6px;padding:4px 8px;font-size:13px">22</span><button class="btn sec" id="tedBig" title="Larger text">A+</button><button class="btn" id="tedOk">Place</button><button class="btn sec" id="tedCancel">Cancel</button></div>
+  <div class="tbar"><button class="btn sec" id="tedSmall" title="Smaller text">A&#8722;</button><span id="tedSize" style="color:#fff;background:#26282e;border-radius:6px;padding:4px 8px;font-size:13px">22</span><button class="btn sec" id="tedBig" title="Larger text">A+</button><button class="btn sec" id="tedTex" title="LaTeX math (renders when placed)">&radic;x&#772; TeX</button><button class="btn" id="tedOk">Place</button><button class="btn sec" id="tedCancel">Cancel</button></div>
+  <div id="tedPrev" aria-live="polite"></div>
 </div>
 <button class="btn sec" id="pagesBtn" title="Page organizer: reorder, delete, insert, append" style="position:fixed;top:12px;left:190px;z-index:515">&#9776; Organize pages</button>
+<button class="btn sec" id="plotBtn" title="Plot a function f(x) onto this page as ink" style="position:fixed;top:12px;left:352px;z-index:515">&#128200; Plot</button>
+<div id="plotdlg" role="dialog" aria-modal="true" aria-label="Plot a function"><div class="pcard">
+  <div style="display:flex;align-items:center;margin-bottom:10px"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:21px">Plot a function</h3><button class="btn sec" id="plotClose" style="margin-left:auto">Cancel</button></div>
+  <label style="font-size:13.5px;color:#444">f(x) =&nbsp;<input id="plotFx" type="text" value="sin(x) + x/3" spellcheck="false" style="font:15px ui-monospace,Menlo,monospace;width:280px;padding:5px 8px;border:1.5px solid #ccc;border-radius:7px"></label>
+  <div id="plotErr" style="color:#b3261e;font-size:12.5px;min-height:16px;margin:3px 0"></div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#444;margin:4px 0 10px">
+    <label>x from <input id="plotX0" type="number" value="-10" style="width:64px"> to <input id="plotX1" type="number" value="10" style="width:64px"></label>
+    <label>y from <input id="plotY0" type="number" value="-8" style="width:64px"> to <input id="plotY1" type="number" value="8" style="width:64px"></label>
+  </div>
+  <label style="font-size:13px;color:#444;display:block;margin-bottom:12px"><input id="plotAxes" type="checkbox" checked> draw axes &amp; ticks (skips if already stamped on this page)</label>
+  <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
+  <button class="btn" id="plotGo">Plot onto this page</button>
+</div></div>
 <button class="btn" id="quickExp" title="Download annotated PDF (vector — keeps selectable text)">&#10515; Export PDF</button>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
   <button class="btn sec" id="zIn" title="Zoom in (+ key)">+</button>
@@ -401,10 +442,14 @@ function toggleWhiteboard(){
   if(wbIdx>=0){show(wbIdx);if(!penOn)togglePen();}
 }
 let wbCount=0;
-function addPage(){
+let lastPaperStyle='lined';
+try{lastPaperStyle=localStorage.getItem('inkpadPaper')||'lined';}catch(e){}
+function setPaperStyle(s){lastPaperStyle=s;try{localStorage.setItem('inkpadPaper',s);}catch(e){}}
+function addPage(style){
   wbCount++;
   const sec=document.createElement('section');
   sec.className='slide whiteboard';
+  sec.dataset.pstyle=style||lastPaperStyle;
   sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount;
   sec.dataset.toc='Blank page '+wbCount;
   sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page '+wbCount+'</span></div>';
@@ -430,7 +475,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':document.getElementById('tut').classList.toggle('open');break;
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -522,6 +567,12 @@ function itemBBox(it){
     const w=(it.size*0.58)*Math.max(1,...lines.map(l=>l.length));
     return [it.x,it.y,it.x+w,it.y+it.size*1.3*lines.length];
   }
+  if(it.type==='math'){
+    const rec=mathCache[mathKey(it)];
+    const u=(it.size||28)*EXPX;
+    if(rec)return [it.x,it.y,it.x+rec.exW*u,it.y+rec.exH*u];
+    return [it.x,it.y,it.x+(it.size||28)*Math.max(2,(it.tex||'').length*0.4),it.y+(it.size||28)*1.4];
+  }
   return [Math.min(it.x1,it.x2),Math.min(it.y1,it.y2),Math.max(it.x1,it.x2),Math.max(it.y1,it.y2)];
 }
 function renderItem(c2,it,mapper,wscale){
@@ -530,6 +581,14 @@ function renderItem(c2,it,mapper,wscale){
   const ws=wscale||1;
   c2.globalAlpha=it.a==null?1:it.a;
   const col=it.c||'#c8102e';
+  if(it.type==='math'){
+    const p=M([it.x,it.y]);
+    const rec=mathRec(it);
+    const u=(it.size||28)*EXPX*ws;
+    if(rec.status===1&&rec.img&&rec.img.complete)c2.drawImage(rec.img,p[0],p[1],rec.exW*u,rec.exH*u);
+    else{c2.strokeStyle='#b9b2a8';c2.setLineDash([5,4]);c2.lineWidth=1.4;c2.strokeRect(p[0],p[1],rec.exW*u,rec.exH*u);c2.setLineDash([]);}
+    c2.globalAlpha=1;return;
+  }
   if(it.type==='text'){
     const p=M([it.x,it.y]);
     const sz=(it.size||22)*ws;
@@ -623,7 +682,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b750';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b751';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -863,7 +922,7 @@ function translateItem(it,dx,dy){
 function scaleItem(it,cx,cy,f){
   const sc=(x,y)=>[cx+(x-cx)*f,cy+(y-cy)*f];
   if(it.p){it.p.forEach(q=>{const m=sc(q[0],q[1]);q[0]=m[0];q[1]=m[1];});it.w=(it.w||3.5)*f;}
-  else if(it.type==='text'){const m=sc(it.x,it.y);it.x=m[0];it.y=m[1];it.size=(it.size||22)*f;}
+  else if(it.type==='text'||it.type==='math'){const m=sc(it.x,it.y);it.x=m[0];it.y=m[1];it.size=(it.size||22)*f;}
   else{let m=sc(it.x1,it.y1);it.x1=m[0];it.y1=m[1];m=sc(it.x2,it.y2);it.x2=m[0];it.y2=m[1];it.w=(it.w||3)*f;}
 }
 function commitSelOp(){
@@ -871,6 +930,61 @@ function commitSelOp(){
   pushOp({key:sel.key,before:sel.before,after:(inkStore[sel.key]||[]).slice().map(cloneItem)});
   sel.before=(inkStore[sel.key]||[]).slice().map(cloneItem);
   saveInkSoon();
+}
+/* --- LaTeX math (MathJax, lazy-loaded, local vendor copy) --- */
+let mjLoading=false,mjQueue=[];
+function ensureMathJax(cb){
+  if(window.MathJax&&window.MathJax.tex2svg){cb();return;}
+  mjQueue.push(cb);
+  if(mjLoading)return;
+  mjLoading=true;
+  window.MathJax={svg:{fontCache:'none'},startup:{typeset:false}};
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';
+  s.onload=()=>{const t=()=>{if(window.MathJax&&window.MathJax.tex2svg)mjQueue.splice(0).forEach(f=>{try{f();}catch(_){}});else setTimeout(t,120);};t();};
+  s.onerror=()=>{mjLoading=false;mjQueue=[];alert('The math renderer could not load.');};
+  document.head.appendChild(s);
+}
+const EXPX=0.441; /* ex height in units of font size */
+const mathCache={};
+function mathKey(it){return (it.c||'#000')+'|'+it.tex;}
+function mathRec(it){
+  const key=mathKey(it);
+  let rec=mathCache[key];
+  if(rec)return rec;
+  rec=mathCache[key]={status:0,img:null,exW:6,exH:2.2};
+  ensureMathJax(()=>{
+    try{
+      const node=MathJax.tex2svg(String(it.tex||''),{display:false});
+      const svg=node.querySelector('svg');
+      rec.exW=parseFloat(svg.getAttribute('width'))||6;
+      rec.exH=parseFloat(svg.getAttribute('height'))||2.2;
+      svg.style.color=it.c||'#000';
+      const img=new Image();
+      img.onload=()=>{rec.status=1;redrawInk();};
+      img.onerror=()=>{rec.status=-1;};
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+      rec.img=img;
+    }catch(e){rec.status=-1;}
+  });
+  return rec;
+}
+function mathPngDataUrl(it,timeoutMs){
+  return new Promise(res=>{
+    const rec=mathRec(it);
+    const t0=Date.now();
+    const poll=()=>{
+      if(rec.status===1){
+        const u=(it.size||28)*EXPX;
+        const W=Math.max(2,Math.round(rec.exW*u*4)),Hh=Math.max(2,Math.round(rec.exH*u*4));
+        const cv=document.createElement('canvas');cv.width=W;cv.height=Hh;
+        cv.getContext('2d').drawImage(rec.img,0,0,W,Hh);
+        try{res(cv.toDataURL('image/png'));}catch(e){res(null);}
+      }else if(rec.status<0||Date.now()-t0>(timeoutMs||9000))res(null);
+      else setTimeout(poll,150);
+    };
+    poll();
+  });
 }
 /* --- text editor --- */
 function positionTextEditor(){
@@ -883,19 +997,52 @@ function positionTextEditor(){
   const lbl=document.getElementById('tedSize');
   if(lbl)lbl.textContent=textEditing.size;
 }
+function setTexMode(on){
+  if(!textEditing)return;
+  textEditing.texMode=!!on;
+  document.getElementById('tedTex').classList.toggle('on',textEditing.texMode);
+  document.getElementById('tedPrev').classList.toggle('on',textEditing.texMode);
+  const ta=document.getElementById('texted').querySelector('textarea');
+  ta.placeholder=textEditing.texMode?'\\frac{d}{dx}\\,e^{x^2}':'';
+  updateTexPreview();
+}
+let texPrevT=null;
+function updateTexPreview(){
+  if(!textEditing||!textEditing.texMode)return;
+  clearTimeout(texPrevT);
+  texPrevT=setTimeout(()=>{
+    const ta=document.getElementById('texted').querySelector('textarea');
+    const pv=document.getElementById('tedPrev');
+    const tex=ta.value.trim();
+    if(!tex){pv.innerHTML='<span style="color:#999;font-size:13px">preview</span>';return;}
+    ensureMathJax(()=>{
+      if(!textEditing||!textEditing.texMode)return;
+      try{
+        const node=MathJax.tex2svg(tex,{display:false});
+        const svg=node.querySelector('svg');
+        svg.style.color=ta.style.color||'#000';
+        svg.style.fontSize=Math.max(16,textEditing.size)+'px';
+        pv.innerHTML='';pv.appendChild(svg);
+      }catch(e){pv.innerHTML='<span style="color:#b3261e;font-size:13px">TeX error</span>';}
+    });
+  },280);
+}
 function openTextEditor(deckPt,existing){
   const ed=document.getElementById('texted');
   ed.style.display='block';
   const ta=ed.querySelector('textarea');
-  ta.value=existing?existing.text:'';
+  const isMath=!!(existing&&existing.type==='math');
+  ta.value=existing?(isMath?existing.tex:existing.text):'';
   ta.style.color=existing?existing.c:(penColor==='HL'?'#b7950b':penColor);
   const sizes={2:16,3.5:22,6:30};
   textEditing={item:existing||null,key:inkKey(),
     at:existing?[existing.x,existing.y]:deckPt.slice(),
     size:existing?(existing.size||22):(sizes[penWidth]||22)};
+  setTexMode(isMath||(!existing&&lastTexMode));
   positionTextEditor();
   setTimeout(function(){ta.focus();},30);
 }
+let lastTexMode=false;
 function bumpTextSize(d){
   if(!textEditing)return;
   textEditing.size=Math.max(10,Math.min(72,Math.round(textEditing.size*(d>0?1.2:1/1.2))));
@@ -908,11 +1055,21 @@ function commitText(){
   const txt=ta.value.replace(/\s+$/,'');
   const key=textEditing.key;
   const before=(inkStore[key]||[]).slice().map(cloneItem);
+  const asMath=!!textEditing.texMode;
+  lastTexMode=asMath;
   if(textEditing.item){
-    if(txt){textEditing.item.text=txt;textEditing.item.size=textEditing.size;}
-    else{const arr=inkStore[key]||[];const i=arr.indexOf(textEditing.item);if(i>=0)arr.splice(i,1);if(!arr.length)delete inkStore[key];}
+    const it=textEditing.item;
+    if(txt){
+      it.size=textEditing.size;
+      if(asMath){it.type='math';it.tex=txt;delete it.text;}
+      else{it.type='text';it.text=txt;it.tl=1;delete it.tex;}
+    }
+    else{const arr=inkStore[key]||[];const i=arr.indexOf(it);if(i>=0)arr.splice(i,1);if(!arr.length)delete inkStore[key];}
   }else if(txt){
-    (inkStore[key]=inkStore[key]||[]).push({type:'text',x:textEditing.at[0],y:textEditing.at[1],size:textEditing.size,c:penColor==='HL'?'#b7950b':penColor,a:1,tl:1,text:txt});
+    const col=penColor==='HL'?'#b7950b':penColor;
+    (inkStore[key]=inkStore[key]||[]).push(asMath
+      ?{type:'math',x:textEditing.at[0],y:textEditing.at[1],size:textEditing.size,c:col,a:1,tex:txt}
+      :{type:'text',x:textEditing.at[0],y:textEditing.at[1],size:textEditing.size,c:col,a:1,tl:1,text:txt});
   }
   pushOp({key:key,before:before,after:(inkStore[key]||[]).slice().map(cloneItem)});
   textEditing=null;ed.style.display='none';
@@ -943,7 +1100,7 @@ ink.addEventListener('pointerdown',e=>{
   if(toolMode==='text'){
     const arr=inkStore[inkKey()]||[];
     const hit=arr.slice().reverse().find(it=>{
-      if(it.type!=='text')return false;
+      if(it.type!=='text'&&it.type!=='math')return false;
       const bb=itemBBox(it);
       return dp[0]>bb[0]-6&&dp[0]<bb[2]+6&&dp[1]>bb[1]-6&&dp[1]<bb[3]+6;
     });
@@ -1068,6 +1225,16 @@ addEventListener('keydown',e=>{
   else if(((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='z'||e.key==='Z'))||((e.ctrlKey||e.metaKey)&&(e.key==='y'||e.key==='Y'))){e.preventDefault();doRedo();}
 });
 
+function canvasRuling(c2,style,mapper){
+  if(!style||style==='plain')return;
+  const M=q=>mapper?mapper(q):q;
+  c2.save();c2.strokeStyle='#e6e1da';c2.fillStyle='#d9d3ca';c2.lineWidth=1;
+  const line=(x1,y1,x2,y2)=>{const a=M([x1,y1]),b=M([x2,y2]);c2.beginPath();c2.moveTo(a[0],a[1]);c2.lineTo(b[0],b[1]);c2.stroke();};
+  if(style==='lined'){for(let y=44.5;y<720;y+=45)line(0,y,1280,y);}
+  else if(style==='grid'){for(let y=40;y<720;y+=40)line(0,y,1280,y);for(let x=40;x<1280;x+=40)line(x,0,x,720);}
+  else if(style==='dots'){for(let y=16;y<720;y+=32)for(let x=16;x<1280;x+=32){const p=M([x,y]);c2.beginPath();c2.arc(p[0],p[1],1.4,0,7);c2.fill();}}
+  c2.restore();
+}
 function injectInkPrints(){
   removeInkPrints();
   const fitted=!!(pdfDoc&&pdfAspect);
@@ -1104,6 +1271,7 @@ function injectInkPrints(){
     sl.appendChild(c);
     const c2=c.getContext('2d');
     c2.setTransform(2,0,0,2,0,0);
+    if(sl.classList.contains('whiteboard'))canvasRuling(c2,sl.dataset.pstyle||'lined',mapper);
     sts.forEach(st=>renderItem(c2,st,mapper,wsc));
   });
   if(last)last.classList.add('lastprint');
@@ -1149,6 +1317,8 @@ document.getElementById('pcustomInput').addEventListener('input',e=>{
   setTool('pen');
 });
 document.getElementById('tedOk').onclick=commitText;
+document.getElementById('tedTex').onclick=()=>setTexMode(!(textEditing&&textEditing.texMode));
+document.querySelector('#texted textarea').addEventListener('input',updateTexPreview);
 document.getElementById('tedSmall').onclick=()=>bumpTextSize(-1);
 document.getElementById('tedBig').onclick=()=>bumpTextSize(1);
 document.getElementById('tedCancel').onclick=()=>{textEditing=null;document.getElementById('texted').style.display='none';};
@@ -1301,7 +1471,7 @@ function saveComp(){
   try{
     const pages=slides.filter(sl=>!sl.classList.contains('cover')).map(sl=>{
       if(sl.classList.contains('pdfpage'))return {k:'p',fp:sources[+sl.dataset.src].fp,p:+sl.dataset.pdfpage};
-      return {k:'b',id:sl.dataset.inkkey,label:sl.dataset.toc||''};
+      return {k:'b',id:sl.dataset.inkkey,label:sl.dataset.toc||'',ps:sl.dataset.pstyle||''};
     });
     localStorage.setItem('inkpadComp',JSON.stringify({srcs:sources.map(x=>({fp:x.fp,name:x.name})),pages:pages,ts:Date.now()}));
   }catch(e){}
@@ -1480,6 +1650,7 @@ async function exportVectorPdf(){
     const font=await out.embedFont(PDFLib.StandardFonts.Helvetica);
     const RC=PDFLib.LineCapStyle?PDFLib.LineCapStyle.Round:1;
     const libDocs={};
+    const mathImgs=new Map();
     const drawItems=(page,items,mapPt,scl)=>{
       const H=page.getHeight();
       items.forEach(it=>{
@@ -1497,6 +1668,13 @@ async function exportVectorPdf(){
           it.text.split('\n').forEach((ln,i)=>{
             page.drawText(ln,{x:base[0],y:H-(base[1]+i*sz*1.3+sz*0.82),size:sz,font:font,color:col,opacity:op});
           });
+        }else if(it.type==='math'){
+          const base=mapPt([it.x,it.y]);
+          const u=(it.size||28)*EXPX*scl;
+          const rec=mathCache[mathKey(it)];
+          const im=mathImgs.get(it);
+          if(im&&rec&&rec.status===1)page.drawImage(im,{x:base[0],y:H-(base[1]+rec.exH*u),width:rec.exW*u,height:rec.exH*u,opacity:op});
+          else page.drawText('['+(it.tex||'')+']',{x:base[0],y:H-(base[1]+(it.size||22)*scl),size:(it.size||22)*scl*0.8,font:font,color:col,opacity:op});
         }else if(it.type==='rect'){
           const a=mapPt([it.x1,it.y1]),b=mapPt([it.x2,it.y2]);
           page.drawRectangle({x:Math.min(a[0],b[0]),y:H-Math.max(a[1],b[1]),width:Math.abs(b[0]-a[0]),height:Math.abs(b[1]-a[1]),borderColor:col,borderWidth:(it.w||3)*scl,borderOpacity:op,opacity:0});
@@ -1515,6 +1693,26 @@ async function exportVectorPdf(){
         }
       });
     };
+    const drawRuling=(page,style,scl)=>{
+      if(!style||style==='plain')return;
+      const W=page.getWidth(),H=page.getHeight();
+      const gray=PDFLib.rgb(0.905,0.885,0.86);
+      const line=(x1,y1,x2,y2)=>page.drawLine({start:{x:x1,y:H-y1},end:{x:x2,y:H-y2},thickness:0.7,color:gray});
+      if(style==='lined'){for(let y=44.5;y<720;y+=45)line(0,y*scl,W,y*scl);}
+      else if(style==='grid'){for(let y=40;y<720;y+=40)line(0,y*scl,W,y*scl);for(let x=40;x<1280;x+=40)line(x*scl,0,x*scl,720*scl);}
+      else if(style==='dots'){const dc=PDFLib.rgb(0.84,0.81,0.77);for(let y=16;y<720;y+=32)for(let x=16;x<1280;x+=32)page.drawCircle({x:x*scl,y:H-y*scl,size:0.9,color:dc});}
+    };
+    /* pre-render any LaTeX items to PNG and embed once */
+    for(const sec of slides){
+      if(sec.classList.contains('cover')||sec.classList.contains('noprint'))continue;
+      for(const it of (inkStore[inkKey(slides.indexOf(sec))]||[])){
+        if(it.type==='math'&&!mathImgs.has(it)){
+          pgprog.textContent='Rendering math…';
+          const durl=await mathPngDataUrl(it);
+          mathImgs.set(it,durl?await out.embedPng(durl):null);
+        }
+      }
+    }
     let rotWarn=false,exported=0;
     for(const sec of slides){
       if(sec.classList.contains('cover')||sec.classList.contains('noprint'))continue;
@@ -1541,6 +1739,7 @@ async function exportVectorPdf(){
         if(!items.length)continue;
         const page=out.addPage([792,445.5]);exported++;
         const scl=792/1280;
+        drawRuling(page,sec.dataset.pstyle||'lined',scl);
         drawItems(page,items,q=>[q[0]*scl,q[1]*scl],scl);
       }
     }
@@ -1561,10 +1760,11 @@ async function exportVectorPdf(){
   }
 }
 /* ===== page organizer ===== */
-function createBlank(afterSec){
+function createBlank(afterSec,style){
   wbCount++;
   const sec=document.createElement('section');
   sec.className='slide whiteboard';
+  sec.dataset.pstyle=style||lastPaperStyle;
   sec.dataset.inkkey=(currentFP?'x-'+currentFP+'-':'')+'wb'+wbCount+'-'+Date.now()%100000;
   sec.dataset.toc='Blank page';
   sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
@@ -1725,7 +1925,17 @@ document.getElementById('org').addEventListener('dragstart',e=>e.preventDefault(
 document.addEventListener('dragstart',e=>{if(e.target&&(e.target.classList&&(e.target.classList.contains('pdfimg')||e.target.closest&&e.target.closest('.orgpg'))))e.preventDefault();});
 document.getElementById('pagesBtn').onclick=()=>{buildOrganizer();document.getElementById('org').classList.add('open');};
 document.getElementById('orgClose').onclick=()=>document.getElementById('org').classList.remove('open');
-document.getElementById('orgAddBlank').onclick=()=>{createBlank(null);buildOrganizer();};
+document.getElementById('orgAddBlank').onclick=e=>{e.stopPropagation();document.getElementById('paperMenu').classList.toggle('open');};
+document.querySelectorAll('#paperMenu button').forEach(b=>{
+  b.onclick=e=>{
+    e.stopPropagation();
+    setPaperStyle(b.dataset.ps);
+    createBlank(null,b.dataset.ps);
+    document.getElementById('paperMenu').classList.remove('open');
+    buildOrganizer();
+  };
+});
+document.addEventListener('pointerdown',e=>{const pm=document.getElementById('paperMenu');if(pm&&pm.classList.contains('open')&&!e.target.closest('#paperMenu,#orgAddBlank'))pm.classList.remove('open');});
 document.getElementById('orgAddPdf').onclick=()=>document.getElementById('pdfFile2').click();
 document.getElementById('pdfFile2').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
@@ -1733,6 +1943,119 @@ document.getElementById('pdfFile2').addEventListener('change',async e=>{
   buildOrganizer();
   e.target.value='';
 });
+/* ===== plot-to-ink grapher ===== */
+function compileFx(src){
+  const FN={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sqrt:Math.sqrt,abs:Math.abs,ln:Math.log,log:Math.log10,exp:Math.exp,floor:Math.floor,ceil:Math.ceil,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh};
+  const s=String(src).replace(/\s+/g,'');
+  if(!s)throw new Error('Type a function of x.');
+  const toks=[];let i=0;
+  while(i<s.length){
+    const ch=s[i];
+    if(/[0-9.]/.test(ch)){let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;const v=parseFloat(s.slice(i,j));if(!isFinite(v))throw new Error('bad number');toks.push({t:'num',v:v});i=j;}
+    else if(/[a-zA-Z_]/.test(ch)){let j=i;while(j<s.length&&/[a-zA-Z_]/.test(s[j]))j++;toks.push({t:'id',v:s.slice(i,j).toLowerCase()});i=j;}
+    else if('+-*/^(),'.includes(ch)){toks.push({t:ch});i++;}
+    else throw new Error('unexpected "'+ch+'"');
+  }
+  const out=[];
+  const isVal=tk=>tk&&(tk.t==='num'||tk.t===')'||(tk.t==='id'&&!FN[tk.v]));
+  for(let k=0;k<toks.length;k++){
+    const tk=toks[k],prev=out[out.length-1];
+    if(prev&&isVal(prev)&&(tk.t==='num'||tk.t==='id'||tk.t==='('))out.push({t:'*'});
+    out.push(tk);
+  }
+  let p=0;
+  const peek=()=>out[p],eat=t=>{if(!peek()||peek().t!==t)throw new Error('expected "'+t+'"');return out[p++];};
+  function expr(){let v=term();while(peek()&&(peek().t==='+'||peek().t==='-')){const op=out[p++].t,r=term(),L=v;v=op==='+'?(x=>L(x)+r(x)):(x=>L(x)-r(x));}return v;}
+  function term(){let v=unary();while(peek()&&(peek().t==='*'||peek().t==='/')){const op=out[p++].t,r=unary(),L=v;v=op==='*'?(x=>L(x)*r(x)):(x=>L(x)/r(x));}return v;}
+  function unary(){if(peek()&&peek().t==='-'){p++;const r=unary();return x=>-r(x);}if(peek()&&peek().t==='+'){p++;return unary();}return power();}
+  function power(){const b=atom();if(peek()&&peek().t==='^'){p++;const e=unary();return x=>Math.pow(b(x),e(x));}return b;}
+  function atom(){
+    const tk=peek();
+    if(!tk)throw new Error('unexpected end of expression');
+    if(tk.t==='num'){p++;const n=tk.v;return ()=>n;}
+    if(tk.t==='('){p++;const v=expr();eat(')');return v;}
+    if(tk.t==='id'){
+      p++;
+      if(tk.v==='x')return x=>x;
+      if(tk.v==='pi')return ()=>Math.PI;
+      if(tk.v==='e')return ()=>Math.E;
+      if(FN[tk.v]){eat('(');const a=expr();eat(')');const f=FN[tk.v];return x=>f(a(x));}
+      throw new Error('unknown name "'+tk.v+'"');
+    }
+    throw new Error('unexpected "'+tk.t+'"');
+  }
+  const f=expr();
+  if(p<out.length)throw new Error('could not parse the whole expression');
+  f(0.1234);
+  return f;
+}
+function niceStep(range){const raw=range/8,mag=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/mag;return (n<1.5?1:n<3.5?2:n<7.5?5:10)*mag;}
+const PLOT={x0:180,y0:70,w:920,h:560};
+function stampPlot(){
+  const fxs=document.getElementById('plotFx').value;
+  const ex0=parseFloat(document.getElementById('plotX0').value),ex1=parseFloat(document.getElementById('plotX1').value);
+  const ey0=parseFloat(document.getElementById('plotY0').value),ey1=parseFloat(document.getElementById('plotY1').value);
+  const errEl=document.getElementById('plotErr');
+  errEl.textContent='';
+  if(!(isFinite(ex0)&&isFinite(ex1)&&ex1>ex0&&isFinite(ey0)&&isFinite(ey1)&&ey1>ey0)){errEl.textContent='Window needs max > min on both axes.';return;}
+  let f;try{f=compileFx(fxs);}catch(e){errEl.textContent=e.message;return;}
+  const key=inkKey();
+  const arr0=inkStore[key]||[];
+  const mx=x=>PLOT.x0+(x-ex0)/(ex1-ex0)*PLOT.w;
+  const my=y=>PLOT.y0+(ey1-y)/(ey1-ey0)*PLOT.h;
+  const adds=[];
+  const axCol='#5b6470';
+  if(document.getElementById('plotAxes').checked&&!arr0.some(it=>it.ax)){
+    const seg=(x1,y1,x2,y2,w)=>adds.push({ax:1,c:axCol,w:w||2,a:1,p:[[x1,y1,0.5],[x2,y2,0.5]]});
+    const xAx=(ey0<0&&ey1>0)?my(0):my(ey0);
+    const yAx=(ex0<0&&ex1>0)?mx(0):mx(ex0);
+    seg(PLOT.x0,xAx,PLOT.x0+PLOT.w,xAx,2.2);
+    seg(yAx,PLOT.y0,yAx,PLOT.y0+PLOT.h,2.2);
+    const sx=niceStep(ex1-ex0),sy=niceStep(ey1-ey0);
+    const fmt=v=>String(Math.round(v*1000)/1000);
+    for(let x=Math.ceil(ex0/sx-1e-9)*sx;x<=ex1+1e-9;x+=sx){
+      if(Math.abs(x)<sx*1e-6&&ex0<0&&ex1>0)continue;
+      seg(mx(x),xAx-5,mx(x),xAx+5,1.6);
+      adds.push({ax:1,type:'text',x:mx(x)-8,y:xAx+9,size:13,c:axCol,a:1,tl:1,text:fmt(x)});
+    }
+    for(let y=Math.ceil(ey0/sy-1e-9)*sy;y<=ey1+1e-9;y+=sy){
+      if(Math.abs(y)<sy*1e-6&&ey0<0&&ey1>0)continue;
+      seg(yAx-5,my(y),yAx+5,my(y),1.6);
+      adds.push({ax:1,type:'text',x:yAx-36,y:my(y)-7,size:13,c:axCol,a:1,tl:1,text:fmt(y)});
+    }
+  }
+  const col=penColor==='HL'?'#b7950b':penColor;
+  const N=560,pad=(ey1-ey0)*0.02;
+  let run=null,curveRuns=0;
+  for(let k=0;k<=N;k++){
+    const X=ex0+(ex1-ex0)*k/N;
+    let Y;try{Y=f(X);}catch(e){Y=NaN;}
+    if(isFinite(Y)&&Y>=ey0-pad&&Y<=ey1+pad){
+      if(!run)run={c:col,w:2.6,a:1,p:[]};
+      run.p.push([Math.round(mx(X)*10)/10,Math.round(my(Math.max(ey0,Math.min(ey1,Y)))*10)/10,0.5]);
+    }else if(run){if(run.p.length>1){adds.push(run);curveRuns++;}run=null;}
+  }
+  if(run&&run.p.length>1){adds.push(run);curveRuns++;}
+  if(!curveRuns&&!adds.length){errEl.textContent='The curve never enters this window — adjust the y range.';return;}
+  if(curveRuns){
+    const nlab=arr0.filter(it=>it.plotLabel).length;
+    adds.push({plotLabel:1,type:'text',x:PLOT.x0+10,y:PLOT.y0+8+nlab*24,size:17,c:col,a:1,tl:1,text:'f(x) = '+fxs.trim()});
+  }
+  const before=arr0.slice().map(cloneItem);
+  const arr=(inkStore[key]=inkStore[key]||[]);
+  adds.forEach(it=>arr.push(it));
+  pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
+  saveInkSoon();redrawInk();
+  document.getElementById('plotdlg').classList.remove('open');
+  if(!curveRuns)alert('Axes stamped, but the curve never enters this window — adjust the y range and plot again.');
+}
+document.getElementById('plotBtn').onclick=()=>{
+  if(cur===0&&slides.length>1)show(1);
+  document.getElementById('plotdlg').classList.add('open');
+  setTimeout(()=>document.getElementById('plotFx').focus(),30);
+};
+document.getElementById('plotClose').onclick=()=>document.getElementById('plotdlg').classList.remove('open');
+document.getElementById('plotGo').onclick=stampPlot;
 /* ===== resume last session ===== */
 async function resumeSession(){
   let comp=null;
@@ -1761,6 +2084,7 @@ async function resumeSession(){
         const sec=document.createElement('section');
         sec.className='slide whiteboard';
         sec.dataset.inkkey=pg.id;
+        if(pg.ps)sec.dataset.pstyle=pg.ps;
         sec.dataset.toc=pg.label||'Blank page';
         sec.innerHTML='<div class="wbhead"><span class="kicker">Blank page</span></div>';
         deck.appendChild(sec);
@@ -1852,7 +2176,7 @@ function togglePresent(){
     if(tb)tb.style.display=coarse?'flex':'none';
     try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
     clearTimeout(idleT);
-    if(presentFrom===0)show(0);
+    if(presentFrom===0)show(0); /* entered from the start page → return there */
   }
   const pb=document.getElementById('tbPresent');if(pb)pb.classList.toggle('on',presentOn);
   fit();
@@ -1866,7 +2190,7 @@ function armIdle(){
 addEventListener('pointermove',()=>{if(presentOn)armIdle();});
 addEventListener('pointerdown',()=>{if(presentOn)armIdle();});
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presentOn)togglePresent();});
-document.getElementById('presentBtn').onclick=()=>{if(slides.length>1)show(1);};
+document.getElementById('presentBtn').onclick=()=>{if(slides.length>1)show(1);}; /* start page → first blank page, normal mode */
 document.getElementById('tutBtn').onclick=()=>document.getElementById('tut').classList.add('open');
 document.getElementById('tutClose').onclick=()=>document.getElementById('tut').classList.remove('open');
 document.getElementById('eraseAllBtn').onclick=async()=>{
