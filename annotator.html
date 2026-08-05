@@ -506,6 +506,9 @@ body.present #tbHide{display:flex!important}
   <button class="pcol" data-c="#7CE38B" data-hl="1" title="Green highlighter" style="background:#7CE38B"></button>
   <button class="pcol" data-gl="gold" title="Gold glitter pen" style="background:linear-gradient(135deg,#E8B923,#FFF3B0 55%,#D4881C)"></button>
   <button class="pcol" data-gl="rbw" title="Rainbow glitter pen" style="background:conic-gradient(#e33,#f90,#fd0,#3c9,#39f,#93f,#e33)"></button>
+  <button class="pcol" data-gl="silver" title="Silver glitter pen" style="background:linear-gradient(135deg,#8E9BA6,#F2F5F8 55%,#C0C7D1)"></button>
+  <button class="pcol" data-gl="goldhl" data-hl="1" title="Gold glitter highlighter" style="background:linear-gradient(135deg,#E8B923,#FFF3B0)"></button>
+  <button class="pcol" data-gl="silverhl" data-hl="1" title="Silver glitter highlighter" style="background:linear-gradient(135deg,#9aa7b2,#F2F5F8)"></button>
   <button class="pcol" data-c="#FF8FC0" data-hl="1" title="Pink highlighter" style="background:#FF8FC0"></button>
   <button class="pcol" data-c="#7CC5FF" data-hl="1" title="Blue highlighter" style="background:#7CC5FF"></button>
   <button id="pwidth" title="pen thickness" style="background:#26282e;color:#fff;font-size:17px">&#9679;</button>
@@ -734,7 +737,12 @@ function widthFor(base,p,wPrev){
   if(wPrev==null)return t;
   return Math.max(wPrev*0.9,Math.min(wPrev*1.1,t));  /* slew limit: no beading between segments */
 }
-function glColor(g,i){if(g==='gold')return ['#E8B923','#FFF3B0','#D4881C'][i%3];return 'hsl('+((i*47)%360)+',85%,55%)';}
+const GLCFG={gold:{base:'#E8B923',pal:['#E8B923','#FFF3B0','#D4881C']},
+  silver:{base:'#b9c2cc',pal:['#C0C7D1','#F2F5F8','#8E9BA6']},
+  rbw:{base:'#b090e0',pal:null},
+  goldhl:{base:'#E8B923',pal:['#E8B923','#FFF3B0','#D4881C']},
+  silverhl:{base:'#b9c2cc',pal:['#C0C7D1','#F2F5F8','#8E9BA6']}};
+function glColor(g,i){const c=GLCFG[g]||GLCFG.gold;if(c.pal)return c.pal[i%c.pal.length];return 'hsl('+((i*47)%360)+',85%,55%)';}
 function drawGlitterStroke(c2,it,mapper,ws){
   const M=q=>mapper?mapper(q):q;
   const P=it.p.map(M);
@@ -742,7 +750,7 @@ function drawGlitterStroke(c2,it,mapper,ws){
   c2.save();
   if(P.length>1){
     c2.globalAlpha=0.28;
-    c2.strokeStyle=it.gl==='gold'?'#E8B923':'#b090e0';
+    c2.strokeStyle=(GLCFG[it.gl]||GLCFG.gold).base;
     c2.lineWidth=(it.w||7)*ws*1.6;c2.lineCap=c2.lineJoin='round';
     c2.beginPath();c2.moveTo(P[0][0],P[0][1]);
     for(let i=1;i<P.length;i++)c2.lineTo(P[i][0],P[i][1]);
@@ -964,7 +972,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b793';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b794';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1088,7 +1096,7 @@ function drawIncrement(){
     if(n>=2){
       const p0=q(n-2);
       ictx.save();ictx.globalAlpha=0.28;
-      ictx.strokeStyle=curStroke.gl==='gold'?'#E8B923':'#b090e0';
+      ictx.strokeStyle=(GLCFG[curStroke.gl]||GLCFG.gold).base;
       ictx.lineWidth=(curStroke.w||7)*ws*1.6;ictx.lineCap='round';
       ictx.beginPath();ictx.moveTo(p0[0],p0[1]);ictx.lineTo(p1[0],p1[1]);ictx.stroke();ictx.restore();
     }
@@ -1616,7 +1624,7 @@ ink.addEventListener('pointerdown',e=>{
   strokeBefore=(inkStore[inkKey()]||[]).slice();
   const isHL=penIsHL||penColor==='HL';
   curStroke={c:penColor==='HL'?'HL':penColor,w:isHL?16:penWidth,a:isHL?0.35:1,p:[]};
-  if(penGl&&!isHL){curStroke.gl=penGl;curStroke.w=7;curStroke.a=0.85;}
+  if(penGl&&!isHL){curStroke.gl=penGl;curStroke.w=(/hl$/.test(penGl)?16:7);curStroke.a=0.85;}
   pushPoint(e);
   (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
   drawIncrement();
@@ -1869,7 +1877,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbHelp').onclick=()=>{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();};
 })();
 document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{
-  if(b.dataset.gl){penGl=b.dataset.gl;penColor=b.dataset.gl==='gold'?'#E8B923':'#c8102e';penIsHL=false;}
+  if(b.dataset.gl){penGl=b.dataset.gl;penColor=(typeof GLCFG!=='undefined'&&GLCFG[b.dataset.gl])?GLCFG[b.dataset.gl].base:'#c8102e';penIsHL=false;}
   else{penGl=null;penColor=b.dataset.c;penIsHL=!!b.dataset.hl;}
   toolMode='pen';setEraser(null);updateToolUI2();
 });
@@ -2381,15 +2389,16 @@ async function exportVectorPdf(){
         const op=it.a==null?1:it.a;
         if(it.p&&it.gl){
           const P=it.p.map(mapPt);
-          if(P.length>1)page.drawSvgPath(strokeSvgPath(P),{x:0,y:H,borderColor:hexRGB(it.gl==='gold'?'#E8B923':'#b090e0'),borderWidth:(it.w||7)*1.6*scl,borderOpacity:0.28,borderLineCap:RC});
-          const GOLD=['#E8B923','#FFF3B0','#D4881C'],RBW=['#e03131','#f08c00','#ffd43b','#37b24d','#1c7ed6','#9c36b5'];
+          if(P.length>1)page.drawSvgPath(strokeSvgPath(P),{x:0,y:H,borderColor:hexRGB((GLCFG[it.gl]||GLCFG.gold).base),borderWidth:(it.w||7)*1.6*scl,borderOpacity:0.28,borderLineCap:RC});
+          const RBW=['#e03131','#f08c00','#ffd43b','#37b24d','#1c7ed6','#9c36b5'];
           const step=Math.max(1,Math.floor(P.length/120));
           for(let gi=0;gi<P.length;gi+=step){
             const hsh=(gi*2654435761)>>>0;
             for(let k=0;k<2;k++){
               const hx=((hsh>>(k*8))&255)/255-0.5,hy=((hsh>>(k*8+4))&255)/255-0.5;
               const rr=((((hsh>>(k*3))&7)/7)*1.6+0.7)*scl*1.3;
-              const cl=hexRGB((it.gl==='gold'?GOLD:RBW)[(gi*2+k)%(it.gl==='gold'?3:6)]);
+              const pal=GLCFG[it.gl]&&GLCFG[it.gl].pal;
+              const cl=hexRGB(pal?pal[(gi*2+k)%pal.length]:RBW[(gi*2+k)%6]);
               page.drawCircle({x:P[gi][0]+hx*(it.w||7)*2.2*scl,y:H-(P[gi][1]+hy*(it.w||7)*2.2*scl),size:rr,color:cl,opacity:op});
             }
           }
