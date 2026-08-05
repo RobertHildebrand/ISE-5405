@@ -411,7 +411,7 @@ body.present #tbHide{display:flex!important}
 </div></div>
 <div id="kidsdlg" role="dialog" aria-modal="true" aria-label="Kids corner"><div class="kcard">
   <div style="display:flex;align-items:center"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:24px">&#127912; Kids corner</h3><button class="btn" id="kidsClose" style="margin-left:auto">Done</button></div>
-  <div class="tiny" style="color:#777;margin-top:4px">Coloring pages, puzzles, and games — pick one, then use the pens, glitter, and the &#129699; paint bucket. Print or export when it&rsquo;s a masterpiece.</div>
+  <div class="tiny" style="color:#777;margin-top:4px">Coloring pages, puzzles, and games — pick one, then use the pens, glitter, and the &#129699; paint bucket. Print or export when it&rsquo;s a masterpiece.<br>Dolphin, bunny &amp; turtle artwork by <b>Magnific</b> via <a href="https://www.freepik.com" target="_blank" rel="noopener" style="color:#861F41">Freepik</a>, used with attribution.</div>
   <div id="kidsGrid"></div>
 </div></div>
 <div id="docxdlg" role="dialog" aria-modal="true" aria-label="Word document detected"><div class="pcard">
@@ -955,7 +955,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b791';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b792';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2991,7 +2991,7 @@ document.getElementById('plotGo').onclick=stampPlot;
   });
 })();
 /* ===== kids corner ===== */
-const KIDS_COLOR=[['cat','Cat'],['bunny','Bunny'],['fish','Fish'],['turtle','Turtle'],['butterfly','Butterfly'],['dino','Dinosaur'],['tree','Tree'],['flower','Flower'],['castle','Castle'],['rocket','Rocket'],['sailboat','Sailboat'],['car','Car'],['snowman','Snowman']];
+const KIDS_COLOR=[['dolphin','Dolphin','png'],['bunny','Bunny','png'],['turtle','Turtle','png'],['cat','Cat'],['fish','Fish'],['butterfly','Butterfly'],['dino','Dinosaur'],['tree','Tree'],['flower','Flower'],['castle','Castle'],['rocket','Rocket'],['sailboat','Sailboat'],['car','Car'],['snowman','Snowman']];
 const KIDS_PACKS=[['dot-to-dot-pack','Dot-to-dot','\ud83d\udd22'],['maze-pack','Mazes','\ud83c\udf00'],['sudoku-pack','Sudoku','\ud83e\udde9'],['word-search-pack','Word search','\ud83d\udd24'],['game-sheets','Games for two','\u2b55']];
 async function openKidPdf(file,label){
   document.getElementById('kidsdlg').classList.remove('open');
@@ -3011,7 +3011,7 @@ function openKids(){
     kidsBuilt=true;
     KIDS_COLOR.forEach(k=>{
       const b=document.createElement('button');
-      b.innerHTML='<img src="kids/'+k[0]+'.svg" alt="">'+k[1];
+      b.innerHTML='<img src="kids/'+k[0]+'.'+(k[2]||'svg')+'" alt="">'+k[1];
       b.onclick=()=>openKidPdf(k[0],k[1]+' coloring');
       g.appendChild(b);
     });
