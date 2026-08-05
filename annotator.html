@@ -56,7 +56,7 @@ body.signmode #touchbar,body.signmode #sidectl,body.signmode #zoomctl,body.signm
 body.signmode #signbar{display:grid}
 body.handout #signbar,body.present #signbar{display:none!important}
 @media print{#signbar{display:none!important}}
-#signbar button{border:none;border-radius:14px;background:#3a3d45;color:#eef1f5;font-size:18px;font-weight:600;padding:0;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+#signbar button{position:relative;border:none;border-radius:14px;background:#3a3d45;color:#eef1f5;font-size:18px;font-weight:600;padding:0;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
 #signbar button svg{width:24px;height:24px}
 #signbar #signSign{background:#861F41}
 #signbar button.on{background:#E5751F}
@@ -75,6 +75,7 @@ body.signmode #deck{margin-bottom:150px}
 #pentools{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:500;display:none;gap:8px;background:#26282e;padding:8px 10px;border-radius:10px;align-items:center}
 #pentools button{width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;font-size:13px}
 #pentools .pcol{border:2px solid #fff}
+#pentools .pcol[data-hl]{border-radius:5px;transform:skewX(-10deg);height:28px;box-shadow:inset 0 -8px 0 rgba(255,255,255,.35)}
 .widget{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 button.btn{background:#861F41;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:16px;cursor:pointer}
 button.btn:hover{background:#a33257}
@@ -130,12 +131,13 @@ body.handout .frag{opacity:1;transform:none}
 body.penmode,body.penmode *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.handout #ink{display:none}
 #touchbar{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:520;display:none;gap:5px;align-items:stretch;background:rgba(28,30,36,.93);padding:8px 12px;border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
-#touchbar button{width:58px;height:58px;border:none;border-radius:12px;background:transparent;color:#eef1f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;cursor:pointer}
+#touchbar button{position:relative;width:58px;height:58px;border:none;border-radius:12px;background:transparent;color:#eef1f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;cursor:pointer}
 #touchbar button svg{width:23px;height:23px;flex:0 0 auto}
 #touchbar .tblbl{font-size:10px;font-weight:600;letter-spacing:.35px;line-height:1;opacity:.85}
 #touchbar button:hover{background:#3a3d45}
 #touchbar button.on{background:#E5751F;color:#fff}
 #touchbar button.on .tblbl{opacity:1}
+.cbadge{position:absolute;top:0;right:1px;font-size:13px;line-height:1;padding:5px 7px;opacity:.85;cursor:pointer;color:inherit}
 #touchbar .tbdiv{width:1px;background:rgba(255,255,255,.16);margin:6px 3px;border-radius:1px}
 #touchbar #tbPresent{background:#861F41;color:#fff}
 #touchbar #tbPresent:hover{background:#a03055}
@@ -247,6 +249,8 @@ body.signmode #pchip,body.present #pchip,body.handout #pchip,body.oncover #pchip
 #sidectl button.on{background:#E5751F;color:#fff}
 body.handout #sidectl{display:none!important}
 @media (max-height:540px){#sidectl{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px));right:auto;left:calc(10px + env(safe-area-inset-left,0px))}}
+@media (max-width:1100px){#zoomctl{bottom:106px}#sidectl{bottom:302px}}
+@media (max-width:740px){#zoomctl{bottom:152px}#sidectl{bottom:348px}}
 @media print{#sidectl{display:none!important}}
 #org{position:fixed;inset:0;background:rgba(20,22,26,.88);z-index:640;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 3vw}
 #org.open{display:flex}
@@ -809,7 +813,7 @@ function renderItem(c2,it,mapper,wscale){
     const p=M([it.x,it.y]);
     const sz=(it.size||22)*ws;
     c2.fillStyle=col;
-    c2.font='600 '+sz+'px "Public Sans",sans-serif';
+    c2.font=(it.fw||600)+' '+sz+'px "Public Sans",sans-serif';
     c2.textBaseline='top';
     it.text.split('\n').forEach((ln,i)=>c2.fillText(ln,p[0],p[1]+i*sz*1.3));
     c2.textBaseline='alphabetic';
@@ -898,7 +902,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b787';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b788';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1100,6 +1104,9 @@ function drawSelOverlay(map,ws){
 }
 function positionSelbar(bpt){
   const bar=document.getElementById('selbar');if(!bar||!sel)return;
+  const isSig=sel.items.length&&sel.items.every(it=>it.g&&it.gm&&it.g===sel.items[0].g);
+  const rb=document.getElementById('selRedo');if(rb)rb.style.display=isSig?'':'none';
+  const cb=document.getElementById('selCol');if(cb)cb.style.display=isSig?'none':'';
   const ir=inkRect();
   bar.style.display='flex';
   bar.style.left=Math.max(8,Math.min(innerWidth-230,bpt[0]+ir.left-200))+'px';
@@ -1573,6 +1580,7 @@ addEventListener('pointercancel',function(){endPointer();redrawInk();});
   const bar=document.createElement('div');bar.id='selbar';
   bar.innerHTML='<button class="btn sec" id="selDel" title="Delete selection">&#128465;</button>'+
     '<button class="btn sec" id="selCol" title="Apply current pen color">&#127912;</button>'+
+    '<button class="btn sec" id="selRedo" title="Redo — draw this again" style="display:none">&#8635;</button>'+
     '<button class="btn sec" id="selDone" title="Done">&#10003;</button>';
   document.body.appendChild(bar);
   document.getElementById('selDel').onclick=function(){
@@ -1589,6 +1597,15 @@ addEventListener('pointercancel',function(){endPointer();redrawInk();});
     commitSelOp();redrawInk();
   };
   document.getElementById('selDone').onclick=function(){clearSel();redrawInk();};
+  document.getElementById('selRedo').onclick=function(){
+    if(!sel)return;
+    const key=sel.key,mode=(sel.items[0]&&sel.items[0].gm)||'sig';
+    const keep=(inkStore[key]||[]).filter(it=>sel.items.indexOf(it)<0);
+    pushOp({key:key,before:sel.before,after:keep.slice().map(cloneItem)});
+    applyArr(key,keep);
+    clearSel();saveInkSoon();redrawInk();
+    if(window.sigPad)window.sigPad.open(mode);
+  };
 })();
 /* undo keys */
 addEventListener('keydown',e=>{
@@ -2636,12 +2653,13 @@ function stampPlot(){
   let f;try{f=compileFx(fxs);}catch(e){errEl.textContent=e.message;return;}
   const key=inkKey();
   const arr0=inkStore[key]||[];
+  const gid='pl'+(Date.now()%1e8);
   const mx=x=>PLOT.x0+(x-ex0)/(ex1-ex0)*PLOT.w;
   const my=y=>PLOT.y0+(ey1-y)/(ey1-ey0)*PLOT.h;
   const adds=[];
   const axCol='#5b6470';
   if(document.getElementById('plotAxes').checked&&!arr0.some(it=>it.ax)){
-    const seg=(x1,y1,x2,y2,w)=>adds.push({ax:1,c:axCol,w:w||2,a:1,p:[[x1,y1,0.5],[x2,y2,0.5]]});
+    const seg=(x1,y1,x2,y2,w)=>adds.push({ax:1,g:gid,c:axCol,w:w||2,a:1,p:[[x1,y1,0.5],[x2,y2,0.5]]});
     const xAx=(ey0<0&&ey1>0)?my(0):my(ey0);
     const yAx=(ex0<0&&ex1>0)?mx(0):mx(ex0);
     seg(PLOT.x0,xAx,PLOT.x0+PLOT.w,xAx,2.2);
@@ -2651,12 +2669,12 @@ function stampPlot(){
     for(let x=Math.ceil(ex0/sx-1e-9)*sx;x<=ex1+1e-9;x+=sx){
       if(Math.abs(x)<sx*1e-6&&ex0<0&&ex1>0)continue;
       seg(mx(x),xAx-5,mx(x),xAx+5,1.6);
-      adds.push({ax:1,type:'text',x:mx(x)-8,y:xAx+9,size:13,c:axCol,a:1,tl:1,text:fmt(x)});
+      adds.push({ax:1,g:gid,type:'text',x:mx(x)-8,y:xAx+9,size:13,c:axCol,a:1,tl:1,fw:400,text:fmt(x)});
     }
     for(let y=Math.ceil(ey0/sy-1e-9)*sy;y<=ey1+1e-9;y+=sy){
       if(Math.abs(y)<sy*1e-6&&ey0<0&&ey1>0)continue;
       seg(yAx-5,my(y),yAx+5,my(y),1.6);
-      adds.push({ax:1,type:'text',x:yAx-36,y:my(y)-7,size:13,c:axCol,a:1,tl:1,text:fmt(y)});
+      adds.push({ax:1,g:gid,type:'text',x:yAx-36,y:my(y)-7,size:13,c:axCol,a:1,tl:1,fw:400,text:fmt(y)});
     }
   }
   const col=penColor==='HL'?'#b7950b':penColor;
@@ -2666,7 +2684,7 @@ function stampPlot(){
     const X=ex0+(ex1-ex0)*k/N;
     let Y;try{Y=f(X);}catch(e){Y=NaN;}
     if(isFinite(Y)&&Y>=ey0-pad&&Y<=ey1+pad){
-      if(!run)run={c:col,w:2.6,a:1,p:[]};
+      if(!run)run={c:col,w:2.6,a:1,g:gid,p:[]};
       run.p.push([Math.round(mx(X)*10)/10,Math.round(my(Math.max(ey0,Math.min(ey1,Y)))*10)/10,0.5]);
     }else if(run){if(run.p.length>1){adds.push(run);curveRuns++;}run=null;}
   }
@@ -2674,7 +2692,7 @@ function stampPlot(){
   if(!curveRuns&&!adds.length){errEl.textContent='The curve never enters this window — adjust the y range.';return;}
   if(curveRuns){
     const nlab=arr0.filter(it=>it.plotLabel).length;
-    adds.push({plotLabel:1,type:'text',x:PLOT.x0+10,y:PLOT.y0+8+nlab*24,size:17,c:col,a:1,tl:1,text:'f(x) = '+fxs.trim()});
+    adds.push({plotLabel:1,g:gid,type:'text',x:PLOT.x0+10,y:PLOT.y0+8+nlab*24,size:17,c:col,a:1,tl:1,text:'f(x) = '+fxs.trim()});
   }
   const before=arr0.slice().map(cloneItem);
   const arr=(inkStore[key]=inkStore[key]||[]);
@@ -2773,7 +2791,7 @@ document.getElementById('plotGo').onclick=stampPlot;
     const before=(inkStore[key]||[]).slice().map(cloneItem);
     const arr=(inkStore[key]=inkStore[key]||[]);
     const gid='sg'+(Date.now()%1e8);
-    const items=sts.map(st=>({c:sigColor,w:3,a:1,g:gid,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
+    const items=sts.map(st=>({c:sigColor,w:3,a:1,g:gid,gm:sigMode,p:st.map(q=>[Math.round((ox+(q[0]-bb[0])*f)*10)/10,Math.round((oy+(q[1]-bb[1])*f)*10)/10,0.5])}));
     items.forEach(it=>arr.push(it));
     pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
     dlg.classList.remove('open');
@@ -2849,6 +2867,22 @@ document.getElementById('signSign').onclick=()=>window.sigPad.open('sig');
   ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(t)));
 })();
 document.getElementById('signHome').onclick=()=>{setSignMode(false);show(0);};
+(function(){ /* corner badges: discoverable alternatives to press-and-hold */
+  const ini=document.getElementById('signIni');
+  if(ini){
+    const b=document.createElement('span');b.className='cbadge';b.textContent='\u21bb';b.title='Redraw initials';
+    b.onclick=e=>{e.stopPropagation();window.sigPad.open('ini');};
+    ini.appendChild(b);
+  }
+  const wb=document.getElementById('tbWb');
+  if(wb){
+    const b=document.createElement('span');b.className='cbadge';b.textContent='\u25be';b.title='Choose paper style';
+    b.onclick=e=>{e.stopPropagation();openPaperMenu(wb,ps=>{
+      const cs=slides[cur];const sec=createBlank(cs||null,ps);show(slides.indexOf(sec));if(!penOn)togglePen();
+    });};
+    wb.appendChild(b);
+  }
+})();
 document.getElementById('signMove').onclick=()=>{setTool('lasso');}; /* tap anything to grab it — handles let you drag or resize */
 document.getElementById('signPrev').onclick=()=>prev();
 document.getElementById('signNext').onclick=()=>next();
@@ -2859,7 +2893,7 @@ function stampDate(col){
   const before=(inkStore[key]||[]).slice().map(cloneItem);
   const d=new Date();
   const txt=String(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
-  const it={type:'text',x:600,y:340,size:26,c:col||(penColor==='HL'?'#1a1a1a':penColor),a:1,tl:1,text:txt};
+  const it={type:'text',x:600,y:340,size:26,c:col||(penColor==='HL'?'#1a1a1a':penColor),a:1,tl:1,fw:400,text:txt};
   (inkStore[key]=inkStore[key]||[]).push(it);
   pushOp({key:key,before:before,after:(inkStore[key]||[]).slice().map(cloneItem)});
   setTool('lasso');
