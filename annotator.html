@@ -469,13 +469,14 @@ body.present #tbHide{display:flex!important}
   </div>
   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
     <button class="btn" id="sigPlace">Place on page</button>
+    <label style="display:flex;align-items:center;gap:7px;font-size:14.5px;color:#444;cursor:pointer"><input type="checkbox" id="sigRemember" checked style="width:19px;height:19px;accent-color:#861F41"> Remember on this device</label>
     <button class="btn sec" id="sigClear">Clear</button>
     <button class="btn sec" id="sigSave" title="Save this signature to a file — AirDrop it to another device">&#8595; Save file</button>
     <button class="btn sec" id="sigLoad" title="Load a signature file">&#8593; Load file</button>
     <input type="file" id="sigFile" accept="application/json,.json" style="display:none" aria-label="Signature file">
     <span id="sigSavedRow" style="display:flex;gap:8px;margin-left:auto"></span>
   </div>
-  <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Signatures are remembered only if you say so, stay in this browser, and the &#215; forgets one instantly.</div>
+  <div class="tiny" style="color:#777;margin-top:8px">Sign with pen, finger, or mouse. Placed signatures land selected — drag or resize before clicking elsewhere. Remembered signatures stay in this browser only; the &#215; on a saved one forgets it instantly.</div>
 </div></div>
 <div id="mstart" aria-label="Start">
   <svg width="72" height="82" viewBox="0 0 170 192" aria-hidden="true"><text x="42" y="132" font-family="Georgia,serif" font-size="88" font-weight="500" fill="#861F41">&#305;P</text><path d="M61 86 C55 77 52 69 53 62 C54 56 57 52 61 50 C65 52 68 56 69 62 C70 69 67 77 61 86 Z" fill="#E5751F"/><rect x="32" y="162" width="34" height="9" rx="2" fill="#c07a90"/><rect x="66" y="154" width="36" height="17" rx="2" fill="#861F41"/><rect x="102" y="165" width="34" height="6" rx="2" fill="#c07a90"/></svg>
@@ -501,7 +502,6 @@ body.present #tbHide{display:flex!important}
   <button id="signDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Done</button>
 </div>
 <button id="signExit">&#215; Exit signing</button>
-<div id="sigToast" role="alertdialog" aria-label="Remember signature?"><span>Remember this signature on this device for one-tap reuse?</span><button id="sigYes">Remember</button><button id="sigNo">Not now</button></div>
 <div id="sidectl" role="group" aria-label="Document actions">
   <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
   <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
@@ -1009,7 +1009,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b802';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b803';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -3033,18 +3033,25 @@ document.getElementById('plotGo').onclick=stampPlot;
     items.forEach(it=>arr.push(it));
     pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
     dlg.classList.remove('open');
-    if(!fromSaved)askRemember(sts);
+    if(!fromSaved){
+      const cb=document.getElementById('sigRemember');
+      if(cb&&cb.checked)saveSig(sts);
+    }
     setTool('lasso');
     sel={key:key,items:items,before:arr.slice().map(cloneItem)};
     saveInkSoon();redrawInk();
   }
   function openPad(mode){
     sigMode=mode||'sig';
+    const cb=document.getElementById('sigRemember');
+    if(cb){let p='1';try{p=localStorage.getItem('inkSigRemPref')||'1';}catch(e){}cb.checked=(p==='1');}
     const hd=dlg.querySelector('h3');if(hd)hd.textContent=sigMode==='ini'?'Initials':'Signature';
     dlg.classList.add('open');sigStrokes=[];curS=null;renderSaved();sigRedraw();
   }
   window.sigPad={open:openPad,place:(sts,mode)=>{sigMode=mode||'sig';placeSig(sts,true);},saved:mode=>{try{return JSON.parse(localStorage.getItem(mode==='ini'?'inkSigIni':'inkSigs'))||[];}catch(e){return [];}}};
   document.getElementById('psig').onclick=()=>openPad('sig');
+  const remCb=document.getElementById('sigRemember');
+  if(remCb)remCb.onchange=()=>{try{localStorage.setItem('inkSigRemPref',remCb.checked?'1':'0');}catch(e){}};
   document.getElementById('sigClose').onclick=()=>dlg.classList.remove('open');
   document.getElementById('sigClear').onclick=()=>{sigStrokes=[];curS=null;sigRedraw();};
   document.getElementById('sigPlace').onclick=()=>placeSig(sigStrokes);
