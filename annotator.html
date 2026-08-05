@@ -423,6 +423,7 @@ body.present #tbHide{display:flex!important}
   <button id="msResume" style="display:none">&#10227; Resume last session</button>
   <button id="msBoard">&#9998; New whiteboard</button>
   <button id="msTut">? How it works</button>
+  <button id="msWordSetup" style="display:none;background:#fff;color:#861F41">&#10753; Set up Word &#8594; PDF (one tap)</button>
   <div class="mnote">Tip: Share &#8594; Add to Home Screen makes this a full-screen app.</div>
 </div>
 <div id="signbar" role="toolbar" aria-label="Signing">
@@ -880,7 +881,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b784';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b785';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2856,6 +2857,13 @@ function shareApp(e){
   if(navigator.share){navigator.share({title:'InkPodium',text:'Annotate, sign & present PDFs — free, in your browser, nothing leaves your device.',url:url}).catch(()=>{});}
   else if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>alert('Link copied — paste it anywhere.')).catch(()=>{});}
 }
+(function(){
+  const b=document.getElementById('msWordSetup');
+  if(b&&typeof PDF_SHORTCUT_LINK!=='undefined'&&PDF_SHORTCUT_LINK&&isiOS()){
+    b.style.display='block';
+    b.onclick=()=>{try{window.open(PDF_SHORTCUT_LINK,'_blank');}catch(e){location.href=PDF_SHORTCUT_LINK;}};
+  }
+})();
 const sa1=document.getElementById('shareApp');if(sa1)sa1.onclick=shareApp;
 const sa2=document.getElementById('shareApp2');if(sa2)sa2.onclick=shareApp;
 try{if(new URLSearchParams(location.search).get('sign')==='1')setSignMode(true);}catch(e){}
