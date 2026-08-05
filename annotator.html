@@ -183,6 +183,10 @@ body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #tbTab{dis
 body.boardgame #pentools,body.boardgame #pchip{display:none!important}
 #kbRestart,#kbSaveG,#kbLoadG{display:none}
 body.boardgame #kbRestart,body.boardgame #kbSaveG,body.boardgame #kbLoadG{display:block}
+#promoMenu{position:fixed;display:none;z-index:718;background:rgba(28,30,36,.96);border-radius:14px;padding:8px;gap:6px;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+#promoMenu.open{display:flex}
+#promoMenu button{width:50px;height:50px;border:none;border-radius:10px;background:#3a3d45;color:#fff;font-size:30px;cursor:pointer;padding:0}
+#promoMenu button:hover{background:#E5751F}
 #rstdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:650;display:none;align-items:center;justify-content:center}
 #rstdlg.open{display:flex}
 #rstdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:420px;width:92vw}
@@ -424,6 +428,7 @@ body.present #tbHide{display:flex!important}
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
 </div></div>
+<div id="promoMenu" role="menu" aria-label="Promote piece"></div>
 <div id="rstdlg" role="dialog" aria-modal="true" aria-label="Restart game"><div class="pcard">
   <h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0 0 8px;font-size:21px">Are you sure you want to restart?</h3>
   <div style="font-size:14.5px;color:#555;margin-bottom:14px">All the pieces go back to their starting squares.</div>
@@ -996,7 +1001,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b798';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b799';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1592,7 +1597,7 @@ ink.addEventListener('pointerdown',e=>{
     const hit=hitItemAt(dp,arr);
     if(hit){
       const grp=hit.g?arr.filter(it=>it.g===hit.g):[hit];
-      handDrag={item:hit,group:grp,last:dp,key:key,before:arr.slice().map(cloneItem)};
+      handDrag={item:hit,group:grp,last:dp,key:key,before:arr.slice().map(cloneItem),moved:false,cx:e.clientX,cy:e.clientY};
       ink.style.cursor='grabbing';
     }
     else{drawing=false;handDrag=null;}
@@ -1661,6 +1666,7 @@ ink.addEventListener('pointermove',e=>{
     if(handDrag){
       const dp2=toDeck(e);
       const dx=dp2[0]-handDrag.last[0],dy=dp2[1]-handDrag.last[1];
+      if(Math.abs(dx)+Math.abs(dy)>0.4)handDrag.moved=true;
       (handDrag.group||[handDrag.item]).forEach(it=>translateItem(it,dx,dy));
       handDrag.last=dp2;
       redrawInk();
@@ -1723,6 +1729,11 @@ function endPointer(){
   if(toolMode==='hand'){
     if(handDrag){
       const hit=handDrag.item;
+      if(hit&&hit.pc&&!handDrag.moved&&document.body.classList.contains('boardgame')){
+        const hd=handDrag;handDrag=null;ink.style.cursor='grab';
+        openPromoMenu(hit,hd.cx,hd.cy);
+        return;
+      }
       if(hit&&hit.pc&&(!handDrag.group||handDrag.group.length===1)&&typeof boardGeom==='function'){
         const g=boardGeom();
         const cx=hit.x+hit.w/2,cy=hit.y+hit.h/2;
@@ -3082,12 +3093,17 @@ function glyphPiece(glyph,dark){
     x.fillStyle=dark?'#262626':'#ffffff';x.fillText(glyph,48,52);
   },44);
 }
-function discPiece(color){
+function discPiece(color,crowned){
   return pieceStamp(x=>{
     x.fillStyle=color;x.beginPath();x.arc(48,48,38,0,7);x.fill();
     x.strokeStyle='rgba(0,0,0,.45)';x.lineWidth=3;x.stroke();
     x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=2.5;
     x.beginPath();x.arc(48,48,27,0,7);x.stroke();
+    if(crowned){
+      x.font='44px serif';x.textAlign='center';x.textBaseline='middle';
+      x.strokeStyle='#7a5b00';x.lineWidth=3;x.strokeText('\u265b\ufe0e',48,50);
+      x.fillStyle='#E8B923';x.fillText('\u265b\ufe0e',48,50);
+    }
   },40);
 }
 function setupBoard(kind){
@@ -3096,25 +3112,61 @@ function setupBoard(kind){
   const arr=(inkStore[key]=inkStore[key]||[]).filter(it=>!it.pc);
   inkStore[key]=arr;
   const g=boardGeom();
-  const put=(p,col,row)=>{
-    arr.push({type:'stamp',pc:1,x:g.bx+col*g.cw+(g.cw-p.s)/2,y:g.by+row*g.ch+(g.ch-p.s)/2,w:p.s,h:p.s,src:p.src});
+  const put=(p,col,row,pt,side)=>{
+    arr.push({type:'stamp',pc:1,pt:pt,side:side,x:g.bx+col*g.cw+(g.cw-p.s)/2,y:g.by+row*g.ch+(g.ch-p.s)/2,w:p.s,h:p.s,src:p.src});
   };
   if(kind==='chess'){
     const W={k:glyphPiece('\u265a\ufe0e',false),q:glyphPiece('\u265b\ufe0e',false),r:glyphPiece('\u265c\ufe0e',false),b:glyphPiece('\u265d\ufe0e',false),n:glyphPiece('\u265e\ufe0e',false),p:glyphPiece('\u265f\ufe0e',false)};
     const B={k:glyphPiece('\u265a\ufe0e',true),q:glyphPiece('\u265b\ufe0e',true),r:glyphPiece('\u265c\ufe0e',true),b:glyphPiece('\u265d\ufe0e',true),n:glyphPiece('\u265e\ufe0e',true),p:glyphPiece('\u265f\ufe0e',true)};
     const back=['r','n','b','q','k','b','n','r'];
-    back.forEach((t,c)=>{put(B[t],c,0);put(W[t],c,7);});
-    for(let c=0;c<8;c++){put(B.p,c,1);put(W.p,c,6);}
+    back.forEach((t,c)=>{put(B[t],c,0,t,'b');put(W[t],c,7,t,'w');});
+    for(let c=0;c<8;c++){put(B.p,c,1,'p','b');put(W.p,c,6,'p','w');}
   }else{
     const R=discPiece('#c8102e'),K=discPiece('#262626');
-    for(let row=0;row<3;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(K,c,row);
-    for(let row=5;row<8;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(R,c,row);
+    for(let row=0;row<3;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(K,c,row,'d','k');
+    for(let row=5;row<8;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(R,c,row,'d','r');
   }
   undoStack.length=0;redoStack.length=0;updateUndoUI(); /* fresh board = undo floor: takebacks only reach moves */
   setTool('hand');
   saveInkSoon();redrawInk();
 }
 let currentBoardKind=null;
+function promotePiece(it,pt){
+  const key=inkKey();
+  const before=(inkStore[key]||[]).slice().map(cloneItem);
+  let p;
+  if(currentBoardKind==='checkers'){
+    p=discPiece(it.side==='r'?'#c8102e':'#262626',pt==='D');
+  }else{
+    const glyphs={q:'\u265b\ufe0e',r:'\u265c\ufe0e',b:'\u265d\ufe0e',n:'\u265e\ufe0e',p:'\u265f\ufe0e'};
+    p=glyphPiece(glyphs[pt]||glyphs.q,it.side==='b');
+  }
+  it.src=p.src;it.pt=pt;it._img=null;
+  pushOp({key:key,before:before,after:(inkStore[key]||[]).slice().map(cloneItem)});
+  saveInkSoon();redrawInk();
+}
+function openPromoMenu(it,cx,cy){
+  const pm=document.getElementById('promoMenu');if(!pm)return;
+  pm.innerHTML='';
+  const mk=(label,pt,title)=>{
+    const b=document.createElement('button');
+    b.textContent=label;b.title=title||'';
+    b.onclick=e=>{e.stopPropagation();pm.classList.remove('open');promotePiece(it,pt);};
+    pm.appendChild(b);
+  };
+  if(currentBoardKind==='checkers'){
+    if(it.pt==='D')mk('\u2b58','d','Remove crown');
+    else mk('\u265b\ufe0e','D','King this piece');
+  }else{
+    if(it.pt!=='p')return; /* only pawns transform */
+    mk('\u265b\ufe0e','q','Queen');mk('\u265c\ufe0e','r','Rook');mk('\u265d\ufe0e','b','Bishop');mk('\u265e\ufe0e','n','Knight');
+  }
+  pm.classList.add('open');
+  const w2=pm.offsetWidth||200,h2=pm.offsetHeight||56;
+  pm.style.left=Math.max(6,Math.min(innerWidth-w2-6,cx-w2/2))+'px';
+  pm.style.top=Math.max(6,cy-h2-16)+'px';
+}
+document.addEventListener('pointerdown',e=>{const pm=document.getElementById('promoMenu');if(pm&&pm.classList.contains('open')&&!e.target.closest('#promoMenu'))pm.classList.remove('open');});
 async function openBoardGame(kind,label){
   await openKidPdf('board',label);
   currentBoardKind=kind;
