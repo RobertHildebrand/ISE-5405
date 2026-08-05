@@ -173,6 +173,12 @@ body.present .cmtmark{display:none}
 #cmtpop .cauth{font-weight:700;color:#6b5a10;font-size:13px;margin-bottom:2px}
 #cmtpop .cdate{color:#9a8a4a;font-size:11.5px;margin-left:8px;font-weight:400}
 #cmtpop .cbody{white-space:pre-wrap;line-height:1.45;max-height:220px;overflow:auto}
+#docxdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:649;display:none;align-items:center;justify-content:center;overflow:auto}
+#docxdlg.open{display:flex}
+#docxdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:560px;width:94vw;font-size:15px;color:#3a3a3a;line-height:1.5}
+#docxdlg ol{margin:6px 0 12px;padding-left:22px}
+#docxdlg li{margin-bottom:4px}
+#docxdlg .dxhead{font-family:'Fraunces',Georgia,serif;color:#861F41;font-size:21px;margin:0}
 #sigdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:648;display:none;align-items:center;justify-content:center}
 #sigdlg.open{display:flex}
 #sigdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:780px;width:94vw}
@@ -380,6 +386,15 @@ body.present #tbHide{display:flex!important}
   <label style="font-size:13px;color:#444;display:block;margin-bottom:12px"><input id="plotAxes" type="checkbox" checked> draw axes &amp; ticks (skips if already stamped on this page)</label>
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
+</div></div>
+<div id="docxdlg" role="dialog" aria-modal="true" aria-label="Word document detected"><div class="pcard">
+  <div style="display:flex;align-items:center;margin-bottom:8px"><h3 class="dxhead">That&rsquo;s a Word document</h3><button class="btn sec" id="docxClose" style="margin-left:auto">Cancel</button></div>
+  <div id="docxSteps"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+    <button class="btn" id="docxNative" style="background:#861F41">OK &mdash; I&rsquo;ll convert it there</button>
+    <button class="btn sec" id="docxQuick">Quick convert here (approximate)</button>
+  </div>
+  <div class="tiny" style="color:#777;margin-top:10px">The quick converter runs on this device and works well for simple letters; complex layouts can shift.</div>
 </div></div>
 <div id="sigdlg" role="dialog" aria-modal="true" aria-label="Draw your signature"><div class="pcard">
   <div style="display:flex;align-items:center;margin-bottom:10px"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:21px">Signature</h3><button class="btn sec" id="sigClose" style="margin-left:auto">Cancel</button></div>
@@ -618,7 +633,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':document.getElementById('tut').classList.toggle('open');break;
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -865,7 +880,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b782';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b783';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1985,17 +2000,44 @@ async function docxToPdfBytes(buf){
     return bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
   }finally{holder.remove();}
 }
+let docxPending=null;
+function isiOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+function showDocxDialog(){
+  const steps=document.getElementById('docxSteps');
+  if(isiOS()){
+    steps.innerHTML='<p style="margin:4px 0 8px">For a <b>perfect</b> PDF, use your device&rsquo;s own converter &mdash; it uses Apple&rsquo;s Word engine:</p>'+
+      '<b style="color:#861F41">One-time setup</b><ol><li>Open the <b>Shortcuts</b> app &rarr; tap <b>+</b></li><li>Add the action <b>&ldquo;Make PDF&rdquo;</b></li><li>In its settings, turn on <b>&ldquo;Show in Share Sheet&rdquo;</b> and name it <b>Convert to PDF</b></li></ol>'+
+      '<b style="color:#861F41">Every time after that</b><ol><li>In Mail or Files, tap the Word file &rarr; <b>Share</b></li><li>Tap <b>Convert to PDF</b>, then <b>Save to Files</b></li><li>Come back here and tap <b>Open</b> &mdash; pick the new PDF</li></ol>'+
+      '<p style="margin:4px 0 8px" class="tiny" style="color:#777">No Shortcuts? Share &rarr; <b>Print</b>, then share the print preview again &mdash; it becomes a PDF.</p>';
+  }else{
+    steps.innerHTML='<p style="margin:4px 0 8px">For a <b>perfect</b> PDF, let a real Word engine do it:</p>'+
+      '<ol><li>Open the file in <b>Word</b>, <b>Pages</b>, or <b>Google Docs</b></li><li><b>File &rarr; Save As / Export &rarr; PDF</b></li><li>Come back here and open the PDF</li></ol>';
+  }
+  document.getElementById('docxdlg').classList.add('open');
+}
+async function runQuickDocx(){
+  if(!docxPending)return;
+  const job=docxPending;docxPending=null;
+  document.getElementById('docxdlg').classList.remove('open');
+  pgprog.style.display='flex';pgprog.textContent='Converting Word document\u2026';
+  try{
+    const pdfBuf=await docxToPdfBytes(job.buf);
+    const nm=job.name.replace(/\.docx$/i,'.pdf');
+    if(job.append)await appendPdfBytes(nm,pdfBuf);
+    else await loadPdfBytes(nm,pdfBuf);
+  }catch(err){
+    pgprog.style.display='none';
+    alert('Could not convert that Word document ('+err.message+').\nUse the device&rsquo;s own converter instead \u2014 tap the Word file again for the steps.');
+  }
+}
+document.getElementById('docxQuick').onclick=runQuickDocx;
+document.getElementById('docxNative').onclick=()=>{docxPending=null;document.getElementById('docxdlg').classList.remove('open');};
+document.getElementById('docxClose').onclick=()=>{docxPending=null;document.getElementById('docxdlg').classList.remove('open');};
 async function openAnyFile(name,buf,append){
   if(/\.docx$/i.test(name)){
-    pgprog.style.display='flex';pgprog.textContent='Converting Word document\u2026';
-    try{
-      buf=await docxToPdfBytes(buf);
-      name=name.replace(/\.docx$/i,'.pdf');
-    }catch(err){
-      pgprog.style.display='none';
-      alert('Could not convert that Word document ('+err.message+').\nComplex layouts may not be supported \u2014 exporting it to PDF from Word first will always work.');
-      return;
-    }
+    docxPending={name:name,buf:buf,append:!!append};
+    showDocxDialog();
+    return;
   }
   if(append)await appendPdfBytes(name,buf);
   else await loadPdfBytes(name,buf);
