@@ -297,7 +297,7 @@ body.present #tbHide{display:flex!important}
   <div style="font-size:20px;color:#555;margin-bottom:26px">Blank pages + annotate your own PDFs — same pen as the lectures</div>
   <div class="drop">
     <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
-    <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
+    <input type="file" id="pdfFile" accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
     <div style="margin-top:14px"><button class="btn sec" id="signModeBtn" style="background:#861F41;color:#fff">&#9997; Just sign a document</button> <button class="btn sec" id="presentBtn">&#9998; New whiteboard</button> <button class="btn sec" id="tutBtn">? Tutorial</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
   <div id="recents" style="display:none;max-width:520px;margin:18px auto 0;text-align:left"></div>
   <div class="tiny" style="color:#707070;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
@@ -335,7 +335,7 @@ body.present #tbHide{display:flex!important}
   <div style="display:flex;align-items:center"><h3>How to use Ink Pad</h3><button class="btn" id="tutClose" style="margin-left:auto">Done</button></div>
   <div id="tutGrid">
     <div class="tutsec"><b class="h">Get started</b>
-      <b>Open a PDF</b> — it stays on your device, nothing uploads. Share a document by link: add <span class="kbd">?pdf=https://&hellip;</span> to this site&rsquo;s address and the PDF opens right here for whoever taps it. Add <span class="kbd">&amp;sign=1</span> (or tap <b>Just sign a document</b>) for a big-button signing mode — perfect for phones. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
+      <b>Open a PDF</b> — or a Word <b>.docx</b>, converted to PDF pages right on your device. It stays here, nothing uploads. Share a document by link: add <span class="kbd">?pdf=https://&hellip;</span> to this site&rsquo;s address and the PDF opens right here for whoever taps it. Add <span class="kbd">&amp;sign=1</span> (or tap <b>Just sign a document</b>) for a big-button signing mode — perfect for phones. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
     <div class="tutsec"><b class="h">Pen &amp; ink</b>
       <span class="kbd">P</span> pen · colors + 4 highlighters + custom color wheel · &#9679; cycles thickness · <span class="kbd">E</span> cycles erasers (whole-stroke &#9676; / precision &#9986;) · <span class="kbd">C</span> clears the page · <span class="kbd">Ctrl/Cmd+Z</span> undo anything. Rest your palm freely — only the Pencil draws. Highlighters auto-straighten; hold <span class="kbd">Shift</span> for straight lines.</div>
     <div class="tutsec"><b class="h">Tools</b>
@@ -357,7 +357,7 @@ body.present #tbHide{display:flex!important}
 <div id="org" role="dialog" aria-modal="true" aria-label="Page organizer"><div class="orgcard">
   <div class="orghead"><b>Pages</b>
     <button class="btn sec" id="orgAddPdf">&#65291; Append PDF&hellip;</button>
-    <input type="file" id="pdfFile2" accept="application/pdf" style="display:none" aria-label="Append PDF file">
+    <input type="file" id="pdfFile2" accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none" aria-label="Append PDF or Word file">
     <span style="display:inline-flex"><button class="btn sec" id="orgAddBlank" style="border-radius:10px 0 0 10px">&#65291; Blank page</button><button class="btn sec" id="orgAddBlankStyle" title="Choose paper style" style="border-radius:0 10px 10px 0;border-left:1.5px solid rgba(0,0,0,.18);padding-left:10px;padding-right:10px">&#9662;</button></span>
     <button class="btn sec" id="orgRotAll" title="Rotate every PDF page 90&#176;">&#10227; Rotate all</button>
     <button class="btn" id="orgClose">Done</button>
@@ -865,7 +865,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b780';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b781';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1945,10 +1945,64 @@ async function loadPdfBytes(name,buf){
     alert('Could not open that PDF: '+err.message);
   }
 }
+/* ===== Word (.docx) → PDF, entirely on this device ===== */
+function loadScript(src){return new Promise((res,rej)=>{
+  const s=document.createElement('script');
+  const t=setTimeout(()=>rej(new Error('timed out loading '+src)),15000);
+  s.src=src;s.onload=()=>{clearTimeout(t);res();};s.onerror=()=>{clearTimeout(t);rej(new Error('could not load '+src));};
+  document.head.appendChild(s);
+});}
+let docxReady=false;
+async function ensureDocxLibs(){
+  if(docxReady)return;
+  await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+  await loadScript('https://cdn.jsdelivr.net/npm/docx-preview@0.4.0/dist/docx-preview.min.js');
+  await loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+  docxReady=true;
+}
+async function docxToPdfBytes(buf){
+  await ensureDocxLibs();
+  const holder=document.createElement('div');
+  holder.style.cssText='position:absolute;left:-12000px;top:0;width:900px;background:#fff';
+  document.body.appendChild(holder);
+  try{
+    await window.docx.renderAsync(buf,holder,null,{inWrapper:true,breakPages:true,ignoreLastRenderedPageBreak:false});
+    let pages=holder.querySelectorAll('section.docx');
+    if(!pages.length)pages=[holder];
+    const out=await PDFLib.PDFDocument.create();
+    let i=0;
+    for(const pg of pages){
+      i++;pgprog.textContent='Converting page '+i+' / '+pages.length+'\u2026';
+      const cv=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false});
+      const img=await out.embedJpg(cv.toDataURL('image/jpeg',0.92));
+      const W=612,H=Math.max(10,W*cv.height/Math.max(1,cv.width));
+      const p=out.addPage([W,H]);
+      p.drawImage(img,{x:0,y:0,width:W,height:H});
+      cv.width=0;cv.height=0;
+    }
+    const bytes=await out.save();
+    return bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+  }finally{holder.remove();}
+}
+async function openAnyFile(name,buf,append){
+  if(/\.docx$/i.test(name)){
+    pgprog.style.display='flex';pgprog.textContent='Converting Word document\u2026';
+    try{
+      buf=await docxToPdfBytes(buf);
+      name=name.replace(/\.docx$/i,'.pdf');
+    }catch(err){
+      pgprog.style.display='none';
+      alert('Could not convert that Word document ('+err.message+').\nComplex layouts may not be supported \u2014 exporting it to PDF from Word first will always work.');
+      return;
+    }
+  }
+  if(append)await appendPdfBytes(name,buf);
+  else await loadPdfBytes(name,buf);
+}
 document.getElementById('pdfFile').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
   const buf=await file.arrayBuffer();
-  await loadPdfBytes(file.name,buf);
+  await openAnyFile(file.name,buf,false);
   e.target.value='';
 });
 /* ===== IndexedDB recents ===== */
@@ -2455,7 +2509,7 @@ document.addEventListener('pointerdown',e=>{const pm=document.getElementById('pa
 document.getElementById('orgAddPdf').onclick=()=>document.getElementById('pdfFile2').click();
 document.getElementById('pdfFile2').addEventListener('change',async e=>{
   const file=e.target.files[0];if(!file)return;
-  await appendPdfBytes(file.name,await file.arrayBuffer());
+  await openAnyFile(file.name,await file.arrayBuffer(),true);
   buildOrganizer();
   e.target.value='';
 });
