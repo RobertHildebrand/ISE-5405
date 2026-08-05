@@ -880,7 +880,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b783';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b784';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2002,11 +2002,15 @@ async function docxToPdfBytes(buf){
 }
 let docxPending=null;
 function isiOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+const PDF_SHORTCUT_LINK=''; /* iCloud link to a shared "Convert to PDF" shortcut — one-tap install when set */
 function showDocxDialog(){
   const steps=document.getElementById('docxSteps');
   if(isiOS()){
+    const setup=PDF_SHORTCUT_LINK
+      ?'<a class="btn" href="'+PDF_SHORTCUT_LINK+'" target="_blank" rel="noopener" style="display:inline-block;background:#861F41;color:#fff;text-decoration:none;margin:4px 0 10px">&#10753; Add the &ldquo;Convert to PDF&rdquo; shortcut (one tap)</a>'
+      :'<b style="color:#861F41">One-time setup</b><ol><li>Open the <b>Shortcuts</b> app &rarr; tap <b>+</b></li><li>Add the action <b>&ldquo;Make PDF&rdquo;</b></li><li>In its settings, turn on <b>&ldquo;Show in Share Sheet&rdquo;</b> and name it <b>Convert to PDF</b></li></ol>';
     steps.innerHTML='<p style="margin:4px 0 8px">For a <b>perfect</b> PDF, use your device&rsquo;s own converter &mdash; it uses Apple&rsquo;s Word engine:</p>'+
-      '<b style="color:#861F41">One-time setup</b><ol><li>Open the <b>Shortcuts</b> app &rarr; tap <b>+</b></li><li>Add the action <b>&ldquo;Make PDF&rdquo;</b></li><li>In its settings, turn on <b>&ldquo;Show in Share Sheet&rdquo;</b> and name it <b>Convert to PDF</b></li></ol>'+
+      setup+
       '<b style="color:#861F41">Every time after that</b><ol><li>In Mail or Files, tap the Word file &rarr; <b>Share</b></li><li>Tap <b>Convert to PDF</b>, then <b>Save to Files</b></li><li>Come back here and tap <b>Open</b> &mdash; pick the new PDF</li></ol>'+
       '<p style="margin:4px 0 8px" class="tiny" style="color:#777">No Shortcuts? Share &rarr; <b>Print</b>, then share the print preview again &mdash; it becomes a PDF.</p>';
   }else{
