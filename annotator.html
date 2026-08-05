@@ -181,8 +181,8 @@ body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #sidectl,
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #zoomctl,
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #tbTab{display:none!important}
 body.boardgame #pentools,body.boardgame #pchip{display:none!important}
-#kbRestart{display:none}
-body.boardgame #kbRestart{display:block}
+#kbRestart,#kbSaveG,#kbLoadG{display:none}
+body.boardgame #kbRestart,body.boardgame #kbSaveG,body.boardgame #kbLoadG{display:block}
 #rstdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:650;display:none;align-items:center;justify-content:center}
 #rstdlg.open{display:flex}
 #rstdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:420px;width:92vw}
@@ -996,7 +996,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b797';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b798';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -3110,7 +3110,7 @@ function setupBoard(kind){
     for(let row=0;row<3;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(K,c,row);
     for(let row=5;row<8;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(R,c,row);
   }
-  pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
+  undoStack.length=0;redoStack.length=0;updateUndoUI(); /* fresh board = undo floor: takebacks only reach moves */
   setTool('hand');
   saveInkSoon();redrawInk();
 }
@@ -3123,13 +3123,33 @@ async function openBoardGame(kind,label){
 }
 function restartBoard(){
   document.getElementById('rstdlg').classList.remove('open');
-  const key=inkKey();
-  const before=(inkStore[key]||[]).slice().map(cloneItem);
-  delete inkStore[key];
-  pushOp({key:key,before:before,after:[]});
+  delete inkStore[inkKey()];
   setupBoard(currentBoardKind||'chess');
 }
 (function(){
+  const sg=document.getElementById('kbSaveG');
+  if(sg)sg.onclick=()=>{
+    const items=(inkStore[inkKey()]||[]).map(cloneItem);
+    const blob=new Blob([JSON.stringify({inkpodiumGame:1,kind:currentBoardKind||'chess',items:items})],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=(currentBoardKind||'game')+'-game.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  };
+  const lg=document.getElementById('kbLoadG');
+  if(lg)lg.onclick=()=>document.getElementById('kbGameFile').click();
+  const gf=document.getElementById('kbGameFile');
+  if(gf)gf.addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const d=JSON.parse(await file.text());
+      if(!d||!d.inkpodiumGame||!Array.isArray(d.items))throw new Error('not a saved game');
+      inkStore[inkKey()]=d.items.map(cloneItem);
+      if(d.kind)currentBoardKind=d.kind;
+      undoStack.length=0;redoStack.length=0;updateUndoUI();
+      setTool('hand');saveInkSoon();redrawInk();
+    }catch(err){alert('Could not load that game ('+err.message+').');}
+    e.target.value='';
+  });
   const rb=document.getElementById('kbRestart');
   if(rb)rb.onclick=()=>document.getElementById('rstdlg').classList.add('open');
   const rc=document.getElementById('rstCancel');
