@@ -881,7 +881,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b785';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b786';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2003,7 +2003,7 @@ async function docxToPdfBytes(buf){
 }
 let docxPending=null;
 function isiOS(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
-const PDF_SHORTCUT_LINK=''; /* iCloud link to a shared "Convert to PDF" shortcut — one-tap install when set */
+const PDF_SHORTCUT_LINK='https://www.icloud.com/shortcuts/21666dc0fac44e1ca8acd66abedb26ca'; /* one-tap install of the "Convert to PDF" shortcut */
 function showDocxDialog(){
   const steps=document.getElementById('docxSteps');
   if(isiOS()){
