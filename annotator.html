@@ -855,8 +855,16 @@ function renderItem(c2,it,mapper,wscale){
   const col=it.c||'#c8102e';
   if(it.type==='stamp'){
     const p=M([it.x,it.y]),p2=M([it.x+it.w,it.y+it.h]);
-    if(!it._img){it._img=new Image();it._img.onload=()=>{try{redrawInk();}catch(e){}};it._img.src=it.src;}
-    if(it._img.complete)try{c2.drawImage(it._img,Math.min(p[0],p2[0]),Math.min(p[1],p2[1]),Math.abs(p2[0]-p[0]),Math.abs(p2[1]-p[1]));}catch(e){}
+    if(it._img&&it._img.complete&&it._img.naturalWidth===0){it._img=null;} /* broken load — retry */
+    if(!it._img){
+      it._img=new Image();
+      it._img.onload=()=>{try{scheduleInk();}catch(e){}};
+      it._img.onerror=()=>{it._img=null;};
+      it._img.src=it.src;
+    }
+    if(it._img.complete&&it._img.naturalWidth>0){
+      try{c2.drawImage(it._img,Math.min(p[0],p2[0]),Math.min(p[1],p2[1]),Math.abs(p2[0]-p[0]),Math.abs(p2[1]-p[1]));}catch(e){}
+    }
     c2.globalAlpha=1;return;
   }
   if(it.type==='note'){
@@ -972,7 +980,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b795';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b796';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -980,7 +988,7 @@ let lastVVSig='';
 function syncZoom(){
   const v=vvState();
   const sig=[v.ox|0,v.oy|0,v.w|0,v.h|0,Math.round(v.s*100),Math.round((viewZ||1)*100)].join(',');
-  if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();if(typeof positionTextEditor==='function')positionTextEditor();}
+  if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();if(typeof positionTextEditor==='function')positionTextEditor();clearTimeout(syncZoom._t);syncZoom._t=setTimeout(()=>{try{redrawInk();}catch(e){}},150);}
 }
 setInterval(syncZoom,400);
 ink.addEventListener('touchstart',e=>{if(e.touches.length===1)e.preventDefault();},{passive:false});
@@ -1698,8 +1706,19 @@ function endPointer(){
   }
   if(toolMode==='hand'){
     if(handDrag){
+      const hit=handDrag.item;
+      if(hit&&hit.pc&&(!handDrag.group||handDrag.group.length===1)&&typeof boardGeom==='function'){
+        const g=boardGeom();
+        const cx=hit.x+hit.w/2,cy=hit.y+hit.h/2;
+        if(cx>g.bx-g.cw*0.25&&cx<g.bx+8*g.cw+g.cw*0.25&&cy>g.by-g.ch*0.25&&cy<g.by+8*g.ch+g.ch*0.25){
+          const col=Math.max(0,Math.min(7,Math.round((cx-g.bx-g.cw/2)/g.cw)));
+          const row=Math.max(0,Math.min(7,Math.round((cy-g.by-g.ch/2)/g.ch)));
+          hit.x=g.bx+col*g.cw+(g.cw-hit.w)/2;
+          hit.y=g.by+row*g.ch+(g.ch-hit.h)/2;
+        }
+      }
       pushOp({key:handDrag.key,before:handDrag.before,after:(inkStore[handDrag.key]||[]).slice().map(cloneItem)});
-      handDrag=null;saveInkSoon();
+      handDrag=null;saveInkSoon();redrawInk();
     }
     ink.style.cursor='grab';
     return;
@@ -3063,8 +3082,8 @@ function setupBoard(kind){
     arr.push({type:'stamp',pc:1,x:g.bx+col*g.cw+(g.cw-p.s)/2,y:g.by+row*g.ch+(g.ch-p.s)/2,w:p.s,h:p.s,src:p.src});
   };
   if(kind==='chess'){
-    const W={k:glyphPiece('\u265a',false),q:glyphPiece('\u265b',false),r:glyphPiece('\u265c',false),b:glyphPiece('\u265d',false),n:glyphPiece('\u265e',false),p:glyphPiece('\u265f',false)};
-    const B={k:glyphPiece('\u265a',true),q:glyphPiece('\u265b',true),r:glyphPiece('\u265c',true),b:glyphPiece('\u265d',true),n:glyphPiece('\u265e',true),p:glyphPiece('\u265f',true)};
+    const W={k:glyphPiece('\u265a\ufe0e',false),q:glyphPiece('\u265b\ufe0e',false),r:glyphPiece('\u265c\ufe0e',false),b:glyphPiece('\u265d\ufe0e',false),n:glyphPiece('\u265e\ufe0e',false),p:glyphPiece('\u265f\ufe0e',false)};
+    const B={k:glyphPiece('\u265a\ufe0e',true),q:glyphPiece('\u265b\ufe0e',true),r:glyphPiece('\u265c\ufe0e',true),b:glyphPiece('\u265d\ufe0e',true),n:glyphPiece('\u265e\ufe0e',true),p:glyphPiece('\u265f\ufe0e',true)};
     const back=['r','n','b','q','k','b','n','r'];
     back.forEach((t,c)=>{put(B[t],c,0);put(W[t],c,7);});
     for(let c=0;c<8;c++){put(B.p,c,1);put(W.p,c,6);}
