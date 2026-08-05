@@ -176,6 +176,14 @@ body.present .cmtmark{display:none}
 #cmtpop .cauth{font-weight:700;color:#6b5a10;font-size:13px;margin-bottom:2px}
 #cmtpop .cdate{color:#9a8a4a;font-size:11.5px;margin-left:8px;font-weight:400}
 #cmtpop .cbody{white-space:pre-wrap;line-height:1.45;max-height:220px;overflow:auto}
+#kidsdlg{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:646;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:26px 3vw}
+#kidsdlg.open{display:flex}
+#kidsdlg .kcard{background:#f5f2ee;border-radius:16px;padding:20px 24px;max-width:900px;width:100%}
+#kidsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
+#kidsGrid button{background:#fff;border:2px solid #e2dbd1;border-radius:14px;padding:8px;cursor:pointer;font-size:14.5px;color:#444;display:flex;flex-direction:column;align-items:center;gap:6px}
+#kidsGrid button:hover{border-color:#E5751F}
+#kidsGrid img{width:100%;height:96px;object-fit:contain;pointer-events:none}
+#kidsGrid .kemoji{font-size:52px;line-height:96px;height:96px}
 #docxdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:649;display:none;align-items:center;justify-content:center;overflow:auto}
 #docxdlg.open{display:flex}
 #docxdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:560px;width:94vw;font-size:15px;color:#3a3a3a;line-height:1.5}
@@ -398,6 +406,11 @@ body.present #tbHide{display:flex!important}
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
 </div></div>
+<div id="kidsdlg" role="dialog" aria-modal="true" aria-label="Kids corner"><div class="kcard">
+  <div style="display:flex;align-items:center"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:24px">&#127912; Kids corner</h3><button class="btn" id="kidsClose" style="margin-left:auto">Done</button></div>
+  <div class="tiny" style="color:#777;margin-top:4px">Coloring pages, puzzles, and games — pick one, then use the pens, glitter, and the &#129699; paint bucket. Print or export when it&rsquo;s a masterpiece.</div>
+  <div id="kidsGrid"></div>
+</div></div>
 <div id="docxdlg" role="dialog" aria-modal="true" aria-label="Word document detected"><div class="pcard">
   <div style="display:flex;align-items:center;margin-bottom:8px"><h3 class="dxhead">That&rsquo;s a Word document</h3><button class="btn sec" id="docxClose" style="margin-left:auto">Cancel</button></div>
   <div id="docxSteps"></div>
@@ -479,6 +492,8 @@ body.present #tbHide{display:flex!important}
   <button class="pcol" data-c="#1a7d3c" style="background:#1a7d3c"></button>
   <button class="pcol" data-c="#FFD60A" data-hl="1" title="Yellow highlighter" style="background:#FFD60A"></button>
   <button class="pcol" data-c="#7CE38B" data-hl="1" title="Green highlighter" style="background:#7CE38B"></button>
+  <button class="pcol" data-gl="gold" title="Gold glitter pen" style="background:linear-gradient(135deg,#E8B923,#FFF3B0 55%,#D4881C)"></button>
+  <button class="pcol" data-gl="rbw" title="Rainbow glitter pen" style="background:conic-gradient(#e33,#f90,#fd0,#3c9,#39f,#93f,#e33)"></button>
   <button class="pcol" data-c="#FF8FC0" data-hl="1" title="Pink highlighter" style="background:#FF8FC0"></button>
   <button class="pcol" data-c="#7CC5FF" data-hl="1" title="Blue highlighter" style="background:#7CC5FF"></button>
   <button id="pwidth" title="pen thickness" style="background:#26282e;color:#fff;font-size:17px">&#9679;</button>
@@ -494,6 +509,7 @@ body.present #tbHide{display:flex!important}
   <button id="psig" title="Signature: draw once, place anywhere" style="background:#fff;border:2px solid #999">&#9997;</button>
   <button id="pnote" title="Sticky-note comment: exports as a real PDF comment (Adobe-compatible)" style="background:#FFD60A;border:2px solid #b3900a">&#9998;</button>
   <button id="pdate" title="Stamp today's date — then drag it into place" style="background:#fff;border:2px solid #999">&#128197;</button>
+  <button id="pfill" title="Paint bucket: tap a region to fill it with the pen color" style="background:#fff;border:2px solid #999">&#129699;</button>
   <button id="pcustom" title="Custom pen color" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></button>
   <input type="color" id="pcustomInput" style="position:absolute;width:1px;height:1px;opacity:0" aria-label="Custom pen color value">
   <button id="peraser" title="stroke eraser — removes whole strokes" style="background:#fff;border:2px solid #999">&#9676;</button>
@@ -655,7 +671,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();break;}
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}var kdd=document.getElementById('kidsdlg');if(kdd)kdd.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -682,7 +698,7 @@ addEventListener('touchend',e=>{
 
 /* ================= ink engine (identical to the lecture decks) ================= */
 const ink=document.getElementById('ink'),ictx=ink.getContext('2d');
-let drawing=false,penColor='#c8102e',penIsHL=false,penWidth=3.5,curStroke=null,inkStore={},inkDirty=false,toolMode='pen',eraseChanged=false,eraseBefore=null,strokeBefore=null,lassoPts=null,sel=null,selDrag=null,draft=null,textEditing=null,handDrag=null;
+let drawing=false,penColor='#c8102e',penIsHL=false,penWidth=3.5,curStroke=null,inkStore={},inkDirty=false,toolMode='pen',eraseChanged=false,eraseBefore=null,strokeBefore=null,lassoPts=null,sel=null,selDrag=null,draft=null,textEditing=null,handDrag=null,penGl=null;
 try{inkStore=JSON.parse(localStorage.getItem('ink2:'+location.pathname))||{};}catch(e){inkStore={};}
 if(inkStore['cover']){delete inkStore['cover'];try{saveInk();}catch(e){}} /* the start page never keeps ink */
 Object.keys(inkStore).forEach(k=>(inkStore[k]||[]).forEach(it=>{
@@ -706,7 +722,34 @@ function widthFor(base,p,wPrev){
   if(wPrev==null)return t;
   return Math.max(wPrev*0.9,Math.min(wPrev*1.1,t));  /* slew limit: no beading between segments */
 }
+function glColor(g,i){if(g==='gold')return ['#E8B923','#FFF3B0','#D4881C'][i%3];return 'hsl('+((i*47)%360)+',85%,55%)';}
+function drawGlitterStroke(c2,it,mapper,ws){
+  const M=q=>mapper?mapper(q):q;
+  const P=it.p.map(M);
+  if(!P.length)return;
+  c2.save();
+  if(P.length>1){
+    c2.globalAlpha=0.28;
+    c2.strokeStyle=it.gl==='gold'?'#E8B923':'#b090e0';
+    c2.lineWidth=(it.w||7)*ws*1.6;c2.lineCap=c2.lineJoin='round';
+    c2.beginPath();c2.moveTo(P[0][0],P[0][1]);
+    for(let i=1;i<P.length;i++)c2.lineTo(P[i][0],P[i][1]);
+    c2.stroke();
+  }
+  c2.globalAlpha=1;
+  for(let i=0;i<P.length;i++){
+    const hsh=(i*2654435761)>>>0;
+    for(let k=0;k<2;k++){
+      const hx=((hsh>>(k*8))&255)/255-0.5,hy=((hsh>>(k*8+4))&255)/255-0.5;
+      const r=((((hsh>>(k*3))&7)/7)*1.6+0.7)*ws;
+      c2.fillStyle=glColor(it.gl,i*2+k);
+      c2.beginPath();c2.arc(P[i][0]+hx*(it.w||7)*ws*2.2,P[i][1]+hy*(it.w||7)*ws*2.2,r,0,7);c2.fill();
+    }
+  }
+  c2.restore();
+}
 function renderStroke(c2,st,mapper,wscale){
+  if(st.gl){drawGlitterStroke(c2,st,mapper,wscale);return;}
   const base=(st.w||3.5)*(wscale||1);
   c2.globalAlpha=st.a==null?1:st.a;
   c2.strokeStyle=st.c==='HL'?'#FFD60A':st.c;
@@ -751,6 +794,7 @@ function itemBBox(it){
     return [it.x,it.y,it.x+w,it.y+it.size*1.3*lines.length];
   }
   if(it.type==='note')return [it.x,it.y,it.x+26,it.y+26];
+  if(it.type==='stamp')return [it.x,it.y,it.x+it.w,it.y+it.h];
   if(it.type==='math'){
     const rec=mathCache[mathKey(it)];
     const u=(it.size||28)*EXPX;
@@ -789,6 +833,12 @@ function renderItem(c2,it,mapper,wscale){
   const ws=wscale||1;
   c2.globalAlpha=it.a==null?1:it.a;
   const col=it.c||'#c8102e';
+  if(it.type==='stamp'){
+    const p=M([it.x,it.y]),p2=M([it.x+it.w,it.y+it.h]);
+    if(!it._img){it._img=new Image();it._img.onload=()=>{try{redrawInk();}catch(e){}};it._img.src=it.src;}
+    if(it._img.complete)try{c2.drawImage(it._img,Math.min(p[0],p2[0]),Math.min(p[1],p2[1]),Math.abs(p2[0]-p[0]),Math.abs(p2[1]-p[1]));}catch(e){}
+    c2.globalAlpha=1;return;
+  }
   if(it.type==='note'){
     const p=M([it.x,it.y]),s=26*ws;
     c2.fillStyle='#FFD60A';c2.strokeStyle='#b3900a';c2.lineWidth=1.4*ws;
@@ -902,7 +952,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b789';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b790';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -942,7 +992,7 @@ function setEraser(mode){
 }
 function cycleEraser(){setEraser(!erasing?'stroke':(erasing==='stroke'?'partial':null));}
 function updateToolUI(){
-  document.querySelectorAll('#pentools .pcol').forEach(b=>b.classList.toggle('on',!erasing&&b.dataset.c===penColor));
+  document.querySelectorAll('#pentools .pcol').forEach(b=>b.classList.toggle('on',!erasing&&((penGl&&b.dataset.gl===penGl)||(!penGl&&!b.dataset.gl&&b.dataset.c===penColor))));
 }
 function drawEraserRing(e){
   const r=deckRect();const R=Math.max(6,(erasing==='partial'?11:18)*r.width/1280);
@@ -1017,6 +1067,28 @@ function penStyle(){
   ictx.lineCap='round';ictx.lineJoin='round';
 }
 function drawIncrement(){
+  if(curStroke&&curStroke.gl){
+    const P=curStroke.p,n=P.length;
+    const ir=inkRect();
+    const q=i=>{const m=fromDeck(P[i]);return [m[0]-ir.left,m[1]-ir.top];};
+    const ws=deckRect().width/1280;
+    const p1=q(n-1);
+    if(n>=2){
+      const p0=q(n-2);
+      ictx.save();ictx.globalAlpha=0.28;
+      ictx.strokeStyle=curStroke.gl==='gold'?'#E8B923':'#b090e0';
+      ictx.lineWidth=(curStroke.w||7)*ws*1.6;ictx.lineCap='round';
+      ictx.beginPath();ictx.moveTo(p0[0],p0[1]);ictx.lineTo(p1[0],p1[1]);ictx.stroke();ictx.restore();
+    }
+    const gi=n-1,hsh=(gi*2654435761)>>>0;
+    for(let k=0;k<2;k++){
+      const hx=((hsh>>(k*8))&255)/255-0.5,hy=((hsh>>(k*8+4))&255)/255-0.5;
+      const r=((((hsh>>(k*3))&7)/7)*1.6+0.7)*ws;
+      ictx.fillStyle=glColor(curStroke.gl,gi*2+k);
+      ictx.beginPath();ictx.arc(p1[0]+hx*(curStroke.w||7)*ws*2.2,p1[1]+hy*(curStroke.w||7)*ws*2.2,r,0,7);ictx.fill();
+    }
+    return;
+  }
   const P=curStroke.p,n=P.length;
   const base=(curStroke.w||3.5)*(deckRect().width/1280);
   penStyle();
@@ -1072,7 +1144,7 @@ function setTool(m){
   redrawInk();
 }
 function updateToolUI2(){
-  [['phand','hand'],['tbMove','hand'],['pnote','note'],['signMove','lasso'],['plasso','lasso'],['ptext','text'],['prect','rect'],['pellipse','ellipse'],['parrow','arrow']].forEach(x=>{
+  [['phand','hand'],['tbMove','hand'],['pnote','note'],['pfill','fill'],['signMove','lasso'],['plasso','lasso'],['ptext','text'],['prect','rect'],['pellipse','ellipse'],['parrow','arrow']].forEach(x=>{
     const el=document.getElementById(x[0]);if(el)el.classList.toggle('on',toolMode===x[1]&&!erasing);
   });
   if(typeof updateChip==='function')updateChip();
@@ -1151,12 +1223,13 @@ function finishLasso(){
 }
 function translateItem(it,dx,dy){
   if(it.p){it.p.forEach(q=>{q[0]+=dx;q[1]+=dy;});}
-  else if(it.type==='text'||it.type==='math'||it.type==='note'){it.x+=dx;it.y+=dy;}
+  else if(it.type==='text'||it.type==='math'||it.type==='note'||it.type==='stamp'){it.x+=dx;it.y+=dy;}
   else{it.x1+=dx;it.y1+=dy;it.x2+=dx;it.y2+=dy;}
 }
 function scaleItem(it,cx,cy,f){
   const sc=(x,y)=>[cx+(x-cx)*f,cy+(y-cy)*f];
   if(it.p){it.p.forEach(q=>{const m=sc(q[0],q[1]);q[0]=m[0];q[1]=m[1];});it.w=(it.w||3.5)*f;}
+  else if(it.type==='stamp'){const m=sc(it.x,it.y);it.x=m[0];it.y=m[1];it.w*=f;it.h*=f;}
   else if(it.type==='text'||it.type==='math'||it.type==='note'){const m=sc(it.x,it.y);it.x=m[0];it.y=m[1];if(it.size)it.size=it.size*f;}
   else{let m=sc(it.x1,it.y1);it.x1=m[0];it.y1=m[1];m=sc(it.x2,it.y2);it.x2=m[0];it.y2=m[1];it.w=(it.w||3)*f;}
 }
@@ -1310,11 +1383,64 @@ function commitText(){
   textEditing=null;ed.style.display='none';
   saveInkSoon();redrawInk();
 }
+/* --- paint-bucket flood fill → raster stamp item --- */
+function doFloodFill(dp){
+  const sec=slides[cur];if(!sec||sec.classList.contains('cover'))return;
+  const oc=document.createElement('canvas');oc.width=1280;oc.height=720;
+  const c2=oc.getContext('2d');
+  c2.fillStyle='#ffffff';c2.fillRect(0,0,1280,720);
+  if(sec.classList.contains('pdfpage')){
+    const img=sec.querySelector('canvas.pdfhi')||sec.querySelector('img.pdfimg');
+    if(img){
+      const ar=parseFloat(sec.dataset.ar)||(1280/720);
+      const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2;
+      try{c2.drawImage(img,ox,oy,dw,dh);}catch(e){}
+    }
+  }
+  (inkStore[inkKey()]||[]).forEach(it=>{try{renderItem(c2,it,null,1);}catch(e){}});
+  let idata;try{idata=c2.getImageData(0,0,1280,720);}catch(e){return;}
+  const d=idata.data;
+  const sx=Math.max(0,Math.min(1279,Math.round(dp[0]))),sy=Math.max(0,Math.min(719,Math.round(dp[1])));
+  const i0=(sy*1280+sx)*4,tr=d[i0],tg=d[i0+1],tb=d[i0+2];
+  const colHex=(penGl?'#E8B923':(penColor==='HL'?'#FFD60A':penColor));
+  const R=parseInt(colHex.slice(1,3),16),G=parseInt(colHex.slice(3,5),16),B=parseInt(colHex.slice(5,7),16);
+  if(Math.abs(tr-R)<10&&Math.abs(tg-G)<10&&Math.abs(tb-B)<10)return;
+  const TOL=3600;
+  const mask=new Uint8Array(1280*720);
+  const st=[sy*1280+sx];mask[st[0]]=1;
+  let minx=sx,maxx=sx,miny=sy,maxy=sy,count=0;
+  while(st.length){
+    const p=st.pop();count++;
+    const px=p%1280,py=(p-px)/1280;
+    if(px<minx)minx=px;if(px>maxx)maxx=px;if(py<miny)miny=py;if(py>maxy)maxy=py;
+    if(px>0&&!mask[p-1]){const q4=(p-1)*4,dr=d[q4]-tr,dg=d[q4+1]-tg,db=d[q4+2]-tb;if(dr*dr+dg*dg+db*db<TOL){mask[p-1]=1;st.push(p-1);}}
+    if(px<1279&&!mask[p+1]){const q4=(p+1)*4,dr=d[q4]-tr,dg=d[q4+1]-tg,db=d[q4+2]-tb;if(dr*dr+dg*dg+db*db<TOL){mask[p+1]=1;st.push(p+1);}}
+    if(py>0&&!mask[p-1280]){const q4=(p-1280)*4,dr=d[q4]-tr,dg=d[q4+1]-tg,db=d[q4+2]-tb;if(dr*dr+dg*dg+db*db<TOL){mask[p-1280]=1;st.push(p-1280);}}
+    if(py<719&&!mask[p+1280]){const q4=(p+1280)*4,dr=d[q4]-tr,dg=d[q4+1]-tg,db=d[q4+2]-tb;if(dr*dr+dg*dg+db*db<TOL){mask[p+1280]=1;st.push(p+1280);}}
+    if(count>900000)break;
+  }
+  if(count<4)return;
+  const bw=maxx-minx+1,bh=maxy-miny+1;
+  const rc=document.createElement('canvas');rc.width=bw;rc.height=bh;
+  const rx=rc.getContext('2d');
+  const rd=rx.createImageData(bw,bh);
+  for(let y=miny;y<=maxy;y++)for(let x=minx;x<=maxx;x++){
+    if(mask[y*1280+x]){const o=((y-miny)*bw+(x-minx))*4;rd.data[o]=R;rd.data[o+1]=G;rd.data[o+2]=B;rd.data[o+3]=255;}
+  }
+  rx.putImageData(rd,0,0);
+  const key=inkKey();
+  const before=(inkStore[key]||[]).slice().map(cloneItem);
+  const it={type:'stamp',x:minx,y:miny,w:bw,h:bh,src:rc.toDataURL('image/png')};
+  const arr=(inkStore[key]=inkStore[key]||[]);
+  arr.unshift(it); /* fills sit under the outlines' strokes */
+  pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
+  saveInkSoon();redrawInk();
+}
 /* --- collapsible palette on small screens --- */
 function isNarrow(){return (window.matchMedia&&matchMedia('(max-width:740px)').matches)||innerWidth<=740;}
 function updateChip(){
   const c=document.getElementById('pchip');if(!c)return;
-  const glyphs={hand:'\u270b',lasso:'\u2b1a',text:'T',rect:'\u25ad',ellipse:'\u25cb',arrow:'\u2197',note:'\u270e'};
+  const glyphs={hand:'\u270b',lasso:'\u2b1a',text:'T',rect:'\u25ad',ellipse:'\u25cb',arrow:'\u2197',note:'\u270e',fill:'\ud83e\udea3'};
   if(erasing){c.style.background='#5a5e66';c.textContent='\u25cc';}
   else if(toolMode!=='pen'){c.style.background='#5a5e66';c.textContent=glyphs[toolMode]||'\u270e';}
   else{c.style.background=(penColor==='HL')?'#FFD60A':penColor;c.textContent='';}
@@ -1428,6 +1554,11 @@ ink.addEventListener('pointerdown',e=>{
     else{drawing=false;handDrag=null;}
     return;
   }
+  if(toolMode==='fill'){
+    drawing=false;
+    doFloodFill(dp);
+    return;
+  }
   if(toolMode==='note'){
     drawing=false;
     const arrN=inkStore[inkKey()]||[];
@@ -1473,6 +1604,7 @@ ink.addEventListener('pointerdown',e=>{
   strokeBefore=(inkStore[inkKey()]||[]).slice();
   const isHL=penIsHL||penColor==='HL';
   curStroke={c:penColor==='HL'?'HL':penColor,w:isHL?16:penWidth,a:isHL?0.35:1,p:[]};
+  if(penGl&&!isHL){curStroke.gl=penGl;curStroke.w=7;curStroke.a=0.85;}
   pushPoint(e);
   (inkStore[inkKey()]=inkStore[inkKey()]||[]).push(curStroke);
   drawIncrement();
@@ -1724,15 +1856,19 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbPresent').onclick=togglePresent;
   document.getElementById('tbHelp').onclick=()=>{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();};
 })();
-document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;penIsHL=!!b.dataset.hl;toolMode='pen';setEraser(null);updateToolUI2();});
+document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{
+  if(b.dataset.gl){penGl=b.dataset.gl;penColor=b.dataset.gl==='gold'?'#E8B923':'#c8102e';penIsHL=false;}
+  else{penGl=null;penColor=b.dataset.c;penIsHL=!!b.dataset.hl;}
+  toolMode='pen';setEraser(null);updateToolUI2();
+});
 updateToolUI();
 document.getElementById('peraser').onclick=()=>setEraser(erasing==='stroke'?null:'stroke');
 document.getElementById('ppartial').onclick=()=>setEraser(erasing==='partial'?null:'partial');
 document.getElementById('pclear').onclick=clearInk;
 (function(){const b=document.getElementById('pwidth');if(!b)return;const Ws=[2,3.5,6],G=['\u00b7','\u25cf','\u2b24'];let wi=1;b.onclick=()=>{wi=(wi+1)%3;penWidth=Ws[wi];b.innerHTML=G[wi];};})();
 document.getElementById('pclose').onclick=togglePen;
-['phand','pnote','plasso','ptext','prect','pellipse','parrow'].forEach(id=>{
-  const M={phand:'hand',pnote:'note',plasso:'lasso',ptext:'text',prect:'rect',pellipse:'ellipse',parrow:'arrow'};
+['phand','pnote','pfill','plasso','ptext','prect','pellipse','parrow'].forEach(id=>{
+  const M={phand:'hand',pnote:'note',pfill:'fill',plasso:'lasso',ptext:'text',prect:'rect',pellipse:'ellipse',parrow:'arrow'};
   const el=document.getElementById(id);
   if(el)el.onclick=()=>setTool(toolMode===M[id]?'pen':M[id]);
 });
@@ -1740,7 +1876,7 @@ document.getElementById('pundo').onclick=doUndo;
 document.getElementById('predo').onclick=doRedo;
 document.getElementById('pcustom').onclick=()=>document.getElementById('pcustomInput').click();
 document.getElementById('pcustomInput').addEventListener('input',e=>{
-  penColor=e.target.value;penIsHL=false;
+  penColor=e.target.value;penIsHL=false;penGl=null;
   document.getElementById('pcustom').style.background=penColor;
   setTool('pen');
 });
@@ -2230,7 +2366,27 @@ async function exportVectorPdf(){
       items.forEach(it=>{
         const col=hexRGB(it.c||'#c8102e');
         const op=it.a==null?1:it.a;
-        if(it.p&&it.p.length){
+        if(it.p&&it.gl){
+          const P=it.p.map(mapPt);
+          if(P.length>1)page.drawSvgPath(strokeSvgPath(P),{x:0,y:H,borderColor:hexRGB(it.gl==='gold'?'#E8B923':'#b090e0'),borderWidth:(it.w||7)*1.6*scl,borderOpacity:0.28,borderLineCap:RC});
+          const GOLD=['#E8B923','#FFF3B0','#D4881C'],RBW=['#e03131','#f08c00','#ffd43b','#37b24d','#1c7ed6','#9c36b5'];
+          const step=Math.max(1,Math.floor(P.length/120));
+          for(let gi=0;gi<P.length;gi+=step){
+            const hsh=(gi*2654435761)>>>0;
+            for(let k=0;k<2;k++){
+              const hx=((hsh>>(k*8))&255)/255-0.5,hy=((hsh>>(k*8+4))&255)/255-0.5;
+              const rr=((((hsh>>(k*3))&7)/7)*1.6+0.7)*scl*1.3;
+              const cl=hexRGB((it.gl==='gold'?GOLD:RBW)[(gi*2+k)%(it.gl==='gold'?3:6)]);
+              page.drawCircle({x:P[gi][0]+hx*(it.w||7)*2.2*scl,y:H-(P[gi][1]+hy*(it.w||7)*2.2*scl),size:rr,color:cl,opacity:op});
+            }
+          }
+        }else if(it.type==='stamp'){
+          const a2=mapPt([it.x,it.y]),b2=mapPt([it.x+it.w,it.y+it.h]);
+          const im=mathImgs.get(it);
+          const x=Math.min(a2[0],b2[0]),yTop=Math.min(a2[1],b2[1]);
+          const wpx=Math.abs(b2[0]-a2[0]),hpx=Math.abs(b2[1]-a2[1]);
+          if(im)page.drawImage(im,{x:x,y:H-(yTop+hpx),width:wpx,height:hpx,opacity:op});
+        }else if(it.p&&it.p.length){
           const P=it.p.map(mapPt);
           const avgPr=it.p.reduce((sm,q)=>sm+(q[2]==null?0.5:q[2]),0)/it.p.length;
           const w=Math.max(0.4,(it.w||3.5)*(0.65+0.5*avgPr)*scl);
@@ -2297,6 +2453,9 @@ async function exportVectorPdf(){
           pgprog.textContent='Rendering math…';
           const durl=await mathPngDataUrl(it);
           mathImgs.set(it,durl?await out.embedPng(durl):null);
+        }
+        if(it.type==='stamp'&&!mathImgs.has(it)){
+          try{mathImgs.set(it,await out.embedPng(it.src));}catch(e){mathImgs.set(it,null);}
         }
       }
     }
@@ -2827,6 +2986,42 @@ document.getElementById('plotGo').onclick=stampPlot;
     e.target.value='';
   });
 })();
+/* ===== kids corner ===== */
+const KIDS_COLOR=[['cat','Cat'],['bunny','Bunny'],['fish','Fish'],['turtle','Turtle'],['butterfly','Butterfly'],['dino','Dinosaur'],['tree','Tree'],['flower','Flower'],['castle','Castle'],['rocket','Rocket'],['sailboat','Sailboat'],['car','Car'],['snowman','Snowman']];
+const KIDS_PACKS=[['dot-to-dot-pack','Dot-to-dot','\ud83d\udd22'],['maze-pack','Mazes','\ud83c\udf00'],['sudoku-pack','Sudoku','\ud83e\udde9'],['word-search-pack','Word search','\ud83d\udd24'],['game-sheets','Games for two','\u2b55']];
+async function openKidPdf(file,label){
+  document.getElementById('kidsdlg').classList.remove('open');
+  pgprog.style.display='flex';pgprog.textContent='Loading '+label+'\u2026';
+  try{
+    const r=await fetch('kids/'+file+'.pdf');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    await loadPdfBytes(label+'.pdf',await r.arrayBuffer());
+    if(!penOn)togglePen();
+  }catch(err){pgprog.style.display='none';alert('Could not load that ('+err.message+').');}
+}
+let kidsBuilt=false;
+function openKids(){
+  const g=document.getElementById('kidsGrid');
+  if(!kidsBuilt){
+    kidsBuilt=true;
+    KIDS_COLOR.forEach(k=>{
+      const b=document.createElement('button');
+      b.innerHTML='<img src="kids/'+k[0]+'.svg" alt="">'+k[1];
+      b.onclick=()=>openKidPdf(k[0],k[1]+' coloring');
+      g.appendChild(b);
+    });
+    KIDS_PACKS.forEach(k=>{
+      const b=document.createElement('button');
+      b.innerHTML='<div class="kemoji">'+k[2]+'</div>'+k[1];
+      b.onclick=()=>openKidPdf(k[0],k[1]);
+      g.appendChild(b);
+    });
+  }
+  document.getElementById('kidsdlg').classList.add('open');
+}
+(function(){const k1=document.getElementById('kidsBtn');if(k1)k1.onclick=openKids;
+const k2=document.getElementById('msKids');if(k2)k2.onclick=openKids;
+const k3=document.getElementById('kidsClose');if(k3)k3.onclick=()=>document.getElementById('kidsdlg').classList.remove('open');})();
 /* ===== signing mode — big buttons, tiny surface area ===== */
 function setSignMode(on){
   document.body.classList.toggle('signmode',!!on);
