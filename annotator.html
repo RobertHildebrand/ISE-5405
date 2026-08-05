@@ -902,7 +902,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b788';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b789';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2912,7 +2912,11 @@ function shareApp(e){
   const b=document.getElementById('msWordSetup');
   if(b&&typeof PDF_SHORTCUT_LINK!=='undefined'&&PDF_SHORTCUT_LINK&&isiOS()){
     b.style.display='block';
-    b.onclick=()=>{try{window.open(PDF_SHORTCUT_LINK,'_blank');}catch(e){location.href=PDF_SHORTCUT_LINK;}};
+    b.onclick=()=>{ /* window.open is silently ignored in installed iOS web apps — use a real link tap */
+      const a=document.createElement('a');
+      a.href=PDF_SHORTCUT_LINK;a.target='_blank';a.rel='noopener';
+      document.body.appendChild(a);a.click();a.remove();
+    };
   }
 })();
 const sa1=document.getElementById('shareApp');if(sa1)sa1.onclick=shareApp;
