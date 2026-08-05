@@ -180,6 +180,12 @@ body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #touchbar,
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #sidectl,
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #zoomctl,
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #tbTab{display:none!important}
+body.boardgame #pentools,body.boardgame #pchip{display:none!important}
+#kbRestart{display:none}
+body.boardgame #kbRestart{display:block}
+#rstdlg{position:fixed;inset:0;background:rgba(20,22,26,.75);z-index:650;display:none;align-items:center;justify-content:center}
+#rstdlg.open{display:flex}
+#rstdlg .pcard{background:#f5f2ee;border-radius:14px;padding:20px 24px;max-width:420px;width:92vw}
 #kidbar{position:fixed;top:calc(58px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));z-index:516;display:none;flex-direction:column;gap:8px}
 body.kidsdoc:not(.oncover):not(.present):not(.handout):not(.signmode) #kidbar{display:flex}
 @media print{#kidbar{display:none!important}}
@@ -417,6 +423,15 @@ body.present #tbHide{display:flex!important}
   <label style="font-size:13px;color:#444;display:block;margin-bottom:12px"><input id="plotAxes" type="checkbox" checked> draw axes &amp; ticks (skips if already stamped on this page)</label>
   <div style="font-size:12px;color:#777;margin-bottom:12px">sin cos tan asin acos atan sqrt abs ln log exp floor ceil &nbsp;·&nbsp; pi, e &nbsp;·&nbsp; ^ powers &nbsp;·&nbsp; implicit products like 2x.<br>The curve is stamped as <b>ink in your current pen color</b> — undo, lasso, or erase it like any stroke.</div>
   <button class="btn" id="plotGo">Plot onto this page</button>
+</div></div>
+<div id="rstdlg" role="dialog" aria-modal="true" aria-label="Restart game"><div class="pcard">
+  <h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0 0 8px;font-size:21px">Are you sure you want to restart?</h3>
+  <div style="font-size:14.5px;color:#555;margin-bottom:14px">All the pieces go back to their starting squares.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn sec" id="rstSave" style="font-size:15px">Save the game first</button>
+    <button class="btn" id="rstGo" style="font-size:15px">Restart</button>
+    <button class="btn sec" id="rstCancel" style="font-size:15px;margin-left:auto">Cancel</button>
+  </div>
 </div></div>
 <div id="kidsdlg" role="dialog" aria-modal="true" aria-label="Kids corner"><div class="kcard">
   <div style="display:flex;align-items:center"><h3 style="font-family:'Fraunces',Georgia,serif;color:#861F41;margin:0;font-size:24px">&#127912; Kids corner</h3><button class="btn" id="kidsClose" style="margin-left:auto">Done</button></div>
@@ -665,6 +680,7 @@ function addPage(style){
 }
 addEventListener('keydown',e=>{
   if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
+  if(document.body.classList.contains('boardgame')&&/^[pecwnvtl?]$/i.test(e.key))return; /* board games: hand only */
   if(penOn&&(e.key==='c'||e.key==='C')){clearInk();return;}
   const tutEl=document.getElementById('tut');
   if(tutEl&&tutEl.classList.contains('open')&&(e.key==='ArrowRight'||e.key==='ArrowLeft'||e.key===' ')){
@@ -686,7 +702,7 @@ addEventListener('keydown',e=>{
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
     case '?':{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();break;}
-    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}var kdd=document.getElementById('kidsdlg');if(kdd)kdd.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
+    case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}var kdd=document.getElementById('kidsdlg');if(kdd)kdd.classList.remove('open');var rsd=document.getElementById('rstdlg');if(rsd)rsd.classList.remove('open');if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
 counter.onclick=()=>toc.classList.toggle('open');
@@ -980,7 +996,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b796';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b797';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2156,6 +2172,8 @@ async function loadPdfBytes(name,buf){
   try{
     sources=[];
     document.body.classList.remove('kidsdoc');
+    document.body.classList.remove('boardgame');
+    currentBoardKind=null;
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
     document.querySelectorAll('section.whiteboard').forEach(x=>x.remove()); /* opening a document starts clean — no leftover doodle pages */
     const si=await addSource(name,buf);
@@ -3096,10 +3114,31 @@ function setupBoard(kind){
   setTool('hand');
   saveInkSoon();redrawInk();
 }
+let currentBoardKind=null;
 async function openBoardGame(kind,label){
   await openKidPdf('board',label);
+  currentBoardKind=kind;
+  document.body.classList.add('boardgame');
   setTimeout(()=>{try{setupBoard(kind);}catch(e){}},250);
 }
+function restartBoard(){
+  document.getElementById('rstdlg').classList.remove('open');
+  const key=inkKey();
+  const before=(inkStore[key]||[]).slice().map(cloneItem);
+  delete inkStore[key];
+  pushOp({key:key,before:before,after:[]});
+  setupBoard(currentBoardKind||'chess');
+}
+(function(){
+  const rb=document.getElementById('kbRestart');
+  if(rb)rb.onclick=()=>document.getElementById('rstdlg').classList.add('open');
+  const rc=document.getElementById('rstCancel');
+  if(rc)rc.onclick=()=>document.getElementById('rstdlg').classList.remove('open');
+  const rg=document.getElementById('rstGo');
+  if(rg)rg.onclick=restartBoard;
+  const rs=document.getElementById('rstSave');
+  if(rs)rs.onclick=async()=>{try{await exportVectorPdf();}catch(e){}restartBoard();};
+})();
 let kidsBuilt=false;
 function openKids(){
   const g=document.getElementById('kidsGrid');
