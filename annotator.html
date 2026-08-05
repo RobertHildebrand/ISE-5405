@@ -865,7 +865,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b781';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b782';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1931,6 +1931,7 @@ async function loadPdfBytes(name,buf){
   try{
     sources=[];
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
+    document.querySelectorAll('section.whiteboard').forEach(x=>x.remove()); /* opening a document starts clean — no leftover doodle pages */
     const si=await addSource(name,buf);
     pdfBytes=sources[si].bytes;pdfName=name.replace(/\.pdf$/i,'');
     pdfDoc=sources[si].doc;currentFP=sources[si].fp;pdfAspect=sources[si].aspect;
