@@ -972,7 +972,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b794';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b795';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -3022,6 +3022,65 @@ async function openKidPdf(file,label){
     if(!penOn)togglePen();
   }catch(err){pgprog.style.display='none';alert('Could not load that ('+err.message+').');}
 }
+/* board games: pieces are movable stamp objects on the game-board page */
+function boardGeom(){
+  const sec=slides[cur];
+  const ar=parseFloat(sec&&sec.dataset.ar)||(612/792);
+  const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2;
+  const bx=ox+dw*(82/612),by=oy+dh*(172/792);
+  const cw=dw*(56/612),ch=dh*(56/792);
+  return {bx:bx,by:by,cw:cw,ch:ch};
+}
+function pieceStamp(drawFn,sizeDeck){
+  const cv=document.createElement('canvas');cv.width=96;cv.height=96;
+  drawFn(cv.getContext('2d'));
+  return {src:cv.toDataURL('image/png'),s:sizeDeck};
+}
+function glyphPiece(glyph,dark){
+  return pieceStamp(x=>{
+    x.font='78px serif';x.textAlign='center';x.textBaseline='middle';
+    x.lineJoin='round';
+    x.strokeStyle=dark?'#f2efe8':'#262626';x.lineWidth=dark?3:5;
+    x.strokeText(glyph,48,52);
+    x.fillStyle=dark?'#262626':'#ffffff';x.fillText(glyph,48,52);
+  },44);
+}
+function discPiece(color){
+  return pieceStamp(x=>{
+    x.fillStyle=color;x.beginPath();x.arc(48,48,38,0,7);x.fill();
+    x.strokeStyle='rgba(0,0,0,.45)';x.lineWidth=3;x.stroke();
+    x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=2.5;
+    x.beginPath();x.arc(48,48,27,0,7);x.stroke();
+  },40);
+}
+function setupBoard(kind){
+  const key=inkKey();
+  const before=(inkStore[key]||[]).slice().map(cloneItem);
+  const arr=(inkStore[key]=inkStore[key]||[]).filter(it=>!it.pc);
+  inkStore[key]=arr;
+  const g=boardGeom();
+  const put=(p,col,row)=>{
+    arr.push({type:'stamp',pc:1,x:g.bx+col*g.cw+(g.cw-p.s)/2,y:g.by+row*g.ch+(g.ch-p.s)/2,w:p.s,h:p.s,src:p.src});
+  };
+  if(kind==='chess'){
+    const W={k:glyphPiece('\u265a',false),q:glyphPiece('\u265b',false),r:glyphPiece('\u265c',false),b:glyphPiece('\u265d',false),n:glyphPiece('\u265e',false),p:glyphPiece('\u265f',false)};
+    const B={k:glyphPiece('\u265a',true),q:glyphPiece('\u265b',true),r:glyphPiece('\u265c',true),b:glyphPiece('\u265d',true),n:glyphPiece('\u265e',true),p:glyphPiece('\u265f',true)};
+    const back=['r','n','b','q','k','b','n','r'];
+    back.forEach((t,c)=>{put(B[t],c,0);put(W[t],c,7);});
+    for(let c=0;c<8;c++){put(B.p,c,1);put(W.p,c,6);}
+  }else{
+    const R=discPiece('#c8102e'),K=discPiece('#262626');
+    for(let row=0;row<3;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(K,c,row);
+    for(let row=5;row<8;row++)for(let c=0;c<8;c++)if((row+c)%2===1)put(R,c,row);
+  }
+  pushOp({key:key,before:before,after:arr.slice().map(cloneItem)});
+  setTool('hand');
+  saveInkSoon();redrawInk();
+}
+async function openBoardGame(kind,label){
+  await openKidPdf('board',label);
+  setTimeout(()=>{try{setupBoard(kind);}catch(e){}},250);
+}
 let kidsBuilt=false;
 function openKids(){
   const g=document.getElementById('kidsGrid');
@@ -3037,6 +3096,13 @@ function openKids(){
       const b=document.createElement('button');
       b.innerHTML='<div class="kemoji">'+k[2]+'</div>'+k[1];
       b.onclick=()=>openKidPdf(k[0],k[1]);
+      g.appendChild(b);
+    });
+    [['chess','Chess','\u265e'],['checkers','Checkers','\u26c2']].forEach(k=>{
+      const b=document.createElement('button');
+      b.innerHTML='<img src="kids/board.png" alt="">'+k[1];
+      b.title=k[1]+' — pieces are objects: drag with Move, undo takes a move back. Pick it again to reset.';
+      b.onclick=()=>openBoardGame(k[0],k[1]);
       g.appendChild(b);
     });
   }
