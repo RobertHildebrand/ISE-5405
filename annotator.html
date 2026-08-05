@@ -125,7 +125,8 @@ body.handout .frag{opacity:1;transform:none}
   .frag{opacity:1!important;transform:none!important}
   #toc,#ink,#pentools,#help,#progress,#counter,#brand,#laser,#cp,#touchbar,#handoutbar,#zoomctl,.printskip{display:none!important}
 }
-#ink{touch-action:pinch-zoom;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#ink{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#deck,.slide{touch-action:none}
 body.penmode,body.penmode *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.handout #ink{display:none}
 #touchbar{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:520;display:none;gap:5px;align-items:stretch;background:rgba(28,30,36,.93);padding:8px 12px;border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
@@ -287,7 +288,13 @@ body.present #tbHide{display:flex!important}
 #tut .tutcard{background:#f5f2ee;border-radius:16px;padding:22px 28px;max-width:980px;width:100%}
 #tut h3{font-family:"Fraunces",Georgia,serif;color:#861F41;margin:0 0 4px;font-size:24px}
 #tutGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}
-.tutsec{background:#fff;border-radius:12px;padding:12px 16px;font-size:14.5px;line-height:1.75}
+.tutsec{background:#fff;border-radius:12px;padding:16px 20px;font-size:17px;line-height:1.75;display:none}
+.tutsec.tvis{display:block}
+#tutnav{display:flex;align-items:center;gap:14px;margin-top:16px}
+#tutnav .btn{font-size:16px;padding:10px 18px}
+#tutDots{display:flex;gap:9px;margin:0 auto}
+.tdot{width:11px;height:11px;border-radius:50%;background:#d8d0c6;display:inline-block}
+.tdot.on{background:#861F41}
 .tutsec b.h{color:#861F41;font-size:15.5px;display:block;margin-bottom:3px}
 </style>
 </head>
@@ -521,6 +528,12 @@ function show(i){
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   cur=i;update();
   document.body.classList.toggle('oncover',i===0);
+  if(i===0){ /* arriving home: reset the view, as if freshly opened */
+    document.body.classList.remove('pmini');
+    try{if(typeof penOn!=='undefined'&&penOn)togglePen();}catch(e){}
+    try{if(typeof clearSel==='function')clearSel();}catch(e){}
+    try{if(typeof viewZ==='number'&&viewZ>1.001&&typeof zoomFit==='function')zoomFit();}catch(e){}
+  }
   if(typeof updatePdfWindow==='function')updatePdfWindow();
 }
 function next(){show(cur+1);}
@@ -618,6 +631,10 @@ function addPage(style){
 addEventListener('keydown',e=>{
   if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))return;
   if(penOn&&(e.key==='c'||e.key==='C')){clearInk();return;}
+  const tutEl=document.getElementById('tut');
+  if(tutEl&&tutEl.classList.contains('open')&&(e.key==='ArrowRight'||e.key==='ArrowLeft'||e.key===' ')){
+    e.preventDefault();if(window.tutPage)window.tutPage(e.key==='ArrowLeft'?-1:1);return;
+  }
   switch(e.key){
     case 'ArrowRight':case ' ':case 'PageDown':e.preventDefault();next();break;
     case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
@@ -633,7 +650,7 @@ addEventListener('keydown',e=>{
     case 'v':case 'V':setTool(toolMode==='hand'?'pen':'hand');break;
     case 'n':case 'N':show(addPage());break;
     case 'm':case 'M':toc.classList.toggle('open');break;
-    case '?':document.getElementById('tut').classList.toggle('open');break;
+    case '?':{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();break;}
     case 'Escape':toc.classList.remove('open');document.getElementById('help').classList.remove('open');if(typeof clearSel==='function'){clearSel();redrawInk();}var ted=document.getElementById('texted');if(ted)ted.style.display='none';textEditing=null;var og=document.getElementById('org');if(og)og.classList.remove('open');var tt=document.getElementById('tut');if(tt)tt.classList.remove('open');var pdg=document.getElementById('plotdlg');if(pdg)pdg.classList.remove('open');var sg=document.getElementById('sigdlg');if(sg)sg.classList.remove('open');var cpp=document.getElementById('cmtpop');if(cpp)cpp.style.display='none';var ned=document.getElementById('noteed');if(ned){ned.style.display='none';noteEditing=null;}var dxd=document.getElementById('docxdlg');if(dxd){dxd.classList.remove('open');}if(typeof presentOn!=='undefined'&&presentOn&&!document.fullscreenElement)togglePresent();break;
   }
 });
@@ -881,7 +898,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b786';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b787';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1688,7 +1705,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbHide').onclick=()=>setTbHidden(true);
   document.getElementById('tbLaser').onclick=toggleLaser;
   document.getElementById('tbPresent').onclick=togglePresent;
-  document.getElementById('tbHelp').onclick=()=>document.getElementById('tut').classList.toggle('open');
+  document.getElementById('tbHelp').onclick=()=>{const t=document.getElementById('tut');t.classList.toggle('open');if(t.classList.contains('open')&&window.tutReset)window.tutReset();};
 })();
 document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;penIsHL=!!b.dataset.hl;toolMode='pen';setEraser(null);updateToolUI2();});
 updateToolUI();
@@ -2805,7 +2822,7 @@ document.getElementById('signModeBtn').onclick=()=>{setSignMode(true);if(!source
 document.getElementById('msOpen').onclick=()=>document.getElementById('pdfFile').click();
 document.getElementById('msSign').onclick=()=>{setSignMode(true);if(!sources.length)document.getElementById('pdfFile').click();};
 document.getElementById('msBoard').onclick=()=>{if(slides.length>1)show(1);};
-document.getElementById('msTut').onclick=()=>document.getElementById('tut').classList.add('open');
+document.getElementById('msTut').onclick=()=>{document.getElementById('tut').classList.add('open');if(window.tutReset)window.tutReset();};
 (function(){
   try{
     const c=JSON.parse(localStorage.getItem('inkpadComp'));
@@ -3029,7 +3046,34 @@ document.getElementById('tbShow').onclick=()=>{
 };
 (function(){const tbx=document.getElementById('touchbar'),b=document.getElementById('tbShow');
   if(tbx&&b&&getComputedStyle(tbx).display!=='none')b.classList.add('on');})();
-document.getElementById('tutBtn').onclick=()=>document.getElementById('tut').classList.add('open');
+(function(){
+  const tut=document.getElementById('tut');if(!tut)return;
+  const secs=[...tut.querySelectorAll('.tutsec')];if(!secs.length)return;
+  const groups=[[0],[1],[2,3],[4],[5,6],[7]].map(g=>g.filter(i=>i<secs.length)).filter(g=>g.length);
+  let pg=0;
+  const nav=document.createElement('div');nav.id='tutnav';
+  nav.innerHTML='<button class="btn sec" id="tutPrev">&#9664; Back</button><span id="tutDots"></span><button class="btn" id="tutNext">Next &#9654;</button>';
+  tut.querySelector('.tutcard').appendChild(nav);
+  function render(){
+    secs.forEach((s,i)=>s.classList.toggle('tvis',groups[pg].indexOf(i)>=0));
+    document.getElementById('tutDots').innerHTML=groups.map((_,i)=>'<span class="tdot'+(i===pg?' on':'')+'"></span>').join('');
+    document.getElementById('tutPrev').style.visibility=pg?'visible':'hidden';
+    document.getElementById('tutNext').textContent=pg===groups.length-1?'Done':'Next \u25b6';
+  }
+  document.getElementById('tutPrev').onclick=()=>{if(pg>0){pg--;render();}};
+  document.getElementById('tutNext').onclick=()=>{if(pg<groups.length-1){pg++;render();}else tut.classList.remove('open');};
+  window.tutPage=d=>{if(d>0&&pg<groups.length-1){pg++;render();}else if(d<0&&pg>0){pg--;render();}};
+  window.tutReset=()=>{pg=0;render();};
+  render();
+  let sx=null;
+  tut.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;},{passive:true});
+  tut.addEventListener('touchend',e=>{
+    if(sx==null)return;
+    const dx=e.changedTouches[0].clientX-sx;sx=null;
+    if(Math.abs(dx)>60)window.tutPage(dx<0?1:-1);
+  },{passive:true});
+})();
+document.getElementById('tutBtn').onclick=()=>{document.getElementById('tut').classList.add('open');if(window.tutReset)window.tutReset();};
 document.getElementById('tutClose').onclick=()=>document.getElementById('tut').classList.remove('open');
 document.getElementById('eraseAllBtn').onclick=async()=>{
   if(!confirm('Erase everything this tool has stored on this device — all annotations, cached PDFs, and settings? This cannot be undone.'))return;
