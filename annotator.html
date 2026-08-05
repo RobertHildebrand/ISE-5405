@@ -876,15 +876,16 @@ function renderItem(c2,it,mapper,wscale){
   const col=it.c||'#c8102e';
   if(it.type==='stamp'){
     const p=M([it.x,it.y]),p2=M([it.x+it.w,it.y+it.h]);
-    if(it._img&&it._img.complete&&it._img.naturalWidth===0){it._img=null;} /* broken load — retry */
-    if(!it._img){
-      it._img=new Image();
-      it._img.onload=()=>{try{scheduleInk();}catch(e){}};
-      it._img.onerror=()=>{it._img=null;};
-      it._img.src=it.src;
+    let im=stampImgCache[it.src];
+    if(im&&im.complete&&im.naturalWidth===0){delete stampImgCache[it.src];im=null;}
+    if(!im){
+      im=stampImgCache[it.src]=new Image();
+      im.onload=()=>{try{scheduleInk();}catch(e){}};
+      im.onerror=()=>{delete stampImgCache[it.src];};
+      im.src=it.src;
     }
-    if(it._img.complete&&it._img.naturalWidth>0){
-      try{c2.drawImage(it._img,Math.min(p[0],p2[0]),Math.min(p[1],p2[1]),Math.abs(p2[0]-p[0]),Math.abs(p2[1]-p[1]));}catch(e){}
+    if(im.complete&&im.naturalWidth>0){
+      try{c2.drawImage(im,Math.min(p[0],p2[0]),Math.min(p[1],p2[1]),Math.abs(p2[0]-p[0]),Math.abs(p2[1]-p[1]));}catch(e){}
     }
     c2.globalAlpha=1;return;
   }
@@ -945,7 +946,7 @@ function pushOp(op){undoStack.push(op);if(undoStack.length>120)undoStack.shift()
 function applyArr(key,arr){if(arr&&arr.length)inkStore[key]=arr.slice();else delete inkStore[key];}
 function doUndo(){const op=undoStack.pop();if(!op)return;redoStack.push(op);(op.entries||[op]).forEach(e=>applyArr(e.key,e.before));afterHistory();}
 function doRedo(){const op=redoStack.pop();if(!op)return;undoStack.push(op);(op.entries||[op]).forEach(e=>applyArr(e.key,e.after));afterHistory();}
-function afterHistory(){saveInkSoon();clearSel();redrawInk();updateUndoUI();}
+function afterHistory(){saveInkSoon();clearSel();redrawInk();updateUndoUI();setTimeout(()=>{try{redrawInk();}catch(e){}},180);}
 function wipeInk(){
   ictx.save();ictx.setTransform(1,0,0,1,0,0);
   ictx.clearRect(0,0,ink.width,ink.height);
@@ -1001,7 +1002,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b799';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b800';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1304,6 +1305,7 @@ function ensureMathJax(cb){
 }
 const EXPX=0.441; /* ex height in units of font size */
 const mathCache={};
+const stampImgCache={}; /* keyed by image data — survives cloning, undo, and zoom */
 function mathKey(it){return (it.c||'#000')+'|'+it.tex;}
 function mathRec(it){
   const key=mathKey(it);
