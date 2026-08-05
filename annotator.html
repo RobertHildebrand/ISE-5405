@@ -351,6 +351,7 @@ body.present #tbHide{display:flex!important}
   <div class="drop">
     <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
     <input type="file" id="pdfFile" accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
+    <input type="file" id="kidsOwnFile" accept="application/pdf" style="display:none" aria-label="Open your own coloring PDF">
     <div style="margin-top:14px"><button class="btn sec" id="signModeBtn" style="background:#861F41;color:#fff">&#9997; Just sign a document</button> <button class="btn sec" id="presentBtn">&#9998; New whiteboard</button> <button class="btn sec" id="tutBtn">? Tutorial</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
   <div id="recents" style="display:none;max-width:520px;margin:10px auto 0;text-align:left;max-height:132px;overflow-y:auto;overscroll-behavior:contain"></div>
   <div class="tiny" style="color:#707070;margin-top:12px;max-width:460px">Your PDF stays on this device — nothing is uploaded anywhere.<br>
@@ -1008,7 +1009,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b801';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b802';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -3219,11 +3220,33 @@ function restartBoard(){
   const rs=document.getElementById('rstSave');
   if(rs)rs.onclick=async()=>{try{await exportVectorPdf();}catch(e){}restartBoard();};
 })();
+(function(){
+  const inp=document.getElementById('kidsOwnFile');
+  if(inp)inp.addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    pgprog.style.display='flex';pgprog.textContent='Loading '+file.name+'\u2026';
+    try{
+      await loadPdfBytes(file.name,await file.arrayBuffer());
+      document.body.classList.add('kidsdoc');
+      if(!penOn)togglePen();
+    }catch(err){pgprog.style.display='none';alert('Could not open that ('+err.message+').');}
+    e.target.value='';
+  });
+})();
 let kidsBuilt=false;
 function openKids(){
   const g=document.getElementById('kidsGrid');
   if(!kidsBuilt){
     kidsBuilt=true;
+    const own=document.createElement('button');
+    own.innerHTML='<div class="kemoji">\ud83d\udcc4</div>Open your own';
+    own.title='Open any coloring PDF saved on this device — it gets the kid toolbar too';
+    own.onclick=async()=>{
+      document.getElementById('kidsdlg').classList.remove('open');
+      const inp=document.getElementById('kidsOwnFile');
+      if(inp)inp.click();
+    };
+    g.appendChild(own);
     KIDS_COLOR.forEach(k=>{
       const b=document.createElement('button');
       b.innerHTML='<img src="kids/'+k[0]+'.'+(k[2]||'svg')+'" alt="">'+k[1];
