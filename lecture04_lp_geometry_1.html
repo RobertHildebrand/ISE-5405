@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>ISE 5405 · Lecture 4 — LP Geometry I: Polyhedra & Corners</title>
+<title>ISE 5405 · Lecture 3 — LP Geometry I: Polyhedra & Corners</title>
 <script>
 window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false,enableAssistiveMml:true},loader:{load:['a11y/assistive-mml']}};
 </script>
@@ -166,7 +166,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   </svg>
   <div style="font-size:22px;letter-spacing:3px;color:#E5751F;font-weight:600">ISE 5405 · OPTIMIZATION I</div>
   <h1 style="margin:14px 0 8px">The Geometry of Linear Programming I</h1>
-  <div style="font-size:24px;color:#555">Lecture 4 · Polyhedra, Convexity &amp; Corner Points · BT §2.1–2.2</div>
+  <div style="font-size:24px;color:#555">Lecture 3 · Polyhedra, Convexity &amp; Corner Points · BT §2.1–2.2</div>
   <div style="margin-top:32px" class="tiny">
     <span class="kbd">&rarr;</span>/<span class="kbd">Space</span> advance &middot; <span class="kbd">&larr;</span> back &middot;
     <span class="kbd">F</span> fullscreen &middot; <span class="kbd">M</span> menu &middot;
@@ -291,7 +291,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <ul class="small">
         <li class="frag">The hyperplane is the <b>boundary</b> of its halfspace</li>
         <li class="frag">A hyperplane = intersection of two opposing halfspaces</li>
-        <li class="frag">\(a\) is perpendicular to the hyperplane (recall the explorer from Lecture 2!)</li>
+        <li class="frag">\(a\) is perpendicular to the hyperplane (recall the explorer from Lecture 1!)</li>
       </ul>
     </div>
     <div class="col" style="flex:0 0 420px">
@@ -359,7 +359,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         <li class="frag">Purely geometric — doesn't care how \(P\) is written down</li>
         <li class="frag">Interior points and edge-interior points always fail: they're midpoints of neighbors</li>
       </ul>
-      <div class="box blue frag">Negation practice (Lecture 3!): to show \(x\) is <b>not</b> extreme, <i>exhibit</i> \(y, z, \lambda\). To show it <b>is</b>, assume such \(y,z\) exist and derive a contradiction.</div>
+      <div class="box blue frag">Negation practice (Lecture 2!): to show \(x\) is <b>not</b> extreme, <i>exhibit</i> \(y, z, \lambda\). To show it <b>is</b>, assume such \(y,z\) exist and derive a contradiction.</div>
     </div>
     <div class="col widget" style="flex:0 0 480px">
       <div class="tiny" style="margin-bottom:4px"><b>Click anywhere in the polygon</b> — is it extreme?</div>
@@ -577,7 +577,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <div class="col small">
       <div class="box"><b>Corollary.</b> A polyhedron defined by \(m\) linear constraints in \(\mathbb{R}^n\) has finitely many basic solutions — at most \(\binom{m}{n}\).</div>
       <div class="frag"><b>Proof idea.</b> A basic solution is pinned by a choice of \(n\) linearly independent active constraints out of \(m\); each choice pins at most one point; there are \(\binom{m}{n}\) choices. \(\blacksquare\)</div>
-      <div class="box orange frag">Finite \(\ne\) small! The unit cube in \(\mathbb{R}^n\) (constraints \(0\le x_i\le 1\), so \(m=2n\)) has \(2^n\) BFS — you rotated that cube in Lecture 2.</div>
+      <div class="box orange frag">Finite \(\ne\) small! The unit cube in \(\mathbb{R}^n\) (constraints \(0\le x_i\le 1\), so \(m=2n\)) has \(2^n\) BFS — you rotated that cube in Lecture 1.</div>
     </div>
     <div class="col frag" style="flex:0 0 420px">
       <table class="nice">
