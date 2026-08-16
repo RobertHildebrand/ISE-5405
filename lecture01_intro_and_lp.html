@@ -757,8 +757,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           <circle cx="180" cy="170" r="5"/><circle cx="260" cy="150" r="5"/><circle cx="340" cy="130" r="5"/>
         </g>
         <text x="168" y="196" font-size="13" fill="#1a7d3c">cost &minus;10</text>
-        <text x="250" y="176" font-size="13" fill="#1a7d3c">&minus;100</text>
-        <text x="330" y="156" font-size="13" fill="#1a7d3c">&minus;1000&hellip;</text>
+        <text x="252" y="176" font-size="13" fill="#1a7d3c">&minus;20</text>
+        <text x="334" y="156" font-size="13" fill="#1a7d3c">&minus;30&hellip;</text>
         <path d="M 360 122 l 40 -10" stroke="#1a7d3c" stroke-width="2.5" fill="none"/>
         <path d="M 400 112 l -10 -2 3 10 z" fill="#1a7d3c"/>
         <text x="30" y="30" font-size="14" fill="#666">region open in an improving direction &rarr; cost &darr; forever</text>
@@ -2210,7 +2210,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b808';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b809';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
