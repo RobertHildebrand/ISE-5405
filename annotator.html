@@ -104,6 +104,15 @@ iframe.embed{border:none;border-radius:10px;background:#fff}
 
 /* ===== handout / laser / checkpoint ===== */
 body.handout{overflow:auto}
+body.scrollview{overflow:auto}
+body.scrollview #stage{position:static;display:block;height:auto;padding:12px 0 170px}
+body.scrollview #deck{transform:none!important;margin:0 auto;box-shadow:none;background:transparent;border-radius:0;overflow:visible;width:calc(1280px * var(--ss,0.7));height:auto}
+body.scrollview .slide{position:relative;display:flex;inset:auto;width:1280px;height:720px;transform-origin:top left;transform:scale(var(--ss,0.7));margin-bottom:calc(-720px * (1 - var(--ss,0.7)) + 16px);animation:none;overflow:hidden;background:#fdfcfa;box-shadow:0 3px 16px rgba(0,0,0,.35);border-radius:4px}
+body.scrollview .slide.cover{display:none}
+body.scrollview #ink{touch-action:pan-x pan-y}
+#paperChip{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));z-index:517;display:none;align-items:center;gap:8px;background:#33658a;color:#fff;border:none;border-radius:20px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+body.notesmode:not(.oncover):not(.present):not(.handout):not(.signmode):not(.kidsdoc) #paperChip{display:flex}
+@media print{#paperChip{display:none!important}}
 body.handout #stage{position:static;display:block;height:auto}
 body.handout #deck{transform:none!important;margin:24px auto;height:auto;box-shadow:none}
 body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;height:720px;animation:none;border-bottom:3px solid #e5ded6;overflow:hidden}
@@ -250,6 +259,7 @@ body.handout #handoutbar{display:flex}
 .cover{justify-content:center;align-items:center;text-align:center}
 .cover .drop{border:3px dashed #c9b8a8;border-radius:16px;padding:20px 48px;background:#fff}
 .pdfimg{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%}
+body.notesmode .slide.pdfpage .pdfimg{max-width:70%;box-shadow:0 0 0 1px #e0d9cf}
 #pgprog{position:fixed;inset:0;background:rgba(20,22,26,.85);z-index:800;display:none;align-items:center;justify-content:center;color:#fff;font-size:22px;font-family:"Fraunces",Georgia,serif}
 .slide.pdfpage{background:#3a3d45}
 @media print{.noprint{display:none!important}.slide.pdfpage{background:#fff}}
@@ -349,7 +359,7 @@ body.present #tbHide{display:flex!important}
   <h1 style="margin:8px 0 4px">Ink Pad</h1>
   <div style="font-size:19px;color:#555;margin-bottom:14px">Blank pages + annotate your own PDFs — same pen as the lectures</div>
   <div class="drop">
-    <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button>
+    <button class="btn" id="pdfBtn" style="font-size:19px;padding:12px 26px">&#128196; Open a PDF&hellip;</button> <button class="btn sec" id="paperBtn" style="font-size:17px;padding:11px 20px" title="Reading mode for academic papers: wide writable margins beside every page — they export too">&#128214; Read a paper&hellip;</button>
     <input type="file" id="pdfFile" accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none">
     <input type="file" id="kidsOwnFile" accept="application/pdf" style="display:none" aria-label="Open your own coloring PDF">
     <div style="margin-top:14px"><button class="btn sec" id="signModeBtn" style="background:#861F41;color:#fff">&#9997; Just sign a document</button> <button class="btn sec" id="presentBtn">&#9998; New whiteboard</button> <button class="btn sec" id="tutBtn">? Tutorial</button> <button class="btn sec" id="resumeBtn" style="display:none">&#10227; Resume last session</button></div>
@@ -389,7 +399,7 @@ body.present #tbHide{display:flex!important}
   <div style="display:flex;align-items:center"><h3>How to use Ink Pad</h3><button class="btn" id="tutClose" style="margin-left:auto">Done</button></div>
   <div id="tutGrid">
     <div class="tutsec"><b class="h">Get started</b>
-      <b>Open a PDF</b> — or a Word <b>.docx</b>, converted to PDF pages right on your device. It stays here, nothing uploads. Share a document by link: add <span class="kbd">?pdf=https://&hellip;</span> to this site&rsquo;s address and the PDF opens right here for whoever taps it. Add <span class="kbd">&amp;sign=1</span> (or tap <b>Just sign a document</b>) for a big-button signing mode — perfect for phones. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
+      <b>Open a PDF</b> — or a Word <b>.docx</b>, converted to PDF pages right on your device. It stays here, nothing uploads. <b>&#128214; Read a paper</b> opens with wide writable margins beside every page — perfect for working through the math — and exports them as part of the PDF. Share a document by link: add <span class="kbd">?pdf=https://&hellip;</span> to this site&rsquo;s address and the PDF opens right here for whoever taps it. Add <span class="kbd">&amp;sign=1</span> (or tap <b>Just sign a document</b>) for a big-button signing mode — perfect for phones. Recent files reopen with one tap; <b>Resume</b> rebuilds your last arrangement. <span class="kbd">N</span> adds a blank page, <span class="kbd">W</span> jumps to your blank pages.</div>
     <div class="tutsec"><b class="h">Pen &amp; ink</b>
       <span class="kbd">P</span> pen · colors + 4 highlighters + custom color wheel · &#9679; cycles thickness · <span class="kbd">E</span> cycles erasers (whole-stroke &#9676; / precision &#9986;) · <span class="kbd">C</span> clears the page · <span class="kbd">Ctrl/Cmd+Z</span> undo anything. Rest your palm freely — only the Pencil draws. Highlighters auto-straighten; hold <span class="kbd">Shift</span> for straight lines.</div>
     <div class="tutsec"><b class="h">Tools</b>
@@ -484,6 +494,7 @@ body.present #tbHide{display:flex!important}
   <div class="msub">Annotate, sign &amp; share PDFs — nothing leaves your phone</div>
   <button id="msOpen">&#128196; Open a PDF</button>
   <button id="msSign">&#9997; Sign a document</button>
+  <button id="msPaper">&#128214; Read a paper</button>
   <button id="msResume" style="display:none">&#10227; Resume last session</button>
   <button id="msBoard">&#9998; New whiteboard</button>
   <button id="msTut">? How it works</button>
@@ -502,9 +513,11 @@ body.present #tbHide{display:flex!important}
   <button id="signDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Done</button>
 </div>
 <button id="signExit">&#215; Exit signing</button>
+<button id="paperChip" title="Paper margins are on — exports use enlarged pages. Click to turn off.">&#128214; Paper margins &#215;</button>
 <div id="sidectl" role="group" aria-label="Document actions">
   <button id="quickExp" title="Download annotated PDF (vector — keeps selectable text)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="sclbl">Export</span></button>
   <button id="pagesBtn" title="Page organizer: reorder, delete, insert, append"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg><span class="sclbl">Pages</span></button>
+  <button id="scrollBtn" title="Continuous scroll — read and annotate pages as one long roll (click again for single pages)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="8" rx="1.5"/><rect x="5" y="13.5" width="14" height="8" rx="1.5"/><path d="M12 10.5v3"/></svg><span class="sclbl">Scroll</span></button>
   <button id="tbShow" title="Show / hide the pen toolbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="14.5" width="18" height="6.5" rx="2.5"/><path d="M7 17.8h.01M12 17.8h.01M17 17.8h.01"/><path d="M14.5 4a2 2 0 012.8 2.8L11 13l-3.4.6L8.2 10z"/></svg><span class="sclbl">Tools</span></button>
 </div>
 <div id="zoomctl" role="group" aria-label="Zoom controls">
@@ -590,6 +603,9 @@ function show(i){
   slides.forEach((s,j)=>s.classList.toggle('active',j===i));
   cur=i;update();
   document.body.classList.toggle('oncover',i===0);
+  if(typeof inScroll==='function'&&inScroll()&&i>0&&slides[i]){
+    try{slides[i].scrollIntoView({block:'start'});}catch(e){}
+  }
   if(i===0){ /* arriving home: reset the view, as if freshly opened */
     document.body.classList.remove('pmini');
     try{if(typeof penOn!=='undefined'&&penOn)togglePen();}catch(e){}
@@ -619,6 +635,7 @@ function fit(){
   deck.style.transform='scale('+baseFit()+')';
 }
 function appZoom(rz,c0,c1){
+  if(typeof inScroll==='function'&&inScroll())return;
   const r0=deck.getBoundingClientRect();
   let W=r0.width*rz;
   const minW=1280*baseFit();
@@ -631,6 +648,7 @@ function appZoom(rz,c0,c1){
   if(typeof updatePdfWindow==='function')updatePdfWindow();
 }
 addEventListener('resize',fit);
+addEventListener('resize',()=>{if(typeof inScroll==='function'&&inScroll())scrollLayout();});
 /* app-controlled two-finger pan & zoom: smooth, clamped to the document — no native-pinch jank */
 let g2=null;
 function g2pts(e){return [[e.touches[0].clientX,e.touches[0].clientY],[e.touches[1].clientX,e.touches[1].clientY]];}
@@ -645,6 +663,13 @@ addEventListener('touchmove',e=>{
   const p=g2pts(e);
   const d0=Math.hypot(g2.p[0][0]-g2.p[1][0],g2.p[0][1]-g2.p[1][1]);
   const d1=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
+  if(typeof inScroll==='function'&&inScroll()){
+    scrollSS=Math.max(0.25,Math.min(2.2,scrollSS*(d1/Math.max(1,d0))));
+    document.documentElement.style.setProperty('--ss',scrollSS);
+    if(typeof sizeInk==='function')sizeInk();
+    g2={p:p};
+    return;
+  }
   const c0=[(g2.p[0][0]+g2.p[1][0])/2,(g2.p[0][1]+g2.p[1][1])/2];
   const c1=[(p[0][0]+p[1][0])/2,(p[0][1]+p[1][1])/2];
   appZoom(d1/Math.max(1,d0),c0,c1);
@@ -653,10 +678,11 @@ addEventListener('touchmove',e=>{
 addEventListener('touchend',e=>{if(e.touches.length<2)g2=null;});
 async function toggleHandout(){
   const entering=!document.body.classList.contains('handout');
+  if(entering&&typeof inScroll==='function'&&inScroll()){wasScrollHandout=true;setScrollView(false,true);}
   if(entering&&typeof renderAllForPrint==='function')await renderAllForPrint();
   document.body.classList.toggle('handout');
   if(document.body.classList.contains('handout')){deck.style.transform='none';injectInkPrints();window.scrollTo(0,0);}
-  else{removeInkPrints();fit();redrawInk();}
+  else{removeInkPrints();fit();redrawInk();if(wasScrollHandout){wasScrollHandout=false;setTimeout(()=>setScrollView(true,true),40);}}
 }
 addEventListener('beforeprint',()=>{applyPrintSize();document.body.classList.add('handout');deck.style.transform='none';injectInkPrints();});
 addEventListener('afterprint',()=>{document.body.classList.remove('handout');removeInkPrints();fit();redrawInk();});
@@ -725,6 +751,7 @@ counter.onclick=()=>toc.classList.toggle('open');
 })();
 let tx=null,tyv=null,tt0=0;
 addEventListener('touchstart',e=>{
+  if(typeof inScroll==='function'&&inScroll()){tx=null;return;}
   const t=e.changedTouches[0];
   if(penOn||(viewZ||1)>1.01||(t.touchType&&t.touchType==='stylus')){tx=null;return;}
   if(e.target.closest('.widget,button,input'))return;
@@ -755,7 +782,7 @@ function allowDraw(e){
   return true;
 }
 function inkKey(i){const sl=slides[i==null?cur:i];return (sl&&sl.dataset.inkkey)||String(i==null?cur:i);}
-function deckRect(){return deck.getBoundingClientRect();}
+function deckRect(){if(typeof inScroll==='function'&&inScroll()&&slides[cur])return slides[cur].getBoundingClientRect();return deck.getBoundingClientRect();}
 function kDeck(){const r=deckRect();return 1280/Math.max(1,r.width);} /* deck units per screen pixel */
 function toDeck(e){const r=deckRect();return [Math.round((e.clientX-r.left)/r.width*12800)/10,Math.round((e.clientY-r.top)/r.height*7200)/10];}
 function fromDeck(q){const r=deckRect();return [q[0]/1280*r.width+r.left,q[1]/720*r.height+r.top];}
@@ -963,6 +990,21 @@ function inkRect(){return ink.getBoundingClientRect();}
 function redrawInk(){
   wipeInk();
   const ir=inkRect();
+  if(typeof inScroll==='function'&&inScroll()){
+    slides.forEach((sl,i)=>{
+      if(sl.classList.contains('cover'))return;
+      const r=sl.getBoundingClientRect();
+      if(r.bottom<-60||r.top>innerHeight+60)return;
+      const map=q=>[r.left+q[0]/1280*r.width-ir.left,r.top+q[1]/720*r.height-ir.top];
+      const ws=r.width/1280;
+      (inkStore[inkKey(i)]||[]).forEach(it=>renderItem(ictx,it,map,ws));
+      if(i===cur){
+        if(typeof drawSelOverlay==='function')drawSelOverlay(map,ws);
+        if(typeof drawDraftOverlay==='function')drawDraftOverlay(map,ws);
+      }
+    });
+    return;
+  }
   const map=q=>{const m=fromDeck(q);return[m[0]-ir.left,m[1]-ir.top];};
   const ws=deckRect().width/1280;
   (inkStore[inkKey()]||[]).forEach(it=>renderItem(ictx,it,map,ws));
@@ -1009,7 +1051,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b804';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b806';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -1020,8 +1062,8 @@ function syncZoom(){
   if(sig!==lastVVSig){lastVVSig=sig;sizeInk();pinUI();if(typeof positionTextEditor==='function')positionTextEditor();clearTimeout(syncZoom._t);syncZoom._t=setTimeout(()=>{try{redrawInk();}catch(e){}},150);}
 }
 setInterval(syncZoom,400);
-ink.addEventListener('touchstart',e=>{if(e.touches.length===1)e.preventDefault();},{passive:false});
-ink.addEventListener('touchmove',e=>{if(e.touches.length===1)e.preventDefault();},{passive:false});
+ink.addEventListener('touchstart',e=>{if(e.touches.length===1&&!(typeof inScroll==='function'&&inScroll()))e.preventDefault();},{passive:false});
+ink.addEventListener('touchmove',e=>{if(e.touches.length===1&&!(typeof inScroll==='function'&&inScroll()))e.preventDefault();},{passive:false});
 function togglePen(){
   penOn=!penOn;
   document.getElementById('pentools').style.display=penOn?'flex':'none';
@@ -1451,7 +1493,7 @@ function doFloodFill(dp){
     const img=sec.querySelector('canvas.pdfhi')||sec.querySelector('img.pdfimg');
     if(img){
       const ar=parseFloat(sec.dataset.ar)||(1280/720);
-      const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2;
+      const cr=contentRect(ar),dw=cr.dw,dh=cr.dh,ox=cr.ox,oy=cr.oy;
       try{c2.drawImage(img,ox,oy,dw,dh);}catch(e){}
     }
   }
@@ -1590,6 +1632,12 @@ const gUp=e=>{if(e.pointerType==='touch'){gTouches.delete(e.pointerId);if(gTouch
 addEventListener('pointerup',gUp,true);
 addEventListener('pointercancel',gUp,true);
 ink.addEventListener('pointerdown',e=>{
+  if(typeof inScroll==='function'&&inScroll()){
+    if(e.pointerType==='touch')return; /* fingers scroll the paper; Pencil & mouse draw */
+    const si=slideAtPoint(e.clientX,e.clientY);
+    if(si<0)return;
+    if(si!==cur){cur=si;update();}
+  }
   e.preventDefault();
   syncZoom();
   if(e.pointerType==='touch'&&(multiTouch||gTouches.size>=2))return; /* pinch in progress — never draw */
@@ -1845,8 +1893,7 @@ function injectInkPrints(){
     if(fitted){
       if(sl.classList.contains('pdfpage')){
         const ar=parseFloat(sl.dataset.ar)||pdfAspect;
-        const dh=Math.min(720,1280/ar),dw=dh*ar;
-        const ox=(1280-dw)/2,oy=(720-dh)/2;
+        const cr=contentRect(ar),dw=cr.dw,dh=cr.dh,ox=cr.ox,oy=cr.oy;
         const dh2=Math.min(ph,pw/ar),dw2=dh2*ar;
         rect=[(pw-dw2)/2,(ph-dh2)/2,dw2,dh2];
         mapper=q=>[(q[0]-ox)/dw*dw2,(q[1]-oy)/dh*dh2];
@@ -1989,6 +2036,13 @@ let sources=[]; /* {name,fp,bytes,doc,aspect} */
 function docFor(sec){const i=+(sec.dataset.src||0);return sources[i]?sources[i].doc:pdfDoc;}
 const pgprog=document.getElementById('pgprog');
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+function contentRect(ar){ /* where the page lives inside the 1280×720 stage */
+  let dh=Math.min(720,1280/ar),dw=dh*ar;
+  if(document.body.classList.contains('notesmode')&&dw>1280*0.70){
+    const s=(1280*0.70)/dw;dw*=s;dh*=s; /* paper mode: cap width, margins become writing space */
+  }
+  return {dw:dw,dh:dh,ox:(1280-dw)/2,oy:(720-dh)/2};
+}
 function userRot(sec){return ((+(sec.dataset.rot||0))%360+360)%360;}
 function totalRot(page,sec){return (((page.rotate||0)+userRot(sec))%360+360)%360;}
 function fitScale(page,sec){
@@ -1998,7 +2052,7 @@ function fitScale(page,sec){
 function hiScale(page,sec){
   const vp=page.getViewport({scale:1,rotation:sec?totalRot(page,sec):(page.rotate||0)});
   const fs=fitScale(page,sec);
-  const zx=Math.min(2,Math.max(1,(typeof viewZ==='number'?viewZ:1)));
+  const zx=(typeof inScroll==='function'&&inScroll())?Math.min(2.2,Math.max(1,scrollSS)):Math.min(2,Math.max(1,(typeof viewZ==='number'?viewZ:1)));
   const want=Math.min(3*zx,Math.max(2,(window.devicePixelRatio||1)*1.5*zx));
   const cap=3500/Math.max(vp.width*fs,vp.height*fs);
   return Math.min(want,Math.max(1.5,cap));
@@ -2055,7 +2109,7 @@ async function ensureAnnots(sec){ /* comment markers for annotations that came w
     const anns=await page.getAnnotations();
     const W=v00.width,H=v00.height;
     const Wv=(rt%180)?H:W,Hv=(rt%180)?W:H,ar=Wv/Hv;
-    const dh=Math.min(720,1280/ar),dw=dh*ar,ox=(1280-dw)/2,oy=(720-dh)/2,scl=Wv/dw;
+    const cr=contentRect(ar),dw=cr.dw,dh=cr.dh,ox=cr.ox,oy=cr.oy,scl=Wv/dw;
     const toView=(x,y)=>{
       if(rt===90)return [y,x];
       if(rt===180)return [W-x,y];
@@ -2102,10 +2156,18 @@ function showComment(ev,auth,mdate,txt){
 document.addEventListener('pointerdown',e=>{const pop=document.getElementById('cmtpop');if(pop&&pop.style.display==='block'&&!e.target.closest('#cmtpop,.cmtmark'))pop.style.display='none';});
 function updatePdfWindow(){
   if(!pdfDoc)return;
+  const scrollv=(typeof inScroll==='function'&&inScroll());
   slides.forEach((sec,i)=>{
     if(!sec.classList.contains('pdfpage'))return;
-    const win=(typeof viewZ==='number'&&viewZ>1.8)?1:2;
-    if(Math.abs(i-cur)<=win){
+    let near;
+    if(scrollv){
+      const r=sec.getBoundingClientRect();
+      near=r.bottom>-innerHeight&&r.top<innerHeight*2;
+    }else{
+      const win=(typeof viewZ==='number'&&viewZ>1.8)?1:2;
+      near=Math.abs(i-cur)<=win;
+    }
+    if(near){
       queueRender(()=>ensureImg(sec));
       queueRender(()=>ensureHi(sec));
       queueRender(()=>ensureAnnots(sec));
@@ -2172,7 +2234,7 @@ function saveComp(){
       if(sl.classList.contains('pdfpage'))return {k:'p',fp:sources[+sl.dataset.src].fp,p:+sl.dataset.pdfpage,r:+(sl.dataset.rot||0)};
       return {k:'b',id:sl.dataset.inkkey,label:sl.dataset.toc||'',ps:sl.dataset.pstyle||''};
     });
-    localStorage.setItem('inkpadComp',JSON.stringify({srcs:sources.map(x=>({fp:x.fp,name:x.name})),pages:pages,ts:Date.now()}));
+    localStorage.setItem('inkpadComp',JSON.stringify({srcs:sources.map(x=>({fp:x.fp,name:x.name})),pages:pages,nm:document.body.classList.contains('notesmode')?1:0,ts:Date.now()}));
   }catch(e){}
 }
 async function appendPdfBytes(name,buf){
@@ -2194,6 +2256,8 @@ async function loadPdfBytes(name,buf){
     document.body.classList.remove('kidsdoc');
     document.body.classList.remove('boardgame');
     currentBoardKind=null;
+    document.body.classList.toggle('notesmode',!!window._wantNotes);
+    window._wantNotes=false;
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
     document.querySelectorAll('section.whiteboard').forEach(x=>x.remove()); /* opening a document starts clean — no leftover doodle pages */
     const si=await addSource(name,buf);
@@ -2204,6 +2268,9 @@ async function loadPdfBytes(name,buf){
     refreshSlides();
     pgprog.style.display='none';
     show(1);
+    let wantScroll=document.body.classList.contains('notesmode');
+    try{wantScroll=wantScroll||localStorage.getItem('inkpadScrollPref')==='1';}catch(e){}
+    setScrollView(wantScroll,true);
     queueThumbSweep();saveComp();
   }catch(err){
     pgprog.style.display='none';
@@ -2550,18 +2617,31 @@ async function exportVectorPdf(){
           libDocs[si]=await PDFLib.PDFDocument.load(sources[si].bytes,{ignoreEncryption:true});
         }
         const p=+sec.dataset.pdfpage;
+        const rU=+(sec.dataset.rot||0);
+        let srcPage=null;try{srcPage=libDocs[si].getPage(p-1);}catch(_){}
+        let baseR=0;try{baseR=srcPage?((srcPage.getRotation().angle%360)+360)%360:0;}catch(_){}
+        const total=(baseR+rU)%360;
+        const notes=document.body.classList.contains('notesmode')&&total===0&&srcPage;
+        if(notes){
+          /* paper mode: enlarged deck-shaped page — margins export too */
+          const W=srcPage.getWidth(),Hh=srcPage.getHeight();
+          const cr=contentRect(W/Hh);
+          const k=W/cr.dw;
+          const emb=await out.embedPage(srcPage);
+          const page=out.addPage([1280*k,720*k]);exported++;
+          page.drawPage(emb,{x:cr.ox*k,y:(720-cr.oy-cr.dh)*k});
+          if(!items.length)continue;
+          drawItems(page,items,q=>[q[0]*k,q[1]*k],k);
+          continue;
+        }
         const copied=await out.copyPages(libDocs[si],[p-1]);
         const page=copied[0];
         out.addPage(page);exported++;
-        const rU=+(sec.dataset.rot||0);
-        let baseR=0;try{baseR=((page.getRotation().angle%360)+360)%360;}catch(_){}
-        const total=(baseR+rU)%360;
         try{if(total!==baseR)page.setRotation(PDFLib.degrees(total));}catch(_){}
         if(!items.length)continue;
         const W=page.getWidth(),Hh=page.getHeight();
         const Wv=(total%180)?Hh:W,Hv=(total%180)?W:Hh,ar=Wv/Hv;
-        const dh=Math.min(720,1280/ar),dw=dh*ar;
-        const ox=(1280-dw)/2,oy=(720-dh)/2;
+        const cr=contentRect(ar),dw=cr.dw,ox=cr.ox,oy=cr.oy;
         const scl=Wv/dw;
         const mapPt=q=>{
           const vx=(q[0]-ox)*scl,vy=(q[1]-oy)*scl;
@@ -3146,6 +3226,71 @@ function setupBoard(kind){
   setTool('hand');
   saveInkSoon();redrawInk();
 }
+/* ===== continuous scroll view ===== */
+let scrollSS=0.7,wasScrollPresent=false,wasScrollHandout=false;
+function inScroll(){return document.body.classList.contains('scrollview');}
+function scrollLayout(){
+  if(!inScroll())return;
+  let target=0.96*innerWidth/1280;
+  const firstPdf=slides.find(s=>s.classList.contains('pdfpage'));
+  if(firstPdf){
+    const ar=parseFloat(firstPdf.dataset.ar)||(612/792);
+    const cr=contentRect(ar);
+    target=Math.min(1.8,(0.74*innerWidth)/cr.dw);
+  }
+  scrollSS=Math.max(0.25,target);
+  document.documentElement.style.setProperty('--ss',scrollSS);
+  if(typeof sizeInk==='function')sizeInk();
+}
+function setScrollView(on,noPersist){
+  on=!!on;
+  if(on===inScroll()){const b0=document.getElementById('scrollBtn');if(b0)b0.classList.toggle('on',on);return;}
+  if(on){
+    if(typeof presentOn!=='undefined'&&presentOn)togglePresent();
+    document.body.classList.add('scrollview');
+    scrollLayout();
+    const t=slides[Math.max(1,cur)];
+    if(t)setTimeout(()=>{try{t.scrollIntoView({block:'start'});}catch(e){}},30);
+    setTimeout(()=>{try{const over=document.documentElement.scrollWidth-innerWidth;if(over>0)scrollTo({left:over/2});}catch(e){}},60);
+  }else{
+    document.body.classList.remove('scrollview');
+    document.documentElement.style.removeProperty('--ss');
+    try{scrollTo(0,0);}catch(e){}
+    fit();
+    if(typeof sizeInk==='function')sizeInk();
+  }
+  const b=document.getElementById('scrollBtn');
+  if(b)b.classList.toggle('on',on);
+  if(!noPersist)try{localStorage.setItem('inkpadScrollPref',on?'1':'0');}catch(e){}
+  if(typeof updatePdfWindow==='function')updatePdfWindow();
+  redrawInk();
+}
+function slideAtPoint(x,y){
+  for(let i=slides.length-1;i>=0;i--){
+    const sl=slides[i];
+    if(sl.classList.contains('cover'))continue;
+    const r=sl.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return i;
+  }
+  return -1;
+}
+let scrollRAF=null;
+addEventListener('scroll',()=>{
+  if(!inScroll()||scrollRAF)return;
+  scrollRAF=requestAnimationFrame(()=>{
+    scrollRAF=null;
+    let best=-1,bd=1e18;const mid=innerHeight/2;
+    slides.forEach((sl,i)=>{
+      if(sl.classList.contains('cover'))return;
+      const r=sl.getBoundingClientRect();
+      const d=Math.abs((r.top+r.bottom)/2-mid);
+      if(d<bd){bd=d;best=i;}
+    });
+    if(best>=0&&best!==cur){cur=best;update();}
+    else scheduleInk();
+    if(typeof updatePdfWindow==='function')updatePdfWindow();
+  });
+},{passive:true});
 let currentBoardKind=null;
 function promotePiece(it,pt){
   const key=inkKey();
@@ -3185,6 +3330,7 @@ function openPromoMenu(it,cx,cy){
 document.addEventListener('pointerdown',e=>{const pm=document.getElementById('promoMenu');if(pm&&pm.classList.contains('open')&&!e.target.closest('#promoMenu'))pm.classList.remove('open');});
 async function openBoardGame(kind,label){
   await openKidPdf('board',label);
+  setScrollView(false,true); /* board games are single-page */
   currentBoardKind=kind;
   document.body.classList.add('boardgame');
   setTimeout(()=>{try{setupBoard(kind);}catch(e){}},250);
@@ -3297,6 +3443,11 @@ function setSignMode(on){
 }
 document.getElementById('signModeBtn').onclick=()=>{setSignMode(true);document.getElementById('pdfFile').click();};
 document.getElementById('msOpen').onclick=()=>document.getElementById('pdfFile').click();
+(function(){
+  const go=()=>{window._wantNotes=true;document.getElementById('pdfFile').click();};
+  const b1=document.getElementById('paperBtn');if(b1)b1.onclick=go;
+  const b2=document.getElementById('msPaper');if(b2)b2.onclick=go;
+})();
 document.getElementById('msSign').onclick=()=>{setSignMode(true);document.getElementById('pdfFile').click();};
 document.getElementById('msBoard').onclick=newWhiteboard;
 document.getElementById('msTut').onclick=()=>{document.getElementById('tut').classList.add('open');if(window.tutReset)window.tutReset();};
@@ -3388,6 +3539,7 @@ async function resumeSession(){
   if(!comp||!comp.pages||!comp.pages.length)return alert('No previous session found.');
   pgprog.style.display='flex';pgprog.textContent='Restoring session…';
   try{
+    document.body.classList.toggle('notesmode',!!comp.nm);
     sources=[];
     document.querySelectorAll('section.pdfpage').forEach(x=>x.remove());
     document.querySelectorAll('section.whiteboard').forEach(x=>x.remove());
@@ -3464,6 +3616,15 @@ addEventListener('keydown',e=>{
 });
 addEventListener('wheel',e=>{
   if(document.body.classList.contains('handout'))return;
+  if(typeof inScroll==='function'&&inScroll()){
+    if(e.ctrlKey||e.metaKey){
+      e.preventDefault();
+      scrollSS=Math.max(0.25,Math.min(2.2,scrollSS*(e.deltaY<0?1.1:1/1.1)));
+      document.documentElement.style.setProperty('--ss',scrollSS);
+      if(typeof sizeInk==='function')sizeInk();
+    }
+    return; /* plain wheel: native scrolling */
+  }
   if(e.ctrlKey||e.metaKey){
     e.preventDefault();
     appZoom(e.deltaY<0?1.12:1/1.12,[e.clientX,e.clientY],[e.clientX,e.clientY]);
@@ -3501,6 +3662,7 @@ function setTbHidden(h){
   tbTab.style.display=(h&&presentOn)?'block':'none';
 }
 function togglePresent(){
+  if(!presentOn&&typeof inScroll==='function'&&inScroll()){wasScrollPresent=true;setScrollView(false,true);}
   presentOn=!presentOn;
   document.body.classList.toggle('present',presentOn);
   const tb=document.getElementById('touchbar');
@@ -3517,6 +3679,7 @@ function togglePresent(){
     const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
     let tbPref=true;try{tbPref=localStorage.getItem('inkpadTbHide')!=='1';}catch(e){}
     if(tb)tb.style.display=(coarse||tbPref)?'flex':'none';
+    if(wasScrollPresent){wasScrollPresent=false;setTimeout(()=>setScrollView(true,true),40);}
     try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}catch(e){}
     clearTimeout(idleT);
     if(presentFrom===0)show(0); /* entered from the start page → return there */
@@ -3534,6 +3697,8 @@ addEventListener('pointermove',()=>{if(presentOn)armIdle();});
 addEventListener('pointerdown',()=>{if(presentOn)armIdle();});
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presentOn)togglePresent();});
 function newWhiteboard(){
+  setScrollView(false,true);
+  document.body.classList.remove('notesmode');
   sources=[];
   pdfDoc=null;pdfAspect=null;currentFP=null;pdfBytes=null;pdfName=null;
   document.body.classList.remove('kidsdoc');document.body.classList.remove('boardgame');
@@ -3546,6 +3711,8 @@ function newWhiteboard(){
   if(!penOn)togglePen();
 }
 document.getElementById('presentBtn').onclick=newWhiteboard;
+document.getElementById('scrollBtn').onclick=()=>setScrollView(!inScroll());
+(function(){const pc=document.getElementById('paperChip');if(pc)pc.onclick=()=>{document.body.classList.remove('notesmode');saveComp();if(inScroll())scrollLayout();redrawInk();if(typeof updatePdfWindow==='function')updatePdfWindow();};})();
 document.getElementById('tbShow').onclick=()=>{
   const tbx=document.getElementById('touchbar');if(!tbx)return;
   const vis=getComputedStyle(tbx).display!=='none';
