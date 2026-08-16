@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>ISE 5405 · Lecture 1 — Introduction &amp; Linear Optimization</title>
 <script>
-window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false,enableAssistiveMml:true},loader:{load:['a11y/assistive-mml']}};
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false,enableAssistiveMml:true},loader:{load:['a11y/assistive-mml','[tex]/color']},startup:{}};MathJax.tex.packages={'[+]':['color']};
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -855,7 +855,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </section>
 
 <!-- ============ 12 · BRUTE FORCE ============ -->
-<section class="slide">
+<section class="slide" data-checkpoint="cpG">
   <h2>The Axioms of Linear Programming</h2>
   <div class="cols">
     <div class="col small">
@@ -916,7 +916,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </section>
 
 <!-- 17 PRODUCTION -->
-<section class="slide">
+<section class="slide" data-checkpoint="cpH">
   <div class="kicker">&sect;1.2 &middot; Examples of LP models</div>
   <h2>A Production Problem</h2>
   <div class="cols">
@@ -1921,19 +1921,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <button class="btn" id="hbPrint">&#128190; Save / Print PDF</button>
   <button class="btn sec" id="hbExit">Exit handout</button>
 </div>
-<ol id="cpA" style="display:none" data-why="The 200 hours, the $40 profit, and the constraint count are all <b>data</b> — fixed inputs. Decision variables are the things you get to choose: how much of each product to make.">
-  <li>In the production-planning LP, which of these is a <b>decision variable</b>?</li>
-  <li>The 200 labor hours available</li>
-  <li data-ok>The number of units of product A to make</li>
-  <li>The $40 profit per unit of A</li>
-  <li>The number of constraints</li>
+<ol id="cpA" style="display:none" data-why="A mathematical program supplies variables, an objective, and constraints — but nothing promises the optimum is unique (or even exists). Ties and unbounded problems are both possible, as we'll see.">
+  <li>Every mathematical program has three ingredients. Which of these is NOT one of them?</li>
+  <li>Decision variables</li>
+  <li>An objective to optimize</li>
+  <li>Constraints on the decisions</li>
+  <li data-ok>A guarantee that the optimal solution is unique</li>
 </ol>
-<ol id="cpB" style="display:none" data-why="You can't buy 3.7 trucks — the decision is inherently whole-numbered, which breaks <b>divisibility</b> and turns the model into an integer program.">
+<ol id="cpB" style="display:none" data-why="Whole trucks are a discrete decision — that makes it a (mixed-)integer program. Drop the whole-number requirement and it relaxes to a linear program, which is exactly the trick the picture shows.">
+  <li>A city must buy delivery trucks — whole trucks only — to serve routes at minimum cost. Which flavor of optimization is that?</li>
+  <li>A linear program</li>
+  <li data-ok>A mixed-integer program</li>
+  <li>A nonlinear program</li>
+  <li>Not an optimization problem</li>
+</ol>
+<ol id="cpG" style="display:none" data-why="You can't buy 3.7 trucks — the decision is inherently whole-numbered, which breaks <b>divisibility</b> and turns the model into an integer program.">
   <li>Your model has a variable \(x\) = number of delivery trucks to purchase. Which LP axiom is at risk?</li>
   <li>Proportionality</li>
   <li>Additivity</li>
   <li data-ok>Divisibility</li>
   <li>Certainty</li>
+</ol>
+<ol id="cpH" style="display:none" data-why="The 200 hours, the $40 profit, and the constraint count are all <b>data</b> — fixed inputs. Decision variables are the things you get to choose: how much of each product to make.">
+  <li>In the production-planning LP, which of these is a <b>decision variable</b>?</li>
+  <li>The 200 labor hours available</li>
+  <li data-ok>The number of units of product A to make</li>
+  <li>The $40 profit per unit of A</li>
+  <li>The number of constraints</li>
 </ol>
 <ol id="cpC" style="display:none" data-why="Relaxing (dropping) constraints can only enlarge the feasible set, so the relaxed optimum is at least as good as the original's — an <b>optimistic bound</b>. It can be strictly better (the LP optimum may be fractional), so 'always equal' is too strong.">
   <li>Take an integer program and <b>relax</b> (drop) the integrality requirement. The optimal value of the resulting LP is&hellip;</li>
@@ -2196,7 +2210,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b807';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b808';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
