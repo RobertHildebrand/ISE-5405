@@ -138,6 +138,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #appx.open{display:flex}
 #appx .axcard{background:#fdfcfa;border-radius:16px;padding:24px 32px;max-width:900px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
 #appx h3{margin:2px 0 10px;color:#861F41;font-family:"Fraunces",Georgia,serif;font-size:27px}
+
+/* explorer content styles (carried from original L1) */
+.ax3{display:flex;gap:12px;margin:10px 0}
+.ax3>div{flex:1;background:#f6f3ef;border-radius:10px;padding:9px 13px;font-size:15px}
+.ax3 b{color:#861F41}
+.ax3 ul{margin:5px 0 0;padding-left:18px}
+.ax3 li{margin:3px 0}
+.axflavor{font-size:14.5px;background:#fdf3ea;border-left:4px solid #E5751F;padding:7px 12px;border-radius:0 8px 8px 0;margin-top:4px}
 </style>
 </head>
 <body>
@@ -447,27 +455,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </section>
 
 <!-- ============ 6 · PRODUCTION EXAMPLE ============ -->
-<section class="slide" style="padding:34px 46px" data-checkpoint="cpB">
-  <div class="kicker">One picture &middot; three flavors</div>
-  <h2 style="margin-bottom:8px">Linear &middot; Mixed-Integer &middot; Nonlinear</h2>
-  <div style="display:flex;gap:14px">
-    <div class="widget" style="flex:1;padding:8px">
-      <canvas id="triLP" width="368" height="290" style="width:100%"></canvas>
-      <div class="tiny center" style="min-height:38px"><b>Linear:</b> flat sides, flat costs &mdash; an optimum sits at a <b>corner</b>.</div>
-    </div>
-    <div class="widget" style="flex:1;padding:8px">
-      <canvas id="triMIP" width="368" height="290" style="width:100%"></canvas>
-      <div class="tiny center" style="min-height:38px"><b>Mixed-integer:</b> only lattice points allowed.
-        <button class="btn sec" id="triRelax" style="padding:2px 10px;font-size:13px">Relax integrality</button></div>
-    </div>
-    <div class="widget" style="flex:1;padding:8px">
-      <canvas id="triNLP" width="368" height="290" style="width:100%"></canvas>
-      <div class="tiny center" style="min-height:38px"><b>Nonlinear:</b> curved boundary &amp; costs.
-        <button class="btn sec" id="triCut" style="padding:2px 10px;font-size:13px">Approximate by LPs</button></div>
-    </div>
-  </div>
-  <div class="box orange small frag" style="margin-top:10px"><b>Punchline:</b> drop integrality and a MIP <i>becomes</i> an LP (its <b>relaxation</b> &mdash; an optimistic bound). Tangent lines turn curved regions into LPs too. <b>LP is the common denominator.</b></div>
-</section>
 
 <!-- ============ 11 · MASTER KEY ============ -->
 <section class="slide">
@@ -949,6 +936,75 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <div class="tiny center frag" style="color:#6d6d6d;margin-top:10px">Full interactive tutorial with practice problems: <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> &mdash; revisit any time.</div>
 </section>
 
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Worked example &middot; from the course text</div>
+  <h2>Worked Example: Sam's Bakery</h2>
+  <div class="box small"><b>The story.</b> Sam decides how many chocolate <i>cakes</i> and trays of <i>cookies</i> to bake tomorrow. A cake earns \$4 and uses 3 cups of flour + 2 eggs; a tray earns \$3 and uses 2 cups + 1 egg. The pantry holds 24 cups of flour and 12 eggs, and the market will buy at most 5 cakes. Maximize profit.</div>
+  <div class="cols small" style="margin-top:8px">
+    <div class="col frag">
+      <b style="color:#861F41">Step 1 &mdash; what are we deciding?</b>
+      \[x_C=\text{cakes},\qquad x_K=\text{cookie trays}\]
+      <div class="tiny">Allow real values for now (the LP is easier; we'll revisit integrality) &mdash; but never negative: \(x_C,x_K\ge 0\).</div>
+    </div>
+    <div class="col frag">
+      <b style="color:#861F41">Step 2 &mdash; what are the limits?</b>
+      <div class="tiny">Hunt for <i>only / at most / no more than</i> &mdash; each phrase is one constraint. Resource used \(\le\) amount available:</div>
+      \[\begin{aligned}3x_C+2x_K&\le 24&&\text{(flour, cups)}\\ 2x_C+ x_K&\le 12&&\text{(eggs)}\\ x_C&\le 5&&\text{(market demand)}\end{aligned}\]
+    </div>
+  </div>
+  <div class="box orange small frag">Check the <b>units</b>: the flour row is cups on both sides. If the two sides of a constraint carry different units, the constraint is wrong.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Worked example &middot; from the course text</div>
+  <h2>Sam's Bakery: Full Model, Solution, Sanity Check</h2>
+  <div class="cols small">
+    <div class="col">
+      <b style="color:#861F41">Step 3 &mdash; the goal</b>, then assemble:
+      \[\begin{aligned}\max\;\;&4x_C+3x_K\\ \text{s.t.}\;\;&3x_C+2x_K\le 24\\ &2x_C+x_K\le 12\\ &x_C\le 5\\ &x_C,x_K\ge 0\end{aligned}\]
+      <div class="tiny frag">Two variables, three resource constraints &mdash; a solver returns the optimum in microseconds.</div>
+    </div>
+    <div class="col frag">
+      <b style="color:#861F41">Step 4 &mdash; solve &amp; sanity-check.</b> Optimum: \(x_C=4,\;x_K=4\), profit \(4(4)+3(4)=\$28\).
+      <ul class="small" style="margin-top:6px">
+        <li>Flour: \(3(4)+2(4)=20\le 24\) &mdash; 4 cups slack</li>
+        <li>Eggs: \(2(4)+4=12\le 12\) &mdash; <b>tight: the binding constraint</b></li>
+        <li>Cakes: \(4\le 5\) &mdash; 1 cake of slack</li>
+      </ul>
+      <div class="box frag" style="margin-top:8px">Eggs are the bottleneck: more eggs would raise profit; more flour would not (yet). Asking <i>"what's binding?"</i> is the first step of sensitivity analysis &mdash; a whole chapter later on.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Worked example &middot; looking ahead to software</div>
+  <h2>Sam's Bakery in Code</h2>
+  <div class="cols small">
+    <div class="col">
+      <pre style="background:#26282e;color:#e8e6e1;border-radius:10px;padding:14px 18px;font-size:13.5px;line-height:1.45;overflow:auto" aria-label="Pyomo code for the bakery LP">import pyomo.environ as pyo
+
+m = pyo.ConcreteModel()
+m.x_C = pyo.Var(domain=pyo.NonNegativeReals)
+m.x_K = pyo.Var(domain=pyo.NonNegativeReals)
+
+m.profit = pyo.Objective(
+    expr=4*m.x_C + 3*m.x_K,
+    sense=pyo.maximize)
+
+m.flour  = pyo.Constraint(expr=3*m.x_C + 2*m.x_K &lt;= 24)
+m.eggs   = pyo.Constraint(expr=2*m.x_C + 1*m.x_K &lt;= 12)
+m.demand = pyo.Constraint(expr=m.x_C &lt;= 5)
+
+pyo.SolverFactory("glpk").solve(m)</pre>
+    </div>
+    <div class="col">
+      <div class="box frag">Once the math is settled, every modeling library is a thin translator: the code lines match the model lines one-for-one.</div>
+      <div class="box orange frag" style="margin-top:10px">The rhythm of every model in this course: <b>name the variables &rarr; one inequality per limit &rarr; write the objective &rarr; translate to code.</b> If you can't say the model in plain English first, you're not ready to write the math.</div>
+      <div class="tiny frag" style="margin-top:8px;color:#6d6d6d">We'll set up Python + a solver in a later session &mdash; nothing to install today.</div>
+    </div>
+  </div>
+</section>
+
 <!-- 17 PRODUCTION -->
 <section class="slide" data-checkpoint="cpH">
   <div class="kicker">&sect;1.2 &middot; Examples of LP models</div>
@@ -1156,6 +1212,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 <!-- 27 GRAPHICAL -->
 <section class="slide">
+  <div class="kicker">&sect;1.4 &middot; Warm-up for graphing</div>
+  <h2>How to Plot a Line (and an Inequality) in 2D</h2>
+  <div class="cols small">
+    <div class="col">
+      <b>Take \(3x+5y=15\).</b>
+      <div class="box frag"><b>1. Find the intercepts.</b><br>Set \(y=0\): \(3x=15\Rightarrow x=5\) &rarr; point \((5,0)\).<br>Set \(x=0\): \(5y=15\Rightarrow y=3\) &rarr; point \((0,3)\).</div>
+      <div class="box frag" style="margin-top:8px"><b>2. Connect them.</b> Two points determine the line &mdash; done.</div>
+      <div class="box frag" style="margin-top:8px"><b>3. Which side is \(3x+5y\ge 15\)?</b> Test an easy point. The origin: \(3(0)+5(0)=0\ge 15\)? <b>No</b> &rarr; shade the side <i>away</i> from the origin.</div>
+      <div class="box orange small frag" style="margin-top:8px">A feasible region is just several of these shaded half-planes stacked on top of each other &mdash; next slides.</div>
+    </div>
+    <div class="col">
+      <svg viewBox="0 0 440 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Coordinate plane with the line through the intercepts (5,0) and (0,3) for 3x+5y=15. The origin is marked with an X because 0 is not at least 15, so the half-plane on the far side of the line from the origin is shaded as 3x+5y at least 15.">
+        <line x1="50" y1="280" x2="420" y2="280" stroke="#555" stroke-width="1.5"/>
+        <line x1="50" y1="280" x2="50" y2="20" stroke="#555" stroke-width="1.5"/>
+        <text x="425" y="292" font-size="13" fill="#555">x</text>
+        <text x="38" y="24" font-size="13" fill="#555">y</text>
+        <polygon points="410,30 410,280 350,280 50,100 50,30" fill="rgba(134,31,65,.12)"/>
+        <line x1="350" y1="280" x2="50" y2="100" stroke="#861F41" stroke-width="3"/>
+        <circle cx="350" cy="280" r="6" fill="#861F41"/><text x="338" y="303" font-size="14" fill="#861F41" font-weight="bold">(5,0)</text>
+        <circle cx="50" cy="100" r="6" fill="#861F41"/><text x="60" y="96" font-size="14" fill="#861F41" font-weight="bold">(0,3)</text>
+        <text x="196" y="168" font-size="14" fill="#861F41" font-weight="bold" transform="rotate(-31 196 168)">3x + 5y = 15</text>
+        <text x="42" y="300" font-size="17" fill="#b3261e" font-weight="bold">&#10005;</text>
+        <text x="62" y="304" font-size="12.5" fill="#b3261e">origin fails: 0 &#8805; 15 is false</text>
+        <text x="255" y="120" font-size="14" fill="#861F41" font-weight="bold">3x + 5y &#8805; 15</text>
+        <text x="255" y="138" font-size="12" fill="#6d6d6d">(the side without the origin)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
   <div class="kicker">&sect;1.4 &middot; Geometry</div>
   <h2>Graphical Representation</h2>
   <ul style="font-size:23px">
@@ -1226,6 +1313,28 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     </div>
   </div>
   <div class="box orange frag"><b>(d)</b> Add \(x_1+x_2\le -2\): the feasible set is empty — <b>infeasible</b>.</div>
+</section>
+
+<section class="slide" style="padding:34px 46px" data-checkpoint="cpB">
+  <div class="kicker">One picture &middot; three flavors</div>
+  <h2 style="margin-bottom:8px">Linear &middot; Mixed-Integer &middot; Nonlinear</h2>
+  <div style="display:flex;gap:14px">
+    <div class="widget" style="flex:1;padding:8px">
+      <canvas id="triLP" width="368" height="290" style="width:100%"></canvas>
+      <div class="tiny center" style="min-height:38px"><b>Linear:</b> flat sides, flat costs &mdash; an optimum sits at a <b>corner</b>.</div>
+    </div>
+    <div class="widget" style="flex:1;padding:8px">
+      <canvas id="triMIP" width="368" height="290" style="width:100%"></canvas>
+      <div class="tiny center" style="min-height:38px"><b>Mixed-integer:</b> only lattice points allowed.
+        <button class="btn sec" id="triRelax" style="padding:2px 10px;font-size:13px">Relax integrality</button></div>
+    </div>
+    <div class="widget" style="flex:1;padding:8px">
+      <canvas id="triNLP" width="368" height="290" style="width:100%"></canvas>
+      <div class="tiny center" style="min-height:38px"><b>Nonlinear:</b> curved boundary &amp; costs.
+        <button class="btn sec" id="triCut" style="padding:2px 10px;font-size:13px">Approximate by LPs</button></div>
+    </div>
+  </div>
+  <div class="box orange small frag" style="margin-top:10px"><b>Punchline:</b> drop integrality and a MIP <i>becomes</i> an LP (its <b>relaxation</b> &mdash; an optimistic bound). Tangent lines turn curved regions into LPs too. <b>LP is the common denominator.</b></div>
 </section>
 
 <!-- 29b CUBE 3D -->
@@ -1780,6 +1889,107 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   </div>
 </section>
 
+<!-- ===== appendix: application details (printable copy of the Explore modals) ===== -->
+<section class="slide small" data-toc="Appendix: Airlines &amp; Energy">
+  <div class="kicker">Appendix &middot; the Explore-button write-ups, for your handout</div>
+  <h2 style="margin-bottom:4px">Applications in Depth: Airlines &amp; Energy</h2>
+  <div class="cols">
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Airlines</b> <span class="tiny" style="color:#E5751F">Discrete &middot; among the largest IPs solved anywhere</span>
+<div class="small"><p>Airlines re-plan constantly: crews, aircraft, prices. Crew scheduling alone involves millions of yes/no choices.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Which crew pairing to fly (yes/no each)</li><li>Which aircraft type serves each route</li><li>How many seats to sell at each fare</li></ul></div>
+    <div><b>Constraints</b><ul><li>Every flight covered by exactly one crew</li><li>FAA duty &amp; rest rules; return to base</li><li>Fleet counts, maintenance windows, gates</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize crew + fuel cost</li><li>Maximize ticket revenue</li><li>Minimize delay propagation</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> integer programming at massive scale — solved by branch-and-bound over LP relaxations.</div>
+  <div class="axdata"><b>Data needed first:</b> full flight schedule, crew cost rules, historical demand by route &amp; fare class, disruption statistics.</div></div></div></div>
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Energy</b> <span class="tiny" style="color:#E5751F">Mixed continuous/discrete &middot; re-solved every 5 minutes</span>
+<div class="small"><p>Grid operators decide which plants run and at what level — a fresh optimization every few minutes, national scale.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Unit on/off status each hour (discrete)</li><li>Output level of each running unit (continuous)</li><li>Reserve capacity held back</li></ul></div>
+    <div><b>Constraints</b><ul><li>Supply = demand, every moment, everywhere</li><li>Ramp-rate limits; min up/down times</li><li>Transmission line capacities</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize fuel + startup cost</li><li>Minimize emissions (or price them)</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> unit commitment = MIP; dispatch = LP; true AC power physics = nonlinear (usually linearized!).</div>
+  <div class="axdata"><b>Data needed first:</b> demand forecasts (ML!), generator cost curves, outage statistics, network parameters.</div></div></div></div>
+  </div>
+</section>
+
+<section class="slide small" data-toc="Appendix: Logistics &amp; Manufacturing">
+  <div class="kicker">Appendix &middot; the Explore-button write-ups, for your handout</div>
+  <h2 style="margin-bottom:4px">Applications in Depth: Logistics &amp; Manufacturing</h2>
+  <div class="cols">
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Logistics</b> <span class="tiny" style="color:#E5751F">Discrete &middot; routing and location</span>
+<div class="small"><p>Every package rides a chain of optimized decisions: which warehouse, which truck, which route, which order of stops.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Route and stop sequence per vehicle</li><li>Package-to-vehicle assignment</li><li>Where to place warehouses (long-run)</li></ul></div>
+    <div><b>Constraints</b><ul><li>Vehicle capacity; driver hour limits</li><li>Delivery time windows</li><li>Every package delivered exactly once</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize miles / fuel / cost</li><li>Maximize on-time percentage</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> vehicle routing = hard combinatorial IP; heavily attacked with LP bounds + heuristics.</div>
+  <div class="axdata"><b>Data needed first:</b> demand by location, travel-time predictions, cost models, service-level statistics.</div></div></div></div>
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Manufacturing</b> <span class="tiny" style="color:#E5751F">Linear at heart &middot; the classic LP habitat</span>
+<div class="small"><p>The original LP applications: what to make, how to cut, what to blend — the production examples in this course.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Quantity of each product</li><li>Which cutting patterns to use</li><li>Blend fractions (fuels, feeds, alloys)</li></ul></div>
+    <div><b>Constraints</b><ul><li>Machine &amp; labor capacity</li><li>Raw material availability</li><li>Quality/recipe specifications, demand</li></ul></div>
+    <div><b>Objectives</b><ul><li>Maximize profit</li><li>Minimize waste or cost</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> mostly genuinely linear — proportional, additive, divisible. LP's home turf since the 1940s.</div>
+  <div class="axdata"><b>Data needed first:</b> bills of materials, capacity measurements, cost accounting, demand forecasts.</div></div></div></div>
+  </div>
+</section>
+
+<section class="slide small" data-toc="Appendix: Finance &amp; Healthcare">
+  <div class="kicker">Appendix &middot; the Explore-button write-ups, for your handout</div>
+  <h2 style="margin-bottom:4px">Applications in Depth: Finance &amp; Healthcare</h2>
+  <div class="cols">
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Finance</b> <span class="tiny" style="color:#E5751F">Nonlinear risk &middot; linear sneaks back in</span>
+<div class="small"><p>Allocate wealth across assets balancing return against risk — Markowitz's Nobel-winning model and its LP cousins.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Fraction of wealth per asset</li><li>Trades to rebalance a portfolio</li></ul></div>
+    <div><b>Constraints</b><ul><li>Budget: fractions sum to 1</li><li>Position limits, no-short rules</li><li>Regulatory / risk limits</li></ul></div>
+    <div><b>Objectives</b><ul><li>Maximize return &minus; risk penalty</li><li>Minimize tracking error vs an index</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> variance risk = quadratic (nonlinear); absolute-deviation risk versions are LPs; arbitrage detection is pure LP duality (later in this course!).</div>
+  <div class="axdata"><b>Data needed first:</b> return histories, covariance estimates (statistics!), transaction cost models.</div></div></div></div>
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Healthcare</b> <span class="tiny" style="color:#E5751F">Continuous and discrete &middot; high stakes</span>
+<div class="small"><p>From radiation dose maps to staff schedules to kidney exchanges — optimization with lives in the objective function.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Beamlet intensities (continuous)</li><li>Nurse-to-shift assignments (discrete)</li><li>Donor&ndash;patient matches (discrete)</li></ul></div>
+    <div><b>Constraints</b><ul><li>Tumor dose minimums, organ dose caps</li><li>Shift coverage, work rules</li><li>Medical compatibility, exchange cycles</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize dose to healthy tissue</li><li>Minimize staffing cost / overtime</li><li>Maximize number of transplants</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> therapy planning &asymp; LP; scheduling &amp; matching = IP.</div>
+  <div class="axdata"><b>Data needed first:</b> imaging &amp; dose physics, patient arrival statistics, compatibility testing — and clinical workflows ready to <i>use</i> the answer.</div></div></div></div>
+  </div>
+</section>
+
+<section class="slide small" data-toc="Appendix: Sports &amp; Machine learning">
+  <div class="kicker">Appendix &middot; the Explore-button write-ups, for your handout</div>
+  <h2 style="margin-bottom:4px">Applications in Depth: Sports &amp; Machine learning</h2>
+  <div class="cols">
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Sports</b> <span class="tiny" style="color:#E5751F">Discrete &middot; yes, the MLB schedule is an IP</span>
+<div class="small"><p>Season schedules juggle venues, travel, TV and fairness — Major League Baseball's is produced with integer programming.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Which teams play where, each day</li><li>Series groupings and off days</li></ul></div>
+    <div><b>Constraints</b><ul><li>Venue availability</li><li>Travel distance / back-to-back limits</li><li>Broadcast windows, rivalry dates, fairness</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize total travel</li><li>Maximize attractive matchups in prime slots</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> pure integer programming — schedules don't come in fractions.</div>
+  <div class="axdata"><b>Data needed first:</b> venue calendars, travel times, broadcast contracts, historical attendance.</div></div></div></div>
+<div class="col"><div class="box" style="height:100%"><b style="color:#861F41;font-size:19px">Machine learning</b> <span class="tiny" style="color:#E5751F">Nonlinear &middot; optimization all the way down</span>
+<div class="small"><p>Training any model <i>is</i> optimization: choose parameters minimizing a loss. The fields are siblings, not rivals.</p>
+  <div class="ax3">
+    <div><b>Decisions</b><ul><li>Model weights (millions&ndash;billions of them)</li></ul></div>
+    <div><b>Constraints</b><ul><li>Often none explicit — or regularization playing that role</li></ul></div>
+    <div><b>Objectives</b><ul><li>Minimize prediction loss on data</li></ul></div>
+  </div>
+  <div class="axflavor"><b>Flavor:</b> high-dimensional nonlinear (gradient methods — ISE 5406). But LP appears inside ML too: \(\ell_1\)/robust regression, optimal transport.</div>
+  <div class="axdata"><b>Data needed first:</b> the training data <i>is</i> the model — and ML's outputs (forecasts) are optimization's <i>inputs</i>, one rung down the maturity curve.</div></div></div></div>
+  </div>
+</section>
+
 
 <!-- WHITEBOARDS -->
 <section class="slide whiteboard" data-inkkey="wb1" data-toc="Whiteboard 1">
@@ -2246,7 +2456,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b811';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b812';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
