@@ -92,9 +92,10 @@ body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;heigh
 body.handout #progress,body.handout #counter,body.handout #brand{display:none}
 body.handout .frag{opacity:1;transform:none}
 #laser{position:fixed;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff4040 0%,rgba(255,64,64,.4) 55%,transparent 72%);box-shadow:0 0 14px 5px rgba(255,64,64,.55);pointer-events:none;z-index:700;display:none;transform:translate(-50%,-50%)}
-#cp{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:620;display:none;align-items:center;justify-content:center}
-#cp.open{display:flex}
-#cp .cpcard{background:#fdfcfa;border-radius:16px;padding:26px 34px;max-width:700px;min-width:520px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#cp{position:fixed;inset:0;background:transparent;z-index:620;display:none;pointer-events:none}
+#cp.open{display:block}
+#cp .cpcard{position:absolute;left:18px;bottom:18px;pointer-events:auto;background:#fdfcfa;border-radius:16px;padding:18px 24px;max-width:560px;min-width:420px;box-shadow:0 18px 60px rgba(0,0,0,.5);border:1.5px solid #d8cfc4}
+#cp .cpcard .kicker{cursor:move;user-select:none;-webkit-user-select:none}
 #cpQ{font-size:23px;margin:6px 0 14px;line-height:1.45}
 #cpOpts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 #cpOpts button{text-align:left;font-size:18px;padding:9px 14px}
@@ -130,6 +131,13 @@ body.handout #handoutbar{display:flex}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid #33658a;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .kicker{color:#a4520e}
+
+/* application explorer (styles carried over from original Lecture 1) */
+.axbtn{float:right;padding:1px 10px;font-size:12.5px;margin-left:8px}
+#appx{position:fixed;inset:0;background:rgba(20,22,26,.82);z-index:620;display:none;align-items:center;justify-content:center}
+#appx.open{display:flex}
+#appx .axcard{background:#fdfcfa;border-radius:16px;padding:24px 32px;max-width:900px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#appx h3{margin:2px 0 10px;color:#861F41;font-family:"Fraunces",Georgia,serif;font-size:27px}
 </style>
 </head>
 <body>
@@ -906,13 +914,39 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </section>
 
 <!-- ============ 16 · MATERIALS ============ -->
-<section class="slide" style="padding:28px 40px">
-  <div class="kicker">Interactive &middot; from the course text</div>
-  <h2 style="margin-bottom:6px">From Words to Math</h2>
-  <div class="widget" style="padding:6px;flex:1;display:flex">
-    <iframe class="embed" src="https://open-optimization.github.io/open-optimization-or-book/visualizations/#modeling-intro" style="width:100%;height:100%;min-height:520px" loading="lazy" title="Modeling introduction demo"></iframe>
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Modeling &middot; from the course text</div>
+  <h2>From Words to Math: The Three Questions</h2>
+  <p class="small">A solver knows nothing about cakes, trucks, or hospitals — only variables and inequalities. The model is the shared language. Ask, in order:</p>
+  <div class="cols small" style="margin-top:6px">
+    <div class="col frag"><div class="box"><b style="color:#861F41">1. What am I deciding?</b><br>&rarr; <b>decision variables</b><br><span class="tiny">"How many cakes to bake today?" &nbsp;\(x\ge 0\)</span></div></div>
+    <div class="col frag"><div class="box"><b style="color:#861F41">2. What are the limits?</b><br>&rarr; <b>constraints</b><br><span class="tiny">"We have only 50 lb of flour." &nbsp;\(2x+3y\le 50\)</span></div></div>
+    <div class="col frag"><div class="box"><b style="color:#861F41">3. What makes a plan best?</b><br>&rarr; <b>objective</b> (one number)<br><span class="tiny">"Maximize total profit." &nbsp;\(\max\;4x+5y\)</span></div></div>
   </div>
-  <div class="tiny center" style="color:#6d6d6d;margin-top:4px">Guided modeling tutorial &mdash; students can revisit it any time at <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> (requires internet)</div>
+  <table class="frag small" style="margin-top:12px;border-collapse:collapse;width:100%">
+    <tr style="color:#861F41"><th style="text-align:left;border-bottom:2px solid #861F41;padding:4px 8px">real world</th><th style="text-align:left;border-bottom:2px solid #861F41;padding:4px 8px">OR concept</th><th style="text-align:left;border-bottom:2px solid #861F41;padding:4px 8px">math</th></tr>
+    <tr><td style="padding:4px 8px">"How many trucks should I buy?"</td><td style="padding:4px 8px">decision variable</td><td style="padding:4px 8px">\(x\in\mathbb{Z}_{\ge 0}\)</td></tr>
+    <tr><td style="padding:4px 8px">"We can't spend more than \$1M."</td><td style="padding:4px 8px">budget constraint</td><td style="padding:4px 8px">\(50000\,x\le 1000000\)</td></tr>
+    <tr><td style="padding:4px 8px">"We want the cheapest plan."</td><td style="padding:4px 8px">min-cost objective</td><td style="padding:4px 8px">\(\min\;c^\top x\)</td></tr>
+    <tr><td style="padding:4px 8px">"No fractional trucks."</td><td style="padding:4px 8px">variable type</td><td style="padding:4px 8px">\(x\in\mathbb{Z}_{\ge 0}\)</td></tr>
+  </table>
+  <div class="tiny center frag" style="color:#6d6d6d;margin-top:8px">Answer the three questions in plain English first — the math is mostly mechanical from there.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">&sect;1.2 &middot; Modeling &middot; from the course text</div>
+  <h2>Modeling Pitfalls (Everybody Makes These)</h2>
+  <div class="cols small" style="margin-top:4px">
+    <div class="col">
+      <div class="box frag"><b>Forgetting non-negativity.</b><br><span class="bad">\(x_C,x_K\in\mathbb{R}\)</span> &rarr; <span class="good">\(x_C,x_K\ge 0\)</span><br><span class="tiny">Otherwise the solver may happily set \(x=-1000\) if it helps the objective.</span></div>
+      <div class="box frag" style="margin-top:10px"><b>Wrong objective direction.</b><br><span class="bad">min profit</span> &rarr; <span class="good">max profit (= min &minus;profit)</span><br><span class="tiny">Minimizing when you meant to maximize gives a feasible but trivially bad answer.</span></div>
+    </div>
+    <div class="col">
+      <div class="box frag"><b>Constraint vs.&nbsp;objective.</b><br><span class="bad">\(\max\; x\ge 100\)</span> &rarr; <span class="good">constraint \(x\ge 100\); objective separate</span><br><span class="tiny">"At least", "at most", "must be" are <b>constraints</b>. A model has many constraints but exactly one objective.</span></div>
+      <div class="box frag" style="margin-top:10px"><b>Solve-then-round for integers.</b><br><span class="bad">round \(x=3.7\) to 4</span> &rarr; <span class="good">model it as a MIP from the start</span><br><span class="tiny">Rounding can be infeasible or sub-optimal — and you can't 0.4-open a facility.</span></div>
+    </div>
+  </div>
+  <div class="tiny center frag" style="color:#6d6d6d;margin-top:10px">Full interactive tutorial with practice problems: <b>open-optimization.github.io/open-optimization-or-book/visualizations</b> &mdash; revisit any time.</div>
 </section>
 
 <!-- 17 PRODUCTION -->
@@ -948,11 +982,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <div class="cols">
     <div class="widget" style="flex:none;width:430px">
       <div class="small"><b>Data</b> (drag to change the world):</div>
-      <div class="crow">Profit A: $<span id="sbPAv" class="readout">40</span> <input id="sbPA" type="range" min="10" max="100" value="40" style="flex:1"></div>
-      <div class="crow">Profit B: $<span id="sbPBv" class="readout">55</span> <input id="sbPB" type="range" min="10" max="100" value="55" style="flex:1"></div>
-      <div class="crow">Labor: <span id="sbLv" class="readout">200</span> h <input id="sbL" type="range" min="100" max="320" value="200" style="flex:1"></div>
-      <div class="crow">Material: <span id="sbMv" class="readout">160</span> kg <input id="sbM" type="range" min="80" max="260" value="160" style="flex:1"></div>
+      <div class="crow">Profit A: $<span id="sbPAv" class="readout">30</span> <input id="sbPA" type="range" min="10" max="100" value="30" style="flex:1"></div>
+      <div class="crow">Profit B: $<span id="sbPBv" class="readout">45</span> <input id="sbPB" type="range" min="10" max="100" value="45" style="flex:1"></div>
+      <div class="crow">Labor: <span id="sbLv" class="readout">278</span> h <input id="sbL" type="range" min="100" max="320" value="278" style="flex:1"></div>
+      <div class="crow">Material: <span id="sbMv" class="readout">186</span> kg <input id="sbM" type="range" min="80" max="260" value="186" style="flex:1"></div>
       <div class="tiny" style="color:#6d6d6d">A uses 4 h + 2 kg per unit; B uses 5 h + 4 kg.</div>
+      <div class="box small" id="sbModel" style="margin-top:8px;font-family:Georgia,serif;line-height:1.5"></div>
       <div class="box small" id="sbOut" style="margin-top:8px;min-height:100px"></div>
     </div>
     <div class="col">
@@ -1775,7 +1810,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 <canvas id="ink"></canvas>
 <div id="help" onclick="this.classList.remove('open')"><div class="card">
   <h3>Keyboard controls</h3>
-  <b>&rarr; / Space / click</b> &mdash; next reveal or slide<br>
+  <b>&rarr; / Space</b> &mdash; next reveal or slide (tap on touch screens)<br>
   <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
   <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
   <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
@@ -1993,12 +2028,12 @@ function show(i,revealAll){
   cur=i;
   if(revealAll)frags(slides[i]).forEach(f=>f.classList.add('on'));
   update();
-  const cpid=slides[i].dataset.checkpoint;
-  if(cpid&&!slides[i].dataset.cpdone){slides[i].dataset.cpdone=1;setTimeout(()=>openCheckpoint(cpid),400);}
 }
 function next(){
   const f=frags(slides[cur]).find(x=>!x.classList.contains('on'));
   if(f){f.classList.add('on');return;}
+  const cpid=slides[cur].dataset.checkpoint;
+  if(cpid&&!slides[cur].dataset.cpdone){slides[cur].dataset.cpdone=1;openCheckpoint(cpid);return;}
   if(cur<slides.length-1)show(cur+1);
 }
 function prev(){
@@ -2029,7 +2064,8 @@ addEventListener('keydown',e=>{
 deck.addEventListener('click',e=>{
   if(penOn)return;
   if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
-  next();
+  /* advance on tap only for touch screens; on a laptop use the arrow keys */
+  if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)next();
 });
 let viewZ=1;
 function baseFit(){return Math.min(innerWidth/1280,innerHeight/720);}
@@ -2210,7 +2246,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b809';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b810';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2488,10 +2524,20 @@ function openCheckpoint(id){
     };
     opts.appendChild(b);
   });
+  const card=cp.querySelector('.cpcard');
+  card.style.left='18px';card.style.top='auto';card.style.bottom='18px';
   cp.classList.add('open');
   if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([cp]);
 }
 if(cp)document.getElementById('cpClose').onclick=()=>cp.classList.remove('open');
+if(cp){ /* drag the checkpoint card by its header if it covers something you need */
+  const card=cp.querySelector('.cpcard'),hd=card.querySelector('.kicker');
+  let dg=null;
+  hd.addEventListener('pointerdown',e=>{const r=card.getBoundingClientRect();dg={dx:e.clientX-r.left,dy:e.clientY-r.top};try{hd.setPointerCapture(e.pointerId);}catch(_){ }e.preventDefault();});
+  hd.addEventListener('pointermove',e=>{if(!dg)return;card.style.left=Math.max(0,Math.min(innerWidth-120,e.clientX-dg.dx))+'px';card.style.top=Math.max(0,Math.min(innerHeight-80,e.clientY-dg.dy))+'px';card.style.bottom='auto';});
+  hd.addEventListener('pointerup',()=>dg=null);
+  hd.addEventListener('pointercancel',()=>dg=null);
+}
 
 let startPos=parseInt(location.hash.slice(1))-1;
 if(isNaN(startPos)){try{startPos=+localStorage.getItem('deckpos:'+location.pathname)||0;}catch(e){startPos=0;}}
@@ -2561,6 +2607,12 @@ const els={pa:sbPA,pb:sbPB,L:sbL,M:sbM};
 function run(){
   const pa=+sbPA.value,pb=+sbPB.value,L=+sbL.value,M=+sbM.value;
   sbPAv.textContent=pa;sbPBv.textContent=pb;sbLv.textContent=L;sbMv.textContent=M;
+  const _i=s=>'<i>x</i><sub>'+s+'</sub>';
+  document.getElementById('sbModel').innerHTML=
+    'max&nbsp;&nbsp;'+pa+'&thinsp;'+_i('A')+' + '+pb+'&thinsp;'+_i('B')+
+    '<br>s.t.&nbsp;&nbsp;4&thinsp;'+_i('A')+' + 5&thinsp;'+_i('B')+' &le; '+L+' <span style="color:#6d6d6d">(labor)</span>'+
+    '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&thinsp;'+_i('A')+' + 4&thinsp;'+_i('B')+' &le; '+M+' <span style="color:#6d6d6d">(material)</span>'+
+    '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+_i('A')+', '+_i('B')+' &ge; 0';
   const cons=[{a:4,b:5,op:'le',rhs:L},{a:2,b:4,op:'le',rhs:M},{a:-1,b:0,op:'le',rhs:0},{a:0,b:-1,op:'le',rhs:0}];
   const verts=dedupe(regionPoly(cons));
   const vals=verts.map(p=>pa*p[0]+pb*p[1]);

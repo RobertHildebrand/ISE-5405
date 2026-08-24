@@ -94,9 +94,10 @@ body.handout .slide{position:relative;display:flex;inset:auto;width:1280px;heigh
 body.handout #progress,body.handout #counter,body.handout #brand{display:none}
 body.handout .frag{opacity:1;transform:none}
 #laser{position:fixed;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff4040 0%,rgba(255,64,64,.4) 55%,transparent 72%);box-shadow:0 0 14px 5px rgba(255,64,64,.55);pointer-events:none;z-index:700;display:none;transform:translate(-50%,-50%)}
-#cp{position:fixed;inset:0;background:rgba(20,22,26,.8);z-index:620;display:none;align-items:center;justify-content:center}
-#cp.open{display:flex}
-#cp .cpcard{background:#fdfcfa;border-radius:16px;padding:26px 34px;max-width:700px;min-width:520px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+#cp{position:fixed;inset:0;background:transparent;z-index:620;display:none;pointer-events:none}
+#cp.open{display:block}
+#cp .cpcard{position:absolute;left:18px;bottom:18px;pointer-events:auto;background:#fdfcfa;border-radius:16px;padding:18px 24px;max-width:560px;min-width:420px;box-shadow:0 18px 60px rgba(0,0,0,.5);border:1.5px solid #d8cfc4}
+#cp .cpcard .kicker{cursor:move;user-select:none;-webkit-user-select:none}
 #cpQ{font-size:23px;margin:6px 0 14px;line-height:1.45}
 #cpOpts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 #cpOpts button{text-align:left;font-size:18px;padding:9px 14px}
@@ -833,7 +834,7 @@ so $n^2$ is even.
 <canvas id="ink"></canvas>
 <div id="help" onclick="this.classList.remove('open')"><div class="card">
   <h3>Keyboard controls</h3>
-  <b>&rarr; / Space / click</b> &mdash; next reveal or slide<br>
+  <b>&rarr; / Space</b> &mdash; next reveal or slide (tap on touch screens)<br>
   <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
   <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
   <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
@@ -931,12 +932,12 @@ function show(i,revealAll){
   cur=i;
   if(revealAll)frags(slides[i]).forEach(f=>f.classList.add('on'));
   update();
-  const cpid=slides[i].dataset.checkpoint;
-  if(cpid&&!slides[i].dataset.cpdone){slides[i].dataset.cpdone=1;setTimeout(()=>openCheckpoint(cpid),400);}
 }
 function next(){
   const f=frags(slides[cur]).find(x=>!x.classList.contains('on'));
   if(f){f.classList.add('on');return;}
+  const cpid=slides[cur].dataset.checkpoint;
+  if(cpid&&!slides[cur].dataset.cpdone){slides[cur].dataset.cpdone=1;openCheckpoint(cpid);return;}
   if(cur<slides.length-1)show(cur+1);
 }
 function prev(){
@@ -967,7 +968,8 @@ addEventListener('keydown',e=>{
 deck.addEventListener('click',e=>{
   if(penOn)return;
   if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
-  next();
+  /* advance on tap only for touch screens; on a laptop use the arrow keys */
+  if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)next();
 });
 let viewZ=1;
 function baseFit(){return Math.min(innerWidth/1280,innerHeight/720);}
@@ -1426,10 +1428,20 @@ function openCheckpoint(id){
     };
     opts.appendChild(b);
   });
+  const card=cp.querySelector('.cpcard');
+  card.style.left='18px';card.style.top='auto';card.style.bottom='18px';
   cp.classList.add('open');
   if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([cp]);
 }
 if(cp)document.getElementById('cpClose').onclick=()=>cp.classList.remove('open');
+if(cp){ /* drag the checkpoint card by its header if it covers something you need */
+  const card=cp.querySelector('.cpcard'),hd=card.querySelector('.kicker');
+  let dg=null;
+  hd.addEventListener('pointerdown',e=>{const r=card.getBoundingClientRect();dg={dx:e.clientX-r.left,dy:e.clientY-r.top};try{hd.setPointerCapture(e.pointerId);}catch(_){ }e.preventDefault();});
+  hd.addEventListener('pointermove',e=>{if(!dg)return;card.style.left=Math.max(0,Math.min(innerWidth-120,e.clientX-dg.dx))+'px';card.style.top=Math.max(0,Math.min(innerHeight-80,e.clientY-dg.dy))+'px';card.style.bottom='auto';});
+  hd.addEventListener('pointerup',()=>dg=null);
+  hd.addEventListener('pointercancel',()=>dg=null);
+}
 
 let startPos=parseInt(location.hash.slice(1))-1;
 if(isNaN(startPos)){try{startPos=+localStorage.getItem('deckpos:'+location.pathname)||0;}catch(e){startPos=0;}}
