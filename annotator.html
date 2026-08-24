@@ -1051,7 +1051,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b806';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b807';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -3275,10 +3275,14 @@ function slideAtPoint(x,y){
   return -1;
 }
 let scrollRAF=null;
+/* capture:true — body is the scroll container in scrollview (html/body overflow:hidden),
+   and element scroll events don't bubble; without capture this never fired, so ink
+   stayed glued to the viewport and far pages never rendered */
 addEventListener('scroll',()=>{
-  if(!inScroll()||scrollRAF)return;
-  scrollRAF=requestAnimationFrame(()=>{
+  if(!inScroll())return;
+  if(!scrollRAF)scrollRAF=requestAnimationFrame(()=>{
     scrollRAF=null;
+    redrawInk(); /* repaint ink pinned to the pages every frame while scrolling */
     let best=-1,bd=1e18;const mid=innerHeight/2;
     slides.forEach((sl,i)=>{
       if(sl.classList.contains('cover'))return;
@@ -3287,10 +3291,12 @@ addEventListener('scroll',()=>{
       if(d<bd){bd=d;best=i;}
     });
     if(best>=0&&best!==cur){cur=best;update();}
-    else scheduleInk();
-    if(typeof updatePdfWindow==='function')updatePdfWindow();
+    const now=performance.now();
+    if(now-lastPdfWin>250){lastPdfWin=now;if(typeof updatePdfWindow==='function')updatePdfWindow();}
+    clearTimeout(pdfWinTail);pdfWinTail=setTimeout(()=>{if(inScroll()&&typeof updatePdfWindow==='function')updatePdfWindow();},300);
   });
-},{passive:true});
+},{passive:true,capture:true});
+let lastPdfWin=0,pdfWinTail=null;
 let currentBoardKind=null;
 function promotePiece(it,pt){
   const key=inkKey();
