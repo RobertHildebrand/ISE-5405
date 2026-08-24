@@ -233,7 +233,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </div>
     </div>
     <div class="col" style="flex:0 0 440px">
-      <svg viewBox="0 0 440 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 440 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="A wiggly nonlinear objective with a local minimum that is not global, contrasted with a linear objective where downhill is a single direction — no false valleys.">
         <path d="M 30 90 Q 90 200 150 140 Q 200 95 250 190 Q 300 275 400 60" fill="none" stroke="#33658a" stroke-width="3.5"/>
         <circle cx="150" cy="140" r="7" fill="#b25a12"/>
         <text x="120" y="120" font-size="14" fill="#b25a12" font-weight="bold">local, not global</text>
@@ -296,7 +296,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </ul>
     </div>
     <div class="col" style="flex:0 0 420px">
-      <svg viewBox="0 0 420 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 420 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="The hyperplane a'x = b with its normal vector a; points on one side satisfy a'x at least b, points on the other side a'x less than b.">
         <polygon points="60,270 340,60 420,60 420,300 60,300" fill="rgba(134,31,65,.12)"/>
         <line x1="30" y1="292" x2="370" y2="38" stroke="#861F41" stroke-width="3"/>
         <text x="240" y="255" font-size="15" fill="#861F41" font-weight="bold">a&prime;x &ge; b</text>
@@ -384,7 +384,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </ul>
     </div>
     <div class="col" style="flex:0 0 440px">
-      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="A polygon with a dashed objective level line touching exactly one corner — the unique minimizer for cost direction c, so that corner is a vertex.">
         <polygon points="90,250 120,110 230,64 340,120 320,240 210,282" fill="rgba(134,31,65,.13)" stroke="#861F41" stroke-width="2.5"/>
         <line x1="30" y1="130" x2="240" y2="10" stroke="#E5751F" stroke-width="2.5" stroke-dasharray="8 6"/>
         <circle cx="230" cy="64" r="8" fill="#1a7d3c"/>
@@ -411,7 +411,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </ul>
     </div>
     <div class="col" style="flex:0 0 440px">
-      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Three marked points on a polygon: an interior point with 0 active constraints, an edge point with 1, and a corner with 2 — in n dimensions a corner needs n.">
         <polygon points="90,250 120,110 230,64 340,120 320,240 210,282" fill="rgba(134,31,65,.13)" stroke="#861F41" stroke-width="2.5"/>
         <circle cx="215" cy="180" r="7" fill="#33658a"/>
         <text x="228" y="186" font-size="13" fill="#33658a" font-weight="bold">0 active</text>
@@ -439,7 +439,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="box orange frag small">"Linearly independent constraints" = the vectors \(a_i\) are linearly independent. \(n\) independent active constraints pin down a <b>single point</b> — that's what makes it algebraic and computable.</div>
     </div>
     <div class="col" style="flex:0 0 440px">
-      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Two intersections of constraint lines: one is basic and feasible (a corner of the polygon), the other basic but infeasible (outside the region).">
         <polygon points="110,240 140,110 250,70 330,130 310,235" fill="rgba(134,31,65,.13)" stroke="#861F41" stroke-width="2.5"/>
         <line x1="40" y1="285" x2="200" y2="45" stroke="#c9b8a8" stroke-width="2"/>
         <line x1="40" y1="140" x2="330" y2="52" stroke="#c9b8a8" stroke-width="2"/>
@@ -606,7 +606,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </ul>
     </div>
     <div class="col" style="flex:0 0 440px">
-      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 440 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="A polygon where two corners that share an edge are adjacent basic solutions; a corner not on that edge is not adjacent to the top pair.">
         <polygon points="90,250 120,110 230,64 340,120 320,240 210,282" fill="rgba(134,31,65,.13)" stroke="#861F41" stroke-width="2.5"/>
         <line x1="120" y1="110" x2="230" y2="64" stroke="#1a7d3c" stroke-width="5"/>
         <circle cx="120" cy="110" r="8" fill="#1a7d3c"/><circle cx="230" cy="64" r="8" fill="#1a7d3c"/>
@@ -1603,7 +1603,7 @@ document.querySelectorAll('.gproof').forEach(g=>{
   $('.dnote,.gpnote').forEach(el=>el.setAttribute('aria-live','polite'));
   ['help','cp','appx'].forEach(id=>{
     const d=document.getElementById(id);if(!d)return;
-    d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.setAttribute('role','dialog');d.setAttribute('aria-modal',id==='cp'?'false':'true');
     d.setAttribute('aria-label',id==='help'?'Keyboard help':(id==='cp'?'Checkpoint question':'Application details'));
     let ret=null;
     new MutationObserver(()=>{
@@ -1621,6 +1621,20 @@ document.querySelectorAll('.gproof').forEach(g=>{
     const act=document.querySelector('section.slide.active');
     live.textContent='Slide '+cnt.textContent+(act?': '+(act.getAttribute('aria-label')||''):'');
   }).observe(cnt,{childList:true,characterData:true,subtree:true});
+})();
+
+/* ===== figure captions for the handout / printed PDF (embeds each figure's alt text) ===== */
+(function(){
+  const st=document.createElement('style');
+  st.textContent='.figcap{display:none;font-size:11px;line-height:1.35;color:#555;font-style:italic;margin:4px 0 0;max-width:640px}body.handout .figcap{display:block}@media print{.figcap{display:block!important}}';
+  document.head.appendChild(st);
+  document.querySelectorAll('section.slide [role="img"][aria-label]').forEach(el=>{
+    if(el.nextElementSibling&&el.nextElementSibling.classList.contains('figcap'))return;
+    const c=document.createElement('div');
+    c.className='figcap';c.setAttribute('aria-hidden','true'); /* screen readers already get the aria-label */
+    c.textContent='Figure: '+el.getAttribute('aria-label');
+    el.insertAdjacentElement('afterend',c);
+  });
 })();
 </script>
 </body>

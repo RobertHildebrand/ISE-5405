@@ -248,7 +248,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <h2>Implication is Containment</h2>
   <div class="cols">
     <div class="col" style="flex:0 0 520px">
-      <svg viewBox="0 0 520 340" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 520 340" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Nested sets: P (4 divides n) sits inside Q (n is even) inside the universe. The point n=8 lies inside both; n=7 lies outside both. Implication is containment.">
         <rect x="8" y="8" width="504" height="300" rx="10" fill="#faf7f3" stroke="#d5cdc4"/>
         <text x="20" y="32" font-size="14" fill="#999">everything</text>
         <ellipse cx="250" cy="165" rx="190" ry="120" fill="rgba(51,101,138,.12)" stroke="#33658a" stroke-width="2.5"/>
@@ -285,7 +285,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <span class="frag"> Since \(2k^2\) is an integer, \(n^2\) is twice an integer — i.e. even. \(\;\blacksquare\)</span>
   </div>
   <div class="box orange small frag"><b>Anatomy:</b> unpack the definition ("even" = \(2k\)) → algebra → repack the definition. Most direct proofs are exactly this shape.</div>
-  <svg viewBox="0 0 1140 90" class="frag" style="width:100%;margin-top:6px">
+  <svg viewBox="0 0 1140 90" class="frag" style="width:100%;margin-top:6px" role="img" aria-label="A chain of boxes from 'n is even' to 'n squared is even', connected by arrows labeled definition, algebra, and factor — the shape of a direct proof.">
     <defs><marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#861F41"/></marker></defs>
     <g font-size="17" text-anchor="middle">
       <rect x="10" y="18" width="180" height="52" rx="10" fill="#f4eef0" stroke="#861F41" stroke-width="2"/><text x="100" y="50">n is even</text>
@@ -334,7 +334,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="box blue small frag">In LP theory, constantly: <i>&ldquo;Suppose \(x^*\) were not optimal&hellip; then a better feasible point exists&hellip; contradiction.&rdquo;</i></div>
     </div>
     <div class="col" style="flex:0 0 400px">
-      <svg viewBox="0 0 400 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 400 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Flowchart of contradiction: assume S is false, follow valid logical steps, reach something impossible, therefore S is true — the assumed world collapses.">
         <defs><marker id="arrC" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#5a4634"/></marker></defs>
         <g font-size="16" text-anchor="middle">
           <rect x="90" y="16" width="220" height="46" rx="10" fill="#fdf3ea" stroke="#E5751F" stroke-width="2"/>
@@ -431,7 +431,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="box orange small frag">Used here for: correctness of iterative algorithms (simplex pivots!), recursive structures, improving bounds.</div>
     </div>
     <div class="col widget center" style="flex:0 0 470px">
-      <svg id="domSvg" viewBox="0 0 460 190" style="width:100%">
+      <svg id="domSvg" viewBox="0 0 460 190" style="width:100%" role="img" aria-label="A row of dominoes numbered 1, 2, 3, and onward, each knocking over the next: the base case plus the inductive step topple them all.">
         <line x1="10" y1="168" x2="450" y2="168" stroke="#c9b8a8" stroke-width="3"/>
         <g id="domGroup"></g>
         <text x="30" y="186" font-size="13" fill="#861F41" font-weight="bold">n=1</text>
@@ -1776,7 +1776,7 @@ document.querySelectorAll('.gproof').forEach(g=>{
   $('.dnote,.gpnote').forEach(el=>el.setAttribute('aria-live','polite'));
   ['help','cp','appx'].forEach(id=>{
     const d=document.getElementById(id);if(!d)return;
-    d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.setAttribute('role','dialog');d.setAttribute('aria-modal',id==='cp'?'false':'true');
     d.setAttribute('aria-label',id==='help'?'Keyboard help':(id==='cp'?'Checkpoint question':'Application details'));
     let ret=null;
     new MutationObserver(()=>{
@@ -1794,6 +1794,20 @@ document.querySelectorAll('.gproof').forEach(g=>{
     const act=document.querySelector('section.slide.active');
     live.textContent='Slide '+cnt.textContent+(act?': '+(act.getAttribute('aria-label')||''):'');
   }).observe(cnt,{childList:true,characterData:true,subtree:true});
+})();
+
+/* ===== figure captions for the handout / printed PDF (embeds each figure's alt text) ===== */
+(function(){
+  const st=document.createElement('style');
+  st.textContent='.figcap{display:none;font-size:11px;line-height:1.35;color:#555;font-style:italic;margin:4px 0 0;max-width:640px}body.handout .figcap{display:block}@media print{.figcap{display:block!important}}';
+  document.head.appendChild(st);
+  document.querySelectorAll('section.slide [role="img"][aria-label]').forEach(el=>{
+    if(el.nextElementSibling&&el.nextElementSibling.classList.contains('figcap'))return;
+    const c=document.createElement('div');
+    c.className='figcap';c.setAttribute('aria-hidden','true'); /* screen readers already get the aria-label */
+    c.textContent='Figure: '+el.getAttribute('aria-label');
+    el.insertAdjacentElement('afterend',c);
+  });
 })();
 </script>
 </body>

@@ -269,7 +269,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="box orange frag">Why care? Several <i>different bases</i> can describe the <i>same</i> degenerate corner — algorithms can stall walking between them (Ch. 3's cycling problem!).</div>
     </div>
     <div class="col" style="flex:0 0 430px">
-      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Two corners compared: a degenerate corner where three constraint lines pass through one point (n = 2 but 3 active constraints) and a generic corner where exactly two meet.">
         <line x1="30" y1="270" x2="400" y2="60" stroke="#c9b8a8" stroke-width="2"/>
         <line x1="60" y1="30" x2="330" y2="290" stroke="#c9b8a8" stroke-width="2"/>
         <line x1="20" y1="140" x2="410" y2="160" stroke="#c9b8a8" stroke-width="2"/>
@@ -301,7 +301,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="box green frag"><b>Cor. 2.2:</b> nonempty <b>bounded</b> polyhedra and nonempty <b>standard-form</b> polyhedra always have a BFS. (Standard form: the constraints \(x_i \ge 0\) supply \(n\) independent vectors!)</div>
     </div>
     <div class="col" style="flex:0 0 420px">
-      <svg viewBox="0 0 420 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 420 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Two regions: one that contains an entire line has no corners; one that contains no line has corners — the line-free characterization.">
         <polygon points="0,80 420,20 420,140 0,200" fill="rgba(51,101,138,.14)"/>
         <line x1="0" y1="80" x2="420" y2="20" stroke="#33658a" stroke-width="2.5"/>
         <line x1="0" y1="200" x2="420" y2="140" stroke="#33658a" stroke-width="2.5"/>
@@ -448,7 +448,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       </ul>
     </div>
     <div class="col" style="flex:0 0 430px">
-      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px">
+      <svg viewBox="0 0 430 310" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="A two-dimensional polyhedron P casting a one-dimensional shadow on the x1 axis: Fourier-Motzkin elimination computes exactly this projection.">
         <polygon points="110,60 260,40 340,120 300,210 150,220 90,140" fill="rgba(134,31,65,.15)" stroke="#861F41" stroke-width="2.5"/>
         <g stroke="#c9b8a8" stroke-width="1.5" stroke-dasharray="5 5">
           <line x1="90" y1="140" x2="90" y2="262"/><line x1="340" y1="120" x2="340" y2="262"/>
@@ -1497,7 +1497,7 @@ document.querySelectorAll('.gproof').forEach(g=>{
   $('.dnote,.gpnote').forEach(el=>el.setAttribute('aria-live','polite'));
   ['help','cp','appx'].forEach(id=>{
     const d=document.getElementById(id);if(!d)return;
-    d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.setAttribute('role','dialog');d.setAttribute('aria-modal',id==='cp'?'false':'true');
     d.setAttribute('aria-label',id==='help'?'Keyboard help':(id==='cp'?'Checkpoint question':'Application details'));
     let ret=null;
     new MutationObserver(()=>{
@@ -1515,6 +1515,20 @@ document.querySelectorAll('.gproof').forEach(g=>{
     const act=document.querySelector('section.slide.active');
     live.textContent='Slide '+cnt.textContent+(act?': '+(act.getAttribute('aria-label')||''):'');
   }).observe(cnt,{childList:true,characterData:true,subtree:true});
+})();
+
+/* ===== figure captions for the handout / printed PDF (embeds each figure's alt text) ===== */
+(function(){
+  const st=document.createElement('style');
+  st.textContent='.figcap{display:none;font-size:11px;line-height:1.35;color:#555;font-style:italic;margin:4px 0 0;max-width:640px}body.handout .figcap{display:block}@media print{.figcap{display:block!important}}';
+  document.head.appendChild(st);
+  document.querySelectorAll('section.slide [role="img"][aria-label]').forEach(el=>{
+    if(el.nextElementSibling&&el.nextElementSibling.classList.contains('figcap'))return;
+    const c=document.createElement('div');
+    c.className='figcap';c.setAttribute('aria-hidden','true'); /* screen readers already get the aria-label */
+    c.textContent='Figure: '+el.getAttribute('aria-label');
+    el.insertAdjacentElement('afterend',c);
+  });
 })();
 </script>
 </body>
