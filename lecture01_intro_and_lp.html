@@ -1568,8 +1568,8 @@ pyo.SolverFactory("glpk").solve(m)</pre>
         <line x1="170" y1="20" x2="170" y2="220" stroke="#999"/>
         <line x1="30" y1="60" x2="310" y2="172" stroke="#c9c1b8" stroke-width="1.5"/>
         <line x1="30" y1="172" x2="310" y2="60" stroke="#c9c1b8" stroke-width="1.5"/>
-        <line x1="30" y1="130" x2="310" y2="130" stroke="#c9c1b8" stroke-width="1.5"/>
-        <path d="M 30 60 L 118 95 L 218 130 L 310 60" fill="none" stroke="#861F41" stroke-width="3.5"/>
+        <line x1="30" y1="100" x2="310" y2="100" stroke="#c9c1b8" stroke-width="1.5"/>
+        <path d="M 30 60 L 130 100 L 210 100 L 310 60" fill="none" stroke="#861F41" stroke-width="3.5"/>
         <text x="240" y="30" fill="#861F41" font-size="14" font-weight="bold">max of the lines</text>
         <text x="40" y="220" fill="#888" font-size="12">the pointwise max of linear functions is convex</text>
       </svg>
@@ -2456,7 +2456,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b812';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b813';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
