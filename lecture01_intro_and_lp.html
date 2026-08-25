@@ -1991,7 +1991,7 @@ addEventListener('keydown',e=>{
     case 'ArrowLeft':case 'PageUp':e.preventDefault();prev();break;
     case 'Home':show(0);break;
     case 'End':show(slides.length-1);break;
-    case 'f':case 'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case 'f':case 'F':toggleFullscreen();break;
     case 'p':case 'P':togglePen();break;
     case 'h':case 'H':toggleHandout();break;
     case 'l':case 'L':toggleLaser();break;
@@ -2004,7 +2004,7 @@ addEventListener('keydown',e=>{
   }
 });
 deck.addEventListener('click',e=>{
-  if(penOn)return;
+  if(penOn||laserOn)return;
   if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
   /* advance on tap only for touch screens; on a laptop use the arrow keys */
   if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)next();
@@ -2188,7 +2188,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b815';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b816';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2378,7 +2378,7 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
 (function(){
   const coarse=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
   const tb=document.createElement('div');tb.id='touchbar';
-  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbHelp">?</button>';
+  tb.innerHTML='<button id="tbPen" title="pen">&#9998;</button><button id="tbErase" title="eraser">&#9676;</button><button id="tbClear" title="clear ink">&#9003;</button><button id="tbPrev">&#9664;</button><button id="tbNext">&#9654;</button><button id="tbLaser" title="laser pointer">&#9673;</button><button id="tbWb" title="whiteboard">&#9634;</button><button id="tbHand" title="handout">&#9636;</button><button id="tbFull" title="fullscreen">&#x26F6;</button><button id="tbHelp">?</button>';
   document.body.appendChild(tb);
   if(coarse)tb.style.display='flex';
   document.getElementById('tbPen').onclick=togglePen;
@@ -2389,6 +2389,12 @@ function removeInkPrints(){document.querySelectorAll('canvas.inkprint').forEach(
   document.getElementById('tbWb').onclick=toggleWhiteboard;
   document.getElementById('tbHand').onclick=toggleHandout;
   document.getElementById('tbHelp').onclick=()=>document.getElementById('help').classList.toggle('open');
+  document.getElementById('tbLaser').onclick=()=>{toggleLaser();document.getElementById('tbLaser').classList.toggle('on',laserOn);};
+  document.getElementById('tbFull').onclick=toggleFullscreen;
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
+    const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+    document.getElementById('tbFull').classList.toggle('on',on);
+  }));
 })();
 document.querySelectorAll('#pentools .pcol').forEach(b=>b.onclick=()=>{penColor=b.dataset.c;setEraser(null);updateToolUI();});
 updateToolUI();
@@ -2433,8 +2439,20 @@ addEventListener('afterprint',()=>{document.body.classList.remove('handout');rem
 /* laser pointer */
 const laser=document.createElement('div');laser.id='laser';document.body.appendChild(laser);
 let laserOn=false;
-function toggleLaser(){laserOn=!laserOn;laser.style.display=laserOn?'block':'none';document.body.style.cursor=laserOn?'none':'';}
-addEventListener('pointermove',e=>{if(laserOn){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}});
+function toggleLaser(){
+  laserOn=!laserOn;laser.style.display=laserOn?'block':'none';
+  const fine=window.matchMedia&&matchMedia('(pointer:fine)').matches;
+  document.body.style.cursor=(laserOn&&fine)?'none':'';
+  const b=document.getElementById('tbLaser');if(b)b.classList.toggle('on',laserOn);
+}
+function laserTo(e){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}
+addEventListener('pointermove',e=>{if(laserOn)laserTo(e);});
+addEventListener('pointerdown',e=>{if(laserOn)laserTo(e);}); /* touch: dot appears under the finger */
+function toggleFullscreen(){
+  const d=document,de=d.documentElement;
+  if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d);}
+  else{(de.requestFullscreen||de.webkitRequestFullscreen||function(){}).call(de);}
+}
 /* whiteboard pages */
 let wbReturn=0;
 function toggleWhiteboard(){
@@ -3331,7 +3349,7 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('o
   const smap={pvSlider:'Profit line value',gT:'Objective line value t',sbPA:'Profit of product A',sbPB:'Profit of product B',sbL:'Labor hours available',sbM:'Material available',hpB:'Right-hand side b',stSlider:'Number of terms n',cexSlider:'Value of n',bfSlider:'Number of people n'};
   Object.keys(smap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',smap[id]);});
   $('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.getAttribute('title'));});
-  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'Go to whiteboard pages',tbHand:'Handout view',tbHelp:'Keyboard help',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
+  const tmap={tbPen:'Toggle pen',tbErase:'Cycle eraser mode',tbClear:'Clear ink on this page',tbPrev:'Previous page',tbNext:'Next page',tbWb:'Go to whiteboard pages',tbHand:'Handout view',tbHelp:'Keyboard help',tbLaser:'Laser pointer',tbFull:'Toggle fullscreen',pclose:'Close pen toolbar',pclear:'Clear ink on this page',pdfBtn:'Open a PDF file from this device'};
   Object.keys(tmap).forEach(id=>{const el=document.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',tmap[id]);});
   $('#pentools .pcol').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.dataset.c==='HL'?'Highlighter':'Pen color '+b.dataset.c);});
   ['quizFb','trainFb','cpFb','ipOut','hpOut','gStatus','sbOut','cexStatus','mxOut','bcOut','ttOut','fb','vout','pvMsg','bfVerdict','hullOut','pbOut','epOut','cvxOut'].forEach(id=>{
