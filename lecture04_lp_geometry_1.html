@@ -660,7 +660,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 <canvas id="ink"></canvas>
 <div id="help" onclick="this.classList.remove('open')"><div class="card">
   <h3>Keyboard controls</h3>
-  <b>&rarr; / Space</b> &mdash; next reveal or slide (tap on touch screens)<br>
+  <b>&rarr; / Space</b> &mdash; next reveal or slide (touch: tap the <b>right edge</b>; left edge goes back)<br>
   <b>&larr;</b> &mdash; back &nbsp;&middot;&nbsp; <b>Home / End</b> &mdash; first / last slide<br>
   <b>F</b> &mdash; fullscreen &nbsp;&middot;&nbsp; <b>M</b> &mdash; slide menu / jump<br>
   <b>P</b> &mdash; pen &nbsp;&middot;&nbsp; <b>E</b> &mdash; eraser (press again for precision mode &#9986;) &nbsp;&middot;&nbsp; <b>C</b> &mdash; clear slide<br>
@@ -773,11 +773,17 @@ addEventListener('keydown',e=>{
     case '?':document.getElementById('help').classList.toggle('open');break;
   }
 });
+let lastPtrType='';
+document.addEventListener('pointerdown',e=>{lastPtrType=e.pointerType||'';},true);
 deck.addEventListener('click',e=>{
-  if(penOn||laserOn)return;
+  if(penOn)return;
+  if(laserOn&&lastPtrType==='pen')return; /* the pen is the laser; it never turns pages */
   if(e.target.closest('.widget,button,input,select,textarea,a,label'))return;
-  /* advance on tap only for touch screens; on a laptop use the arrow keys */
-  if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)next();
+  if(!(window.matchMedia&&matchMedia('(pointer: coarse)').matches))return;
+  /* invisible thumb zones: right edge = next, left edge = back */
+  const x=e.clientX;
+  if(x>innerWidth*0.82)next();
+  else if(x<innerWidth*0.18)prev();
 });
 let viewZ=1;
 function baseFit(){return Math.min(innerWidth/1280,innerHeight/720);}
@@ -1110,10 +1116,20 @@ function saveInkSoon(){clearTimeout(saveT);saveT=setTimeout(saveInk,350);}
 addEventListener('pagehide',saveInk);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveInk();});
 ink.addEventListener('pointerdown',e=>{
-  e.preventDefault();
   syncZoom();
+  if(!allowDraw(e)){
+    /* palm-rejected finger while pen mode is on: let it tap buttons under the ink layer */
+    if(e.pointerType==='touch'){
+      ink.style.pointerEvents='none';
+      const el=document.elementFromPoint(e.clientX,e.clientY);
+      ink.style.pointerEvents='auto';
+      const it=el&&el.closest?el.closest('button,a,input,select,textarea,label,[role=\"button\"]'):null;
+      if(it&&it.click){e.preventDefault();it.click();}
+    }
+    return;
+  }
+  e.preventDefault();
   if(ink.setPointerCapture)try{ink.setPointerCapture(e.pointerId);}catch(_){}
-  if(!allowDraw(e))return;
   drawing=true;
   if(erasing){eraseAt(e);return;}
   const isHL=penColor==='HL';
@@ -1216,8 +1232,9 @@ function toggleLaser(){
   const b=document.getElementById('tbLaser');if(b)b.classList.toggle('on',laserOn);
 }
 function laserTo(e){laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';}
-addEventListener('pointermove',e=>{if(laserOn)laserTo(e);});
-addEventListener('pointerdown',e=>{if(laserOn)laserTo(e);}); /* touch: dot appears under the finger */
+function laserPtr(e){return e.pointerType==='pen'||e.pointerType==='mouse'||!e.pointerType;}
+addEventListener('pointermove',e=>{if(laserOn&&laserPtr(e))laserTo(e);});
+addEventListener('pointerdown',e=>{if(laserOn&&laserPtr(e))laserTo(e);}); /* pen: dot appears under the tip; fingers stay free to turn pages */
 function toggleFullscreen(){
   const d=document,de=d.documentElement;
   if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d);}
