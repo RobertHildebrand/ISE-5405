@@ -539,6 +539,116 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     </div>
   </div>
 </section>
+
+<section class="slide">
+  <div class="kicker">Toolkit &middot; drawing pictures of LPs</div>
+  <h2>How to Plot a Line (and an Inequality) in 2D</h2>
+  <div class="cols small">
+    <div class="col">
+      <b>Take \(3x+5y=15\).</b>
+      <div class="box frag"><b>1. Find the intercepts.</b><br>Set \(y=0\): \(3x=15\Rightarrow x=5\) &rarr; point \((5,0)\).<br>Set \(x=0\): \(5y=15\Rightarrow y=3\) &rarr; point \((0,3)\).</div>
+      <div class="box frag" style="margin-top:8px"><b>2. Connect them.</b> Two points determine the line &mdash; done.</div>
+      <div class="box frag" style="margin-top:8px"><b>3. Which side is \(3x+5y\ge 15\)?</b> Test an easy point. The origin: \(3(0)+5(0)=0\ge 15\)? <b>No</b> &rarr; shade the side <i>away</i> from the origin.</div>
+      <div class="box orange small frag" style="margin-top:8px">A feasible region is just several of these shaded half-planes stacked on top of each other &mdash; next slides.</div>
+    </div>
+    <div class="col">
+      <svg viewBox="0 0 440 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Coordinate plane with the line through the intercepts (5,0) and (0,3) for 3x+5y=15. The origin is marked with an X because 0 is not at least 15, so the half-plane on the far side of the line from the origin is shaded as 3x+5y at least 15.">
+        <line x1="50" y1="280" x2="420" y2="280" stroke="#555" stroke-width="1.5"/>
+        <line x1="50" y1="280" x2="50" y2="20" stroke="#555" stroke-width="1.5"/>
+        <text x="425" y="292" font-size="13" fill="#555">x</text>
+        <text x="38" y="24" font-size="13" fill="#555">y</text>
+        <polygon points="410,30 410,280 350,280 50,100 50,30" fill="rgba(134,31,65,.12)"/>
+        <line x1="350" y1="280" x2="50" y2="100" stroke="#861F41" stroke-width="3"/>
+        <circle cx="350" cy="280" r="6" fill="#861F41"/><text x="338" y="303" font-size="14" fill="#861F41" font-weight="bold">(5,0)</text>
+        <circle cx="50" cy="100" r="6" fill="#861F41"/><text x="60" y="96" font-size="14" fill="#861F41" font-weight="bold">(0,3)</text>
+        <text x="196" y="168" font-size="14" fill="#861F41" font-weight="bold" transform="rotate(-31 196 168)">3x + 5y = 15</text>
+        <text x="42" y="300" font-size="17" fill="#b3261e" font-weight="bold">&#10005;</text>
+        <text x="62" y="304" font-size="12.5" fill="#b3261e">origin fails: 0 &#8805; 15 is false</text>
+        <text x="255" y="120" font-size="14" fill="#861F41" font-weight="bold">3x + 5y &#8805; 15</text>
+        <text x="255" y="138" font-size="12" fill="#6d6d6d">(the side without the origin)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Toolkit &middot; stacking inequalities</div>
+  <h2>Building a Feasible Region, One Inequality at a Time</h2>
+  <div class="cols">
+    <div class="col small">
+      <div class="box"><b>Each inequality keeps half the plane.</b> Intersecting finitely many halfspaces \(\{x : Ax\ge b\}\) carves out the feasible region &mdash; a shape called a <b>polyhedron</b>.</div>
+      <ul>
+        <li class="frag">The feasible set of <b>every</b> LP looks like this</li>
+        <li class="frag">Flat sides, straight edges, sharp corners &mdash; never curved</li>
+        <li class="frag">Adding a constraint can only <b>shrink</b> the region (or leave it alone)</li>
+      </ul>
+      <div class="box orange frag small">If the region ends up bounded (fits in a big box), it's called a <b>polytope</b>. Much more geometry in Chapter 2.</div>
+    </div>
+    <div class="col widget" style="flex:0 0 480px">
+      <div class="tiny" style="margin-bottom:4px"><b>Build one:</b> start from the whole plane, carve with halfspaces</div>
+      <canvas id="pbCv" width="450" height="300" style="width:100%"></canvas>
+      <div class="center" style="margin-top:6px">
+        <button class="btn" id="pbAdd">Add a halfspace &#9986;</button>
+        <button class="btn sec" id="pbReset">Reset</button>
+        <span id="pbOut" class="small" style="margin-left:10px"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Toolkit &middot; seeing the objective</div>
+  <h2>Level Curves: Where \(c'x\) Is Constant</h2>
+  <div class="cols small">
+    <div class="col">
+      <svg viewBox="0 0 400 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="2-D view: four dashed parallel lines mark where c-transpose-x equals 3, 6, 9, and 12. The vector c is drawn perpendicular to the lines, pointing toward higher values; equal spacing between lines means equal cost increments.">
+        <line x1="30" y1="270" x2="380" y2="270" stroke="#999" stroke-width="1.5"/>
+        <line x1="30" y1="270" x2="30" y2="20" stroke="#999" stroke-width="1.5"/>
+        <g stroke="#33658a" stroke-width="2" stroke-dasharray="8 6">
+          <line x1="30" y1="150" x2="180" y2="270"/>
+          <line x1="30" y1="78" x2="270" y2="270"/>
+          <line x1="66" y1="20" x2="360" y2="255"/>
+          <line x1="156" y1="20" x2="392" y2="209"/>
+        </g>
+        <text x="60" y="240" font-size="13" fill="#33658a" transform="rotate(39 60 240)">c'x = 3</text>
+        <text x="120" y="212" font-size="13" fill="#33658a" transform="rotate(39 120 212)">c'x = 6</text>
+        <text x="185" y="180" font-size="13" fill="#33658a" transform="rotate(39 185 180)">c'x = 9</text>
+        <text x="255" y="150" font-size="13" fill="#33658a" transform="rotate(39 255 150)">c'x = 12</text>
+        <path d="M 150 160 l 52 -65" stroke="#861F41" stroke-width="3.5" fill="none"/>
+        <path d="M 202 95 l -13 1 6 11 z" fill="#861F41"/>
+        <text x="208" y="88" font-size="16" fill="#861F41" font-weight="bold">c</text>
+        <text x="42" y="38" font-size="12.5" fill="#6d6d6d">parallel lines &#8869; c &middot; equal spacing = equal cost steps</text>
+      </svg>
+      <div class="tiny center" style="color:#6d6d6d;margin-top:3px">In 2D: every value of \(c'x\) is a straight line, all parallel, with \(c\) pointing &ldquo;uphill&rdquo;.</div>
+    </div>
+    <div class="col frag">
+      <svg viewBox="0 0 430 300" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="3-D view: the graph of z equals c-transpose-x is a tilted plane over the x1-x2 floor. Slicing the plane at equal heights gives evenly spaced lines on the plane, and their shadows straight below are the parallel level curves on the floor.">
+        <polygon points="90,255 260,313 390,261 220,203" fill="#f0ece6" stroke="#c9c1b8"/>
+        <polygon points="90,255 260,223 390,171 220,203" fill="rgba(134,31,65,.18)" stroke="#861F41" stroke-width="2"/>
+        <g stroke="#861F41" stroke-width="1.4">
+          <line x1="146" y1="244" x2="276" y2="192"/>
+          <line x1="203" y1="234" x2="333" y2="182"/>
+        </g>
+        <g stroke="#33658a" stroke-width="1.6" stroke-dasharray="6 5">
+          <line x1="146" y1="274" x2="276" y2="222"/>
+          <line x1="203" y1="294" x2="333" y2="242"/>
+          <line x1="90" y1="255" x2="220" y2="203"/>
+          <line x1="260" y1="313" x2="390" y2="261"/>
+        </g>
+        <g stroke="#aaa" stroke-width="1" stroke-dasharray="2 4">
+          <line x1="146" y1="244" x2="146" y2="274"/><line x1="276" y1="192" x2="276" y2="222"/>
+          <line x1="203" y1="234" x2="203" y2="294"/><line x1="333" y1="182" x2="333" y2="242"/>
+        </g>
+        <text x="300" y="150" font-size="14" fill="#861F41" font-weight="bold">z = c'x (a tilted plane)</text>
+        <text x="52" y="290" font-size="12.5" fill="#33658a">shadows = level curves</text>
+        <text x="395" y="270" font-size="12" fill="#888">x&#8321;</text>
+        <text x="255" y="328" font-size="12" fill="#888">x&#8322;</text>
+      </svg>
+      <div class="tiny center" style="color:#6d6d6d;margin-top:3px">In 3D: slice the plane at equal heights &mdash; the shadows on the floor are the level curves.</div>
+    </div>
+  </div>
+  <div class="box orange small frag">A <b>linear</b> objective has no bumps or bowls: its level curves are parallel straight lines forever. Optimizing = sliding a level line as far as the feasible region allows &mdash; exactly what we'll do graphically soon.</div>
+</section>
 <section class="slide">
   <h2>A Linear Programming Problem (Ex. 1.1)</h2>
   <div class="cols">
@@ -1100,36 +1210,6 @@ print(xC.X, xK.X, m.ObjVal)   # 4.0 4.0 28.0</pre>
     <li class="frag">If not: rounding up gives a feasible (not necessarily optimal) schedule — and a gap we can measure.</li>
   </ul>
   <div class="box orange frag">This bound-and-round idea is the seed of all of integer programming (end of the course, and ISE 5406).</div>
-</section>
-<section class="slide">
-  <div class="kicker">&sect;1.4 &middot; Warm-up for graphing</div>
-  <h2>How to Plot a Line (and an Inequality) in 2D</h2>
-  <div class="cols small">
-    <div class="col">
-      <b>Take \(3x+5y=15\).</b>
-      <div class="box frag"><b>1. Find the intercepts.</b><br>Set \(y=0\): \(3x=15\Rightarrow x=5\) &rarr; point \((5,0)\).<br>Set \(x=0\): \(5y=15\Rightarrow y=3\) &rarr; point \((0,3)\).</div>
-      <div class="box frag" style="margin-top:8px"><b>2. Connect them.</b> Two points determine the line &mdash; done.</div>
-      <div class="box frag" style="margin-top:8px"><b>3. Which side is \(3x+5y\ge 15\)?</b> Test an easy point. The origin: \(3(0)+5(0)=0\ge 15\)? <b>No</b> &rarr; shade the side <i>away</i> from the origin.</div>
-      <div class="box orange small frag" style="margin-top:8px">A feasible region is just several of these shaded half-planes stacked on top of each other &mdash; next slides.</div>
-    </div>
-    <div class="col">
-      <svg viewBox="0 0 440 330" style="width:100%;background:#fff;border:1px solid #eee;border-radius:10px" role="img" aria-label="Coordinate plane with the line through the intercepts (5,0) and (0,3) for 3x+5y=15. The origin is marked with an X because 0 is not at least 15, so the half-plane on the far side of the line from the origin is shaded as 3x+5y at least 15.">
-        <line x1="50" y1="280" x2="420" y2="280" stroke="#555" stroke-width="1.5"/>
-        <line x1="50" y1="280" x2="50" y2="20" stroke="#555" stroke-width="1.5"/>
-        <text x="425" y="292" font-size="13" fill="#555">x</text>
-        <text x="38" y="24" font-size="13" fill="#555">y</text>
-        <polygon points="410,30 410,280 350,280 50,100 50,30" fill="rgba(134,31,65,.12)"/>
-        <line x1="350" y1="280" x2="50" y2="100" stroke="#861F41" stroke-width="3"/>
-        <circle cx="350" cy="280" r="6" fill="#861F41"/><text x="338" y="303" font-size="14" fill="#861F41" font-weight="bold">(5,0)</text>
-        <circle cx="50" cy="100" r="6" fill="#861F41"/><text x="60" y="96" font-size="14" fill="#861F41" font-weight="bold">(0,3)</text>
-        <text x="196" y="168" font-size="14" fill="#861F41" font-weight="bold" transform="rotate(-31 196 168)">3x + 5y = 15</text>
-        <text x="42" y="300" font-size="17" fill="#b3261e" font-weight="bold">&#10005;</text>
-        <text x="62" y="304" font-size="12.5" fill="#b3261e">origin fails: 0 &#8805; 15 is false</text>
-        <text x="255" y="120" font-size="14" fill="#861F41" font-weight="bold">3x + 5y &#8805; 15</text>
-        <text x="255" y="138" font-size="12" fill="#6d6d6d">(the side without the origin)</text>
-      </svg>
-    </div>
-  </div>
 </section>
 <section class="slide">
   <div class="kicker">&sect;1.4 &middot; Geometry</div>
@@ -2108,7 +2188,7 @@ function onVV(){
   if(vvRAF)return;
   vvRAF=requestAnimationFrame(()=>{vvRAF=null;sizeInk();pinUI();});
 }
-try{document.getElementById('brand').textContent+=' · b814';}catch(e){}
+try{document.getElementById('brand').textContent+=' · b815';}catch(e){}
 sizeInk();pinUI();
 addEventListener('resize',onVV);
 if(window.visualViewport){visualViewport.addEventListener('resize',onVV);visualViewport.addEventListener('scroll',onVV);}
@@ -2514,6 +2594,41 @@ function run(){
 }
 [sbPA,sbPB,sbL,sbM].forEach(s=>s.addEventListener('input',run));
 run();
+})();
+
+/* ================= polyhedron builder ================= */
+(function(){
+const cv=document.getElementById('pbCv');if(!cv)return;
+const ctx=cv.getContext('2d');
+const cuts=[[1,1,560],[-6,-11,-1860],[3,-13,-180],[9,-5,2520],[-1,8,1780],[-12,5,-480]];
+let k=0;
+const out=document.getElementById('pbOut');
+function draw(){
+  ctx.clearRect(0,0,450,300);
+  let poly=[[5,5],[445,5],[445,295],[5,295]];
+  for(let i=0;i<k;i++)poly=clipHP(poly,cuts[i][0],cuts[i][1],cuts[i][2]);
+  if(poly.length){
+    ctx.beginPath();poly.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+    ctx.fillStyle='rgba(134,31,65,.15)';ctx.fill();ctx.strokeStyle='#861F41';ctx.lineWidth=2.5;ctx.stroke();
+    dedupe(poly).forEach(p=>{
+      if(p[0]>6&&p[0]<444&&p[1]>6&&p[1]<294){ctx.beginPath();ctx.arc(p[0],p[1],4.5,0,7);ctx.fillStyle='#26282e';ctx.fill();}
+    });
+  }
+  // last cut line
+  if(k>0){
+    const [a,b,c]=cuts[k-1];
+    ctx.strokeStyle='#E5751F';ctx.lineWidth=2;ctx.setLineDash([7,5]);
+    ctx.beginPath();
+    if(Math.abs(b)>1e-9){ctx.moveTo(0,(c-0)/b);ctx.lineTo(450,(c-a*450)/b);}
+    else{ctx.moveTo(c/a,0);ctx.lineTo(c/a,300);}
+    ctx.stroke();ctx.setLineDash([]);
+  }
+  const verts=k?dedupe((function(){let p=[[5,5],[445,5],[445,295],[5,295]];for(let i=0;i<k;i++)p=clipHP(p,cuts[i][0],cuts[i][1],cuts[i][2]);return p;})()).filter(p=>p[0]>6&&p[0]<444&&p[1]>6&&p[1]<294).length:0;
+  out.innerHTML=k+' halfspace'+(k===1?'':'s')+' · '+verts+' corner'+(verts===1?'':'s');
+}
+document.getElementById('pbAdd').onclick=()=>{if(k<cuts.length){k++;draw();}};
+document.getElementById('pbReset').onclick=()=>{k=0;draw();};
+draw();
 })();
 
 /* ================= grapher widget ================= */
