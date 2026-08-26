@@ -219,6 +219,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <p class="frag center small" style="color:#861F41"><i>Mixing up converse and contrapositive is the #1 rookie proof error.</i></p>
 </section>
 
+<section class="slide">
+  <h2>The Classic Example: Rain and Wet Ground</h2>
+  <p>Let \(P\) = &ldquo;it rained today&rdquo; and \(Q\) = &ldquo;the ground is wet.&rdquo;</p>
+  <div class="cols small">
+    <div class="col">
+      <div class="box"><b>Statement:</b> \(P \implies Q\)<br>&ldquo;It rained today, therefore the ground is wet.&rdquo; <span class="good">&#10003;</span></div>
+      <div class="box frag"><b>Contrapositive:</b> \(\neg Q \implies \neg P\)<br>&ldquo;The ground is dry, therefore it did <i>not</i> rain today.&rdquo;<br><b>Equivalent</b> to the original — checking the ground really does tell you about the rain. <span class="good">&#10003;</span></div>
+    </div>
+    <div class="col">
+      <div class="box orange frag"><b>Converse:</b> \(Q \implies P\)<br>&ldquo;The ground is wet, therefore it rained today.&rdquo;<br><span class="bad">&#10007;</span> Not automatic — sprinklers, a garden hose, a burst pipe&hellip; wet ground has other causes.</div>
+      <div class="box orange frag"><b>Negation trap:</b> the negation of \(P \implies Q\) is <b>not</b> &ldquo;it rained, therefore the ground is dry&rdquo; \((P \implies \neg Q)\).<br>It is \(P \wedge \neg Q\): &ldquo;it rained today <b>and</b> the ground is not wet.&rdquo; One counterexample kills an implication.</div>
+    </div>
+  </div>
+  <p class="frag center small" style="color:#861F41"><i>To disprove an implication you exhibit \(P\) true with \(Q\) false — you never prove the &ldquo;opposite&rdquo; implication.</i></p>
+</section>
+
 <!-- 3a TRUTH TABLE -->
 <section class="slide">
   <div class="kicker">When is an implication false?</div>
